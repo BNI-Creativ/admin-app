@@ -104,11 +104,10 @@ const DashboardPage = () => {
     navigate('/');
   };
 
-  // Handle attendance change and auto-add inlocuitor to guests
-  const handleAttendanceChange = async (memberId, prezent, taxa, numeInlocuitor) => {
+  // Save attendance to API (called with debounce for text fields)
+  const saveAttendanceToAPI = useCallback(async (memberId, prezent, taxa, numeInlocuitor, oldNumeInlocuitor) => {
     try {
       const membru = membri.find(m => m.id === memberId);
-      const oldNumeInlocuitor = membru?.nume_inlocuitor || '';
       
       await axios.post(`${API_URL}/attendance/${dateString}`, {
         member_id: memberId,
@@ -117,35 +116,18 @@ const DashboardPage = () => {
         nume_inlocuitor: numeInlocuitor,
       });
 
-      // Update local state for members
-      setMembri((prev) =>
-        prev.map((m) =>
-          m.id === memberId ? { ...m, prezent, taxa, nume_inlocuitor: numeInlocuitor } : m
-        )
-      );
-
-      // Recalculate total
-      const newTotal = membri.reduce((sum, m) => {
-        if (m.id === memberId) return sum + taxa;
-        return sum + m.taxa;
-      }, 0);
-      setTotalTaxaMembri(newTotal);
-
-      // If nume_inlocuitor changed and is not empty, add to guests
-      if (numeInlocuitor && numeInlocuitor !== oldNumeInlocuitor) {
-        // Parse prenume and nume from numeInlocuitor
+      // Handle inlocuitor guest creation/update/deletion
+      if (numeInlocuitor && numeInlocuitor.trim()) {
         const parts = numeInlocuitor.trim().split(' ');
         const prenume = parts[0] || '';
         const nume = parts.slice(1).join(' ') || '';
-        const membruNume = `${membru.prenume} ${membru.nume}`;
+        const membruNume = `${membru?.prenume || ''} ${membru?.nume || ''}`;
 
-        // Check if this inlocuitor already exists for this member
         const existingInlocuitor = invitati.find(
           g => g.is_inlocuitor && g.member_id === memberId
         );
 
         if (existingInlocuitor) {
-          // Update existing inlocuitor
           await axios.put(`${API_URL}/guests/${existingInlocuitor.id}`, {
             prenume,
             nume,
@@ -159,7 +141,6 @@ const DashboardPage = () => {
             )
           );
         } else {
-          // Create new guest as inlocuitor
           const guestData = {
             prenume,
             nume,
@@ -170,10 +151,9 @@ const DashboardPage = () => {
             member_id: memberId,
           };
           const response = await axios.post(`${API_URL}/guests?data=${dateString}`, guestData);
-          setInvitati([...invitati, response.data]);
+          setInvitati((prev) => [...prev, response.data]);
         }
       } else if (!numeInlocuitor && oldNumeInlocuitor) {
-        // If numeInlocuitor was cleared, remove the inlocuitor guest
         const existingInlocuitor = invitati.find(
           g => g.is_inlocuitor && g.member_id === memberId
         );
@@ -183,6 +163,61 @@ const DashboardPage = () => {
           setTotalTaxaInvitati((prev) => prev - (existingInlocuitor.taxa || 0));
         }
       }
+    } catch (error) {
+      console.error('Error saving attendance:', error);
+    }
+  }, [dateString, membri, invitati]);
+
+  // Debounced version for text input (800ms delay)
+  const debouncedSaveInlocuitor = useDebounce(saveAttendanceToAPI, 800);
+
+  // Update local state immediately, debounce API call for text fields
+  const handleNumeInlocuitorChange = (memberId, numeInlocuitor) => {
+    const membru = membri.find(m => m.id === memberId);
+    const oldNumeInlocuitor = pendingInlocuitorRef.current[memberId]?.old || membru?.nume_inlocuitor || '';
+    
+    // Store the original value for comparison
+    if (!pendingInlocuitorRef.current[memberId]) {
+      pendingInlocuitorRef.current[memberId] = { old: membru?.nume_inlocuitor || '' };
+    }
+
+    // Update UI immediately
+    setMembri((prev) =>
+      prev.map((m) =>
+        m.id === memberId ? { ...m, nume_inlocuitor: numeInlocuitor } : m
+      )
+    );
+
+    // Debounce API call
+    debouncedSaveInlocuitor(memberId, membru?.prezent || false, membru?.taxa || 0, numeInlocuitor, oldNumeInlocuitor);
+  };
+
+  // Handle checkbox and taxa changes (immediate API call)
+  const handleAttendanceChange = async (memberId, prezent, taxa) => {
+    const membru = membri.find(m => m.id === memberId);
+    const numeInlocuitor = membru?.nume_inlocuitor || '';
+
+    // Update UI immediately
+    setMembri((prev) =>
+      prev.map((m) =>
+        m.id === memberId ? { ...m, prezent, taxa } : m
+      )
+    );
+
+    // Recalculate total
+    setTotalTaxaMembri((prev) => {
+      const oldTaxa = membru?.taxa || 0;
+      return prev - oldTaxa + taxa;
+    });
+
+    // Save to API immediately for checkbox/taxa
+    try {
+      await axios.post(`${API_URL}/attendance/${dateString}`, {
+        member_id: memberId,
+        prezent,
+        taxa,
+        nume_inlocuitor: numeInlocuitor,
+      });
     } catch (error) {
       console.error('Error updating attendance:', error);
     }
