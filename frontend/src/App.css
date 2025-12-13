@@ -125,10 +125,16 @@
     letter-spacing: -0.02em;
 }
 
-/* Calendar - dates with data marker - using border ring */
+/* Calendar - dates with data marker - circle outline */
 button.calendar-has-data {
     outline: 2px solid #3b82f6 !important;
-    outline-offset: -2px !important;
+    outline-offset: -3px !important;
+    border-radius: 50% !important;
+}
+
+/* When day is selected - white outline */
+button.calendar-has-data[aria-selected="true"] {
+    outline-color: rgba(255,255,255,0.7) !important;
 }
 
 /* Print specific */
