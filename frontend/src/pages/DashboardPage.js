@@ -406,24 +406,8 @@ const DashboardPage = () => {
                   modifiers={{
                     hasData: datesWithData.map(d => new Date(d + 'T00:00:00'))
                   }}
-                  modifiersStyles={{
-                    hasData: {
-                      position: 'relative'
-                    }
-                  }}
-                  components={{
-                    DayContent: ({ date, displayMonth, ...props }) => {
-                      const dateStr = format(date, 'yyyy-MM-dd');
-                      const hasData = datesWithData.includes(dateStr);
-                      return (
-                        <div className="relative w-full h-full flex items-center justify-center">
-                          <span>{date.getDate()}</span>
-                          {hasData && (
-                            <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1.5 h-1.5 border border-blue-500 rounded-full" />
-                          )}
-                        </div>
-                      );
-                    }
+                  modifiersClassNames={{
+                    hasData: 'calendar-has-data'
                   }}
                   data-testid="date-calendar"
                 />
