@@ -403,6 +403,12 @@ const DashboardPage = () => {
                   selected={selectedDate}
                   onSelect={(date) => date && setSelectedDate(date)}
                   locale={ro}
+                  modifiers={{
+                    hasData: datesWithData.map(d => new Date(d + 'T00:00:00'))
+                  }}
+                  modifiersClassNames={{
+                    hasData: 'has-data-marker'
+                  }}
                   data-testid="date-calendar"
                 />
               </PopoverContent>
