@@ -126,27 +126,29 @@
 }
 
 /* Calendar - dates with data marker */
-.has-data-marker {
+.calendar-has-data {
     position: relative !important;
 }
 
-.has-data-marker::before {
-    content: '';
-    position: absolute;
-    bottom: 2px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 5px;
-    height: 5px;
-    border: 1.5px solid #3b82f6;
-    border-radius: 50%;
-    background: transparent;
-    z-index: 10;
+.calendar-has-data::after {
+    content: '' !important;
+    display: block !important;
+    position: absolute !important;
+    bottom: 1px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: 5px !important;
+    height: 5px !important;
+    border: 1.5px solid #3b82f6 !important;
+    border-radius: 50% !important;
+    background: transparent !important;
+    pointer-events: none !important;
 }
 
-/* When selected, change marker color to white */
-.has-data-marker[aria-selected="true"]::before {
-    border-color: white;
+/* When day is selected (has black background) */
+.calendar-has-data[aria-selected="true"]::after,
+.calendar-has-data.rdp-day_selected::after {
+    border-color: white !important;
 }
 
 /* Print specific */
