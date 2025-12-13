@@ -341,8 +341,8 @@ async def delete_guest(guest_id: str, current_user: dict = Depends(get_current_u
 
 @api_router.get("/attendance/{data}", response_model=DailyAttendanceResponse)
 async def get_daily_attendance(data: str, current_user: dict = Depends(get_current_user)):
-    # Get all members
-    members = await db.members.find({}, {"_id": 0}).sort("nr", 1).to_list(1000)
+    # Get all members sorted by prenume, then nume
+    members = await db.members.find({}, {"_id": 0}).sort([("prenume", 1), ("nume", 1)]).to_list(1000)
     
     # Get attendance records for this date
     attendance_records = await db.attendance.find({"data": data}, {"_id": 0}).to_list(1000)
