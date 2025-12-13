@@ -29,20 +29,6 @@ const LoginPage = () => {
     }
   };
 
-  const handleRegister = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError('');
-    try {
-      await register(registerData.email, registerData.password, registerData.name);
-      navigate('/dashboard');
-    } catch (err) {
-      setError(err.response?.data?.detail || 'Eroare la înregistrare');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <div className="min-h-screen flex">
       {/* Left Side - Login Form */}
