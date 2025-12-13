@@ -480,8 +480,7 @@ const DashboardPage = () => {
                               handleAttendanceChange(
                                 membru.id,
                                 membru.prezent,
-                                parseFloat(e.target.value) || 0,
-                                membru.nume_inlocuitor
+                                parseFloat(e.target.value) || 0
                               )
                             }
                             className="taxa-input table-input rounded-sm"
