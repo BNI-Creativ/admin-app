@@ -456,14 +456,7 @@ const DashboardPage = () => {
                         <TableCell>
                           <Input
                             value={membru.nume_inlocuitor || ''}
-                            onChange={(e) =>
-                              handleAttendanceChange(
-                                membru.id,
-                                membru.prezent,
-                                membru.taxa,
-                                e.target.value
-                              )
-                            }
+                            onChange={(e) => handleNumeInlocuitorChange(membru.id, e.target.value)}
                             placeholder="Prenume Nume"
                             className="table-input rounded-sm text-zinc-500"
                             data-testid={`inlocuitor-input-${membru.id}`}
@@ -473,7 +466,7 @@ const DashboardPage = () => {
                           <Checkbox
                             checked={membru.prezent}
                             onCheckedChange={(checked) =>
-                              handleAttendanceChange(membru.id, checked, membru.taxa, membru.nume_inlocuitor)
+                              handleAttendanceChange(membru.id, checked, membru.taxa)
                             }
                             className="attendance-checkbox"
                             data-testid={`checkbox-${membru.id}`}
