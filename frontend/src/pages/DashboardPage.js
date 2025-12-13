@@ -196,31 +196,6 @@ const DashboardPage = () => {
     }
   };
 
-  // Handle toggling inlocuitor status
-  const handleToggleInlocuitor = async (guestId, isInlocuitor, memberId = null) => {
-    try {
-      let updateData = { is_inlocuitor: isInlocuitor };
-      
-      if (isInlocuitor && memberId) {
-        // Find the member and set invitat_de to member's name
-        const membru = membri.find(m => m.id === memberId);
-        if (membru) {
-          updateData.invitat_de = `${membru.prenume} ${membru.nume}`;
-          updateData.member_id = memberId;
-        }
-      } else if (!isInlocuitor) {
-        updateData.member_id = null;
-      }
-
-      await axios.put(`${API_URL}/guests/${guestId}`, updateData);
-      setInvitati((prev) =>
-        prev.map((g) => (g.id === guestId ? { ...g, ...updateData } : g))
-      );
-    } catch (error) {
-      console.error('Error updating inlocuitor status:', error);
-    }
-  };
-
   const handleDeleteGuest = async (guestId) => {
     try {
       const guest = invitati.find((g) => g.id === guestId);
