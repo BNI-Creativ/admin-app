@@ -684,8 +684,8 @@ const DashboardPage = () => {
                     Nu există invitați pentru această dată.
                   </p>
                 )}
-              </TabsContent>
-            </Tabs>
+              </section>
+            </div>
           )}
         </div>
       </main>
