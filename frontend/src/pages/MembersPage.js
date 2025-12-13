@@ -299,10 +299,10 @@ const MembersPage = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {members.map((member) => (
+                  {members.map((member, index) => (
                     <TableRow key={member.id} data-testid={`member-row-${member.id}`}>
                       <TableCell className="font-medium tabular-nums">
-                        {member.nr}
+                        {index + 1}
                       </TableCell>
                       <TableCell>{member.prenume}</TableCell>
                       <TableCell>{member.nume}</TableCell>
