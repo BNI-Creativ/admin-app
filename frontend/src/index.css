@@ -79,9 +79,10 @@ code, .font-mono {
     }
     
     .print-container {
-        width: 210mm !important;
+        width: 100% !important;
+        max-width: none !important;
         min-height: auto !important;
-        padding: 15mm !important;
+        padding: 5mm !important;
         margin: 0 !important;
         box-shadow: none !important;
         border: none !important;
@@ -89,16 +90,24 @@ code, .font-mono {
     
     table {
         border-collapse: collapse !important;
+        width: 100% !important;
     }
     
     th, td {
         border: 1px solid #000 !important;
-        padding: 8px !important;
+        padding: 4px 6px !important;
     }
     
     th {
         background-color: #f4f4f5 !important;
         font-weight: bold !important;
+    }
+    
+    /* Remove all extra margins in print */
+    .paper-container {
+        padding: 5mm !important;
+        width: 100% !important;
+        max-width: none !important;
     }
 }
 
