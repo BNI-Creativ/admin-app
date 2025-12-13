@@ -5,17 +5,15 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { Users, Lock, Mail, User } from 'lucide-react';
+import { Users, Lock, Mail } from 'lucide-react';
 
 const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const { login, register } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const [loginData, setLoginData] = useState({ email: '', password: '' });
-  const [registerData, setRegisterData] = useState({ email: '', password: '', name: '' });
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -66,142 +64,59 @@ const LoginPage = () => {
                 Bine ai venit
               </CardTitle>
               <CardDescription>
-                Conectează-te sau creează un cont nou
+                Conectează-te pentru a continua
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Tabs defaultValue="login" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 mb-6 rounded-sm">
-                  <TabsTrigger value="login" className="rounded-sm" data-testid="login-tab">
-                    Autentificare
-                  </TabsTrigger>
-                  <TabsTrigger value="register" className="rounded-sm" data-testid="register-tab">
-                    Înregistrare
-                  </TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="login">
-                  <form onSubmit={handleLogin} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="login-email" className="text-sm font-medium">
-                        Email
-                      </Label>
-                      <div className="relative">
-                        <Mail className="absolute left-3 top-3 h-4 w-4 text-zinc-400" strokeWidth={1.5} />
-                        <Input
-                          id="login-email"
-                          type="email"
-                          placeholder="email@exemplu.ro"
-                          value={loginData.email}
-                          onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
-                          className="pl-10 rounded-sm border-zinc-300 focus:ring-2 focus:ring-blue-500/20"
-                          required
-                          data-testid="login-email-input"
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="login-password" className="text-sm font-medium">
-                        Parolă
-                      </Label>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-3 h-4 w-4 text-zinc-400" strokeWidth={1.5} />
-                        <Input
-                          id="login-password"
-                          type="password"
-                          placeholder="••••••••"
-                          value={loginData.password}
-                          onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
-                          className="pl-10 rounded-sm border-zinc-300 focus:ring-2 focus:ring-blue-500/20"
-                          required
-                          data-testid="login-password-input"
-                        />
-                      </div>
-                    </div>
-                    {error && (
-                      <p className="text-red-500 text-sm" data-testid="login-error">{error}</p>
-                    )}
-                    <Button
-                      type="submit"
-                      className="w-full bg-zinc-900 hover:bg-zinc-800 rounded-sm"
-                      disabled={isLoading}
-                      data-testid="login-submit-button"
-                    >
-                      {isLoading ? 'Se încarcă...' : 'Autentificare'}
-                    </Button>
-                  </form>
-                </TabsContent>
-
-                <TabsContent value="register">
-                  <form onSubmit={handleRegister} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="register-name" className="text-sm font-medium">
-                        Nume complet
-                      </Label>
-                      <div className="relative">
-                        <User className="absolute left-3 top-3 h-4 w-4 text-zinc-400" strokeWidth={1.5} />
-                        <Input
-                          id="register-name"
-                          type="text"
-                          placeholder="Ion Popescu"
-                          value={registerData.name}
-                          onChange={(e) => setRegisterData({ ...registerData, name: e.target.value })}
-                          className="pl-10 rounded-sm border-zinc-300 focus:ring-2 focus:ring-blue-500/20"
-                          required
-                          data-testid="register-name-input"
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="register-email" className="text-sm font-medium">
-                        Email
-                      </Label>
-                      <div className="relative">
-                        <Mail className="absolute left-3 top-3 h-4 w-4 text-zinc-400" strokeWidth={1.5} />
-                        <Input
-                          id="register-email"
-                          type="email"
-                          placeholder="email@exemplu.ro"
-                          value={registerData.email}
-                          onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })}
-                          className="pl-10 rounded-sm border-zinc-300 focus:ring-2 focus:ring-blue-500/20"
-                          required
-                          data-testid="register-email-input"
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="register-password" className="text-sm font-medium">
-                        Parolă
-                      </Label>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-3 h-4 w-4 text-zinc-400" strokeWidth={1.5} />
-                        <Input
-                          id="register-password"
-                          type="password"
-                          placeholder="••••••••"
-                          value={registerData.password}
-                          onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })}
-                          className="pl-10 rounded-sm border-zinc-300 focus:ring-2 focus:ring-blue-500/20"
-                          required
-                          data-testid="register-password-input"
-                        />
-                      </div>
-                    </div>
-                    {error && (
-                      <p className="text-red-500 text-sm" data-testid="register-error">{error}</p>
-                    )}
-                    <Button
-                      type="submit"
-                      className="w-full bg-zinc-900 hover:bg-zinc-800 rounded-sm"
-                      disabled={isLoading}
-                      data-testid="register-submit-button"
-                    >
-                      {isLoading ? 'Se încarcă...' : 'Creează cont'}
-                    </Button>
-                  </form>
-                </TabsContent>
-              </Tabs>
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="login-email" className="text-sm font-medium">
+                    Utilizator
+                  </Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-3 h-4 w-4 text-zinc-400" strokeWidth={1.5} />
+                    <Input
+                      id="login-email"
+                      type="text"
+                      placeholder="admin"
+                      value={loginData.email}
+                      onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
+                      className="pl-10 rounded-sm border-zinc-300 focus:ring-2 focus:ring-blue-500/20"
+                      required
+                      data-testid="login-email-input"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="login-password" className="text-sm font-medium">
+                    Parolă
+                  </Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-3 h-4 w-4 text-zinc-400" strokeWidth={1.5} />
+                    <Input
+                      id="login-password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={loginData.password}
+                      onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
+                      className="pl-10 rounded-sm border-zinc-300 focus:ring-2 focus:ring-blue-500/20"
+                      required
+                      data-testid="login-password-input"
+                    />
+                  </div>
+                </div>
+                {error && (
+                  <p className="text-red-500 text-sm" data-testid="login-error">{error}</p>
+                )}
+                <Button
+                  type="submit"
+                  className="w-full bg-zinc-900 hover:bg-zinc-800 rounded-sm"
+                  disabled={isLoading}
+                  data-testid="login-submit-button"
+                >
+                  {isLoading ? 'Se încarcă...' : 'Autentificare'}
+                </Button>
+              </form>
             </CardContent>
           </Card>
         </div>
