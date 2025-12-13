@@ -113,12 +113,13 @@ code, .font-mono {
 
 /* A4 Paper Container */
 .paper-container {
-    width: 210mm;
-    min-height: 297mm;
+    width: 100%;
+    max-width: 210mm;
+    min-height: auto;
     margin: 0 auto;
     background: white;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    padding: 20mm;
+    padding: 10mm;
 }
 
 @layer base {
