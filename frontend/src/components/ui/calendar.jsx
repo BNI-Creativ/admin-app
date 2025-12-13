@@ -9,6 +9,7 @@ function Calendar({
   className,
   classNames,
   showOutsideDays = true,
+  modifiersClassNames,
   ...props
 }) {
   return (
@@ -40,7 +41,7 @@ function Calendar({
         ),
         day: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-8 w-8 p-0 font-normal aria-selected:opacity-100"
+          "h-8 w-8 p-0 font-normal aria-selected:opacity-100 relative"
         ),
         day_range_start: "day-range-start",
         day_range_end: "day-range-end",
@@ -55,6 +56,7 @@ function Calendar({
         day_hidden: "invisible",
         ...classNames,
       }}
+      modifiersClassNames={modifiersClassNames}
       components={{
         IconLeft: ({ className, ...props }) => (
           <ChevronLeft className={cn("h-4 w-4", className)} {...props} />
