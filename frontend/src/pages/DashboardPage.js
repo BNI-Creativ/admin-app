@@ -66,6 +66,7 @@ const DashboardPage = () => {
   const [totalTaxaInvitati, setTotalTaxaInvitati] = useState(0);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [datesWithData, setDatesWithData] = useState([]);
   const [newGuest, setNewGuest] = useState({
     prenume: '',
     nume: '',
@@ -78,6 +79,16 @@ const DashboardPage = () => {
   const pendingInlocuitorRef = useRef({});
 
   const dateString = format(selectedDate, 'yyyy-MM-dd');
+
+  // Fetch dates that have saved data
+  const fetchDatesWithData = useCallback(async () => {
+    try {
+      const response = await axios.get(`${API_URL}/attendance/dates/list`);
+      setDatesWithData(response.data.dates || []);
+    } catch (error) {
+      console.error('Error fetching dates:', error);
+    }
+  }, []);
 
   const fetchData = useCallback(async () => {
     try {
@@ -97,6 +108,10 @@ const DashboardPage = () => {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  useEffect(() => {
+    fetchDatesWithData();
+  }, [fetchDatesWithData]);
 
   const handleLogout = () => {
     logout();
