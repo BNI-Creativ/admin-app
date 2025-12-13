@@ -584,7 +584,7 @@ const DashboardPage = () => {
                     onChange={(e) =>
                       setNewGuest({ ...newGuest, taxa: parseFloat(e.target.value) || 0 })
                     }
-                    className="rounded-sm w-24"
+                    className="rounded-sm w-20"
                     data-testid="guest-taxa-input"
                   />
                   <Button type="submit" className="bg-zinc-900 hover:bg-zinc-800 rounded-sm" data-testid="add-guest-button">
