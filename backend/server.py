@@ -371,6 +371,7 @@ async def update_attendance(data: str, attendance: AttendanceUpdate, current_use
             "member_id": attendance.member_id,
             "prezent": attendance.prezent,
             "taxa": attendance.taxa,
+            "nume_inlocuitor": attendance.nume_inlocuitor or "",
             "data": data
         }},
         upsert=True
