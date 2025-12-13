@@ -171,14 +171,18 @@ async def register(user_data: UserCreate):
 
 @api_router.post("/auth/login", response_model=TokenResponse)
 async def login(credentials: UserLogin):
-    user = await db.users.find_one({"email": credentials.email}, {"_id": 0})
+    # Search by username or email
+    user = await db.users.find_one(
+        {"$or": [{"username": credentials.email}, {"email": credentials.email}]}, 
+        {"_id": 0}
+    )
     if not user or not verify_password(credentials.password, user["password"]):
-        raise HTTPException(status_code=401, detail="Email sau parolă incorectă")
+        raise HTTPException(status_code=401, detail="Utilizator sau parolă incorectă")
     
-    token = create_token(user["id"], user["email"])
+    token = create_token(user["id"], user.get("email", user.get("username", "")))
     return TokenResponse(
         access_token=token,
-        user=UserResponse(id=user["id"], email=user["email"], name=user["name"])
+        user=UserResponse(id=user["id"], email=user.get("email", user.get("username", "")), name=user["name"])
     )
 
 @api_router.get("/auth/me", response_model=UserResponse)
