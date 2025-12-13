@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
@@ -33,6 +33,30 @@ import { ro } from 'date-fns/locale';
 
 const API_URL = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
+// Debounce hook
+function useDebounce(callback, delay) {
+  const timeoutRef = useRef(null);
+  
+  const debouncedCallback = useCallback((...args) => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    timeoutRef.current = setTimeout(() => {
+      callback(...args);
+    }, delay);
+  }, [callback, delay]);
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
+  return debouncedCallback;
+}
+
 const DashboardPage = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -50,6 +74,9 @@ const DashboardPage = () => {
     invitat_de: '',
     taxa: 0,
   });
+  
+  // Track pending inlocuitor updates
+  const pendingInlocuitorRef = useRef({});
 
   const dateString = format(selectedDate, 'yyyy-MM-dd');
 
