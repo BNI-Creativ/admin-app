@@ -18,15 +18,16 @@ import {
 } from '../components/ui/table';
 import {
   Users,
-  UserPlus,
   CalendarDays,
   LogOut,
   Printer,
   Plus,
   Trash2,
   Settings,
+  PanelLeftClose,
+  PanelLeft,
 } from 'lucide-react';
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 import { ro } from 'date-fns/locale';
 
 const API_URL = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -40,6 +41,7 @@ const DashboardPage = () => {
   const [totalTaxaMembri, setTotalTaxaMembri] = useState(0);
   const [totalTaxaInvitati, setTotalTaxaInvitati] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [newGuest, setNewGuest] = useState({
     prenume: '',
     nume: '',
@@ -74,17 +76,18 @@ const DashboardPage = () => {
     navigate('/');
   };
 
-  const handleAttendanceChange = async (memberId, prezent, taxa) => {
+  const handleAttendanceChange = async (memberId, prezent, taxa, numeInlocuitor) => {
     try {
       await axios.post(`${API_URL}/attendance/${dateString}`, {
         member_id: memberId,
         prezent,
         taxa,
+        nume_inlocuitor: numeInlocuitor,
       });
       // Update local state
       setMembri((prev) =>
         prev.map((m) =>
-          m.id === memberId ? { ...m, prezent, taxa } : m
+          m.id === memberId ? { ...m, prezent, taxa, nume_inlocuitor: numeInlocuitor } : m
         )
       );
       // Recalculate total
@@ -149,57 +152,80 @@ const DashboardPage = () => {
   return (
     <div className="flex min-h-screen bg-zinc-100">
       {/* Sidebar */}
-      <aside className="sidebar bg-white border-r border-zinc-200 flex flex-col no-print">
-        <div className="p-6 border-b border-zinc-200">
+      <aside 
+        className={`${sidebarOpen ? 'w-[280px]' : 'w-[60px]'} bg-white border-r border-zinc-200 flex flex-col no-print transition-all duration-300 ease-in-out`}
+      >
+        <div className="p-4 border-b border-zinc-200">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-zinc-900 rounded-sm flex items-center justify-center">
+            <div className="w-10 h-10 bg-zinc-900 rounded-sm flex items-center justify-center flex-shrink-0">
               <Users className="w-5 h-5 text-white" strokeWidth={1.5} />
             </div>
-            <div>
-              <h1 className="font-bold text-zinc-900" style={{ fontFamily: 'Manrope, sans-serif' }}>
-                Membri & Invitați
-              </h1>
-              <p className="text-xs text-zinc-500">{user?.name}</p>
-            </div>
+            {sidebarOpen && (
+              <div className="overflow-hidden">
+                <h1 className="font-bold text-zinc-900 text-sm" style={{ fontFamily: 'Manrope, sans-serif' }}>
+                  Membri & Invitați
+                </h1>
+                <p className="text-xs text-zinc-500 truncate">{user?.name}</p>
+              </div>
+            )}
           </div>
         </div>
 
-        <nav className="flex-1 p-4">
+        <nav className="flex-1 p-2">
           <div className="space-y-1">
             <Link
               to="/dashboard"
-              className="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-sm text-sm font-medium"
+              className="sidebar-link active flex items-center gap-3 px-3 py-3 rounded-sm text-sm font-medium"
               data-testid="nav-dashboard"
+              title="Prezență"
             >
-              <CalendarDays className="w-4 h-4" strokeWidth={1.5} />
-              Prezență
+              <CalendarDays className="w-4 h-4 flex-shrink-0" strokeWidth={1.5} />
+              {sidebarOpen && <span>Prezență</span>}
             </Link>
             <Link
               to="/members"
-              className="sidebar-link flex items-center gap-3 px-4 py-3 rounded-sm text-sm font-medium text-zinc-600"
+              className="sidebar-link flex items-center gap-3 px-3 py-3 rounded-sm text-sm font-medium text-zinc-600"
               data-testid="nav-members"
+              title="Administrare Membri"
             >
-              <Settings className="w-4 h-4" strokeWidth={1.5} />
-              Administrare Membri
+              <Settings className="w-4 h-4 flex-shrink-0" strokeWidth={1.5} />
+              {sidebarOpen && <span>Administrare Membri</span>}
             </Link>
           </div>
         </nav>
 
-        <div className="p-4 border-t border-zinc-200">
+        <div className="p-2 border-t border-zinc-200 space-y-1">
           <Button
             variant="ghost"
-            className="w-full justify-start text-zinc-600 hover:bg-zinc-100"
+            className={`w-full ${sidebarOpen ? 'justify-start' : 'justify-center'} text-zinc-600 hover:bg-zinc-100`}
             onClick={handleLogout}
             data-testid="logout-button"
+            title="Deconectare"
           >
-            <LogOut className="w-4 h-4 mr-2" strokeWidth={1.5} />
-            Deconectare
+            <LogOut className="w-4 h-4 flex-shrink-0" strokeWidth={1.5} />
+            {sidebarOpen && <span className="ml-2">Deconectare</span>}
+          </Button>
+          <Button
+            variant="ghost"
+            className={`w-full ${sidebarOpen ? 'justify-start' : 'justify-center'} text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600`}
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            data-testid="toggle-sidebar"
+            title={sidebarOpen ? 'Restrânge meniu' : 'Extinde meniu'}
+          >
+            {sidebarOpen ? (
+              <>
+                <PanelLeftClose className="w-4 h-4 flex-shrink-0" strokeWidth={1.5} />
+                <span className="ml-2">Restrânge</span>
+              </>
+            ) : (
+              <PanelLeft className="w-4 h-4 flex-shrink-0" strokeWidth={1.5} />
+            )}
           </Button>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="main-content p-8">
+      <main className="flex-1 overflow-y-auto p-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8 no-print">
           <div className="flex items-center gap-4">
@@ -284,14 +310,27 @@ const DashboardPage = () => {
                         </TableCell>
                         <TableCell>{membru.prenume}</TableCell>
                         <TableCell>{membru.nume}</TableCell>
-                        <TableCell className="text-zinc-500">
-                          {membru.nume_inlocuitor || '-'}
+                        <TableCell>
+                          <Input
+                            value={membru.nume_inlocuitor || ''}
+                            onChange={(e) =>
+                              handleAttendanceChange(
+                                membru.id,
+                                membru.prezent,
+                                membru.taxa,
+                                e.target.value
+                              )
+                            }
+                            placeholder="-"
+                            className="table-input rounded-sm text-zinc-500"
+                            data-testid={`inlocuitor-input-${membru.id}`}
+                          />
                         </TableCell>
                         <TableCell className="text-center">
                           <Checkbox
                             checked={membru.prezent}
                             onCheckedChange={(checked) =>
-                              handleAttendanceChange(membru.id, checked, membru.taxa)
+                              handleAttendanceChange(membru.id, checked, membru.taxa, membru.nume_inlocuitor)
                             }
                             className="attendance-checkbox"
                             data-testid={`checkbox-${membru.id}`}
@@ -305,7 +344,8 @@ const DashboardPage = () => {
                               handleAttendanceChange(
                                 membru.id,
                                 membru.prezent,
-                                parseFloat(e.target.value) || 0
+                                parseFloat(e.target.value) || 0,
+                                membru.nume_inlocuitor
                               )
                             }
                             className="taxa-input table-input rounded-sm"
