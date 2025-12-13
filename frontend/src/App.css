@@ -148,6 +148,16 @@
 [class*="emergent"],
 a[href*="emergent"],
 div[style*="Made with"],
-iframe[src*="emergent"] {
+iframe[src*="emergent"],
+div:has(> span:contains("Made with")),
+div[style*="position: fixed"][style*="bottom"],
+div[style*="position:fixed"][style*="bottom"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
+
+/* More specific targeting */
+body > div:last-child:not(.App):not([class]) {
     display: none !important;
 }
