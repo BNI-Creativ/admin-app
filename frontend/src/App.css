@@ -133,12 +133,12 @@
 .has-data-marker::after {
     content: '';
     position: absolute;
-    bottom: 2px;
+    bottom: 1px;
     left: 50%;
     transform: translateX(-50%);
-    width: 4px;
-    height: 4px;
-    border: 1.5px solid #3b82f6;
+    width: 6px;
+    height: 6px;
+    border: 2px solid #3b82f6;
     border-radius: 50%;
     background: transparent;
 }
