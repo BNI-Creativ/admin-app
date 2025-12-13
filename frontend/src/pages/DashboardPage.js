@@ -499,10 +499,10 @@ const DashboardPage = () => {
                     .
                   </p>
                 )}
-              </TabsContent>
+              </section>
 
               {/* Invitați Table */}
-              <TabsContent value="invitati" className="animate-fade-in">
+              <section className="animate-fade-in">
                 <h2
                   className="text-2xl font-semibold tracking-tight mb-6 text-zinc-900"
                   style={{ fontFamily: 'Manrope, sans-serif' }}
