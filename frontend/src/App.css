@@ -126,28 +126,28 @@
 }
 
 /* Calendar - dates with data marker */
-.calendar-has-data {
+button.calendar-has-data {
     position: relative !important;
 }
 
-.calendar-has-data::after {
+button.calendar-has-data::after {
     content: '' !important;
     display: block !important;
     position: absolute !important;
-    bottom: 1px !important;
+    bottom: 2px !important;
     left: 50% !important;
     transform: translateX(-50%) !important;
-    width: 5px !important;
-    height: 5px !important;
+    width: 4px !important;
+    height: 4px !important;
     border: 1.5px solid #3b82f6 !important;
     border-radius: 50% !important;
     background: transparent !important;
     pointer-events: none !important;
+    z-index: 100 !important;
 }
 
 /* When day is selected (has black background) */
-.calendar-has-data[aria-selected="true"]::after,
-.calendar-has-data.rdp-day_selected::after {
+button.calendar-has-data[aria-selected="true"]::after {
     border-color: white !important;
 }
 
