@@ -127,20 +127,26 @@
 
 /* Calendar - dates with data marker */
 .has-data-marker {
-    position: relative;
+    position: relative !important;
 }
 
-.has-data-marker::after {
+.has-data-marker::before {
     content: '';
     position: absolute;
-    bottom: 1px;
+    bottom: 2px;
     left: 50%;
     transform: translateX(-50%);
-    width: 6px;
-    height: 6px;
-    border: 2px solid #3b82f6;
+    width: 5px;
+    height: 5px;
+    border: 1.5px solid #3b82f6;
     border-radius: 50%;
     background: transparent;
+    z-index: 10;
+}
+
+/* When selected, change marker color to white */
+.has-data-marker[aria-selected="true"]::before {
+    border-color: white;
 }
 
 /* Print specific */
