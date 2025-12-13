@@ -142,3 +142,12 @@
         max-width: none !important;
     }
 }
+
+/* Hide Emergent branding */
+[data-emergent-badge],
+[class*="emergent"],
+a[href*="emergent"],
+div[style*="Made with"],
+iframe[src*="emergent"] {
+    display: none !important;
+}
