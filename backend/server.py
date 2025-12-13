@@ -338,13 +338,15 @@ async def get_daily_attendance(data: str, current_user: dict = Depends(get_curre
     membri_with_attendance = []
     total_taxa_membri = 0
     for m in members:
-        att = attendance_map.get(m["id"], {"prezent": False, "taxa": 0})
+        att = attendance_map.get(m["id"], {"prezent": False, "taxa": 0, "nume_inlocuitor": ""})
+        # Use attendance nume_inlocuitor if exists, otherwise empty
+        nume_inlocuitor = att.get("nume_inlocuitor", "")
         membri_with_attendance.append({
             "id": m["id"],
             "nr": m["nr"],
             "prenume": m["prenume"],
             "nume": m["nume"],
-            "nume_inlocuitor": m.get("nume_inlocuitor", ""),
+            "nume_inlocuitor": nume_inlocuitor,
             "prezent": att.get("prezent", False),
             "taxa": att.get("taxa", 0)
         })
