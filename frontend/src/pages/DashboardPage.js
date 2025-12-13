@@ -416,18 +416,9 @@ const DashboardPage = () => {
           {loading ? (
             <div className="text-center py-12 text-zinc-500">Se încarcă...</div>
           ) : (
-            <Tabs defaultValue="membri" className="w-full">
-              <TabsList className="mb-6 rounded-sm no-print">
-                <TabsTrigger value="membri" className="rounded-sm" data-testid="tab-membri">
-                  Membri
-                </TabsTrigger>
-                <TabsTrigger value="invitati" className="rounded-sm" data-testid="tab-invitati">
-                  Invitați
-                </TabsTrigger>
-              </TabsList>
-
+            <div className="space-y-12">
               {/* Membri Table */}
-              <TabsContent value="membri" className="animate-fade-in">
+              <section className="animate-fade-in">
                 <h2
                   className="text-2xl font-semibold tracking-tight mb-6 text-zinc-900"
                   style={{ fontFamily: 'Manrope, sans-serif' }}
