@@ -611,15 +611,8 @@ const DashboardPage = () => {
                           <div className="flex items-center justify-center">
                             <Checkbox
                               checked={invitat.is_inlocuitor || false}
-                              onCheckedChange={(checked) => {
-                                if (checked && !invitat.member_id) {
-                                  // If checking and no member assigned, just toggle
-                                  handleToggleInlocuitor(invitat.id, checked);
-                                } else {
-                                  handleToggleInlocuitor(invitat.id, checked, invitat.member_id);
-                                }
-                              }}
-                              className="attendance-checkbox"
+                              disabled={true}
+                              className="attendance-checkbox cursor-not-allowed"
                               data-testid={`inlocuitor-checkbox-${invitat.id}`}
                             />
                             {invitat.is_inlocuitor && (
