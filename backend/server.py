@@ -133,6 +133,21 @@ def create_token(user_id: str, email: str) -> str:
     }
     return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
+async def create_default_admin():
+    """Create default admin user if not exists"""
+    existing = await db.users.find_one({"username": "admin"})
+    if not existing:
+        admin_doc = {
+            "id": str(uuid.uuid4()),
+            "username": "admin",
+            "email": "admin@local",
+            "name": "Administrator",
+            "password": hash_password("admin123"),
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.users.insert_one(admin_doc)
+        logger.info("Default admin user created (admin/admin123)")
+
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     try:
         payload = jwt.decode(credentials.credentials, JWT_SECRET, algorithms=[JWT_ALGORITHM])
