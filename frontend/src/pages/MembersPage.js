@@ -166,6 +166,15 @@ const MembersPage = () => {
               <Settings className="w-4 h-4 flex-shrink-0" strokeWidth={1.5} />
               {sidebarOpen && <span>Administrare Membri</span>}
             </Link>
+            <Link
+              to="/settings"
+              className="sidebar-link flex items-center gap-3 px-3 py-3 rounded-sm text-sm font-medium text-zinc-600"
+              data-testid="nav-settings"
+              title="Schimbă Parola"
+            >
+              <Users className="w-4 h-4 flex-shrink-0" strokeWidth={1.5} />
+              {sidebarOpen && <span>Schimbă Parola</span>}
+            </Link>
           </div>
         </nav>
 
