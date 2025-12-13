@@ -109,12 +109,14 @@ class AttendanceUpdate(BaseModel):
     member_id: str
     prezent: bool
     taxa: float
+    nume_inlocuitor: Optional[str] = ""
 
 class AttendanceRecord(BaseModel):
     model_config = ConfigDict(extra="ignore")
     member_id: str
     prezent: bool
     taxa: float
+    nume_inlocuitor: str
     data: str
 
 class DailyAttendanceResponse(BaseModel):
