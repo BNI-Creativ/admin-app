@@ -292,7 +292,9 @@ async def create_guest(guest: GuestCreate, data: str, current_user: dict = Depen
         "companie": guest.companie,
         "invitat_de": guest.invitat_de,
         "taxa": guest.taxa,
-        "data": data
+        "data": data,
+        "is_inlocuitor": guest.is_inlocuitor,
+        "member_id": guest.member_id
     }
     await db.guests.insert_one(guest_doc)
     return GuestResponse(**guest_doc)
