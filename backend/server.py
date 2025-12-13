@@ -86,6 +86,8 @@ class GuestCreate(BaseModel):
     companie: str
     invitat_de: str
     taxa: float = 0
+    is_inlocuitor: bool = False
+    member_id: Optional[str] = None
 
 class GuestUpdate(BaseModel):
     prenume: Optional[str] = None
@@ -93,6 +95,8 @@ class GuestUpdate(BaseModel):
     companie: Optional[str] = None
     invitat_de: Optional[str] = None
     taxa: Optional[float] = None
+    is_inlocuitor: Optional[bool] = None
+    member_id: Optional[str] = None
 
 class GuestResponse(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -104,6 +108,8 @@ class GuestResponse(BaseModel):
     invitat_de: str
     taxa: float
     data: str
+    is_inlocuitor: bool = False
+    member_id: Optional[str] = None
 
 class AttendanceUpdate(BaseModel):
     member_id: str
