@@ -1,0 +1,144 @@
+{
+  "design_system": {
+    "identity": {
+      "name": "Swiss Admin",
+      "archetype": "Swiss & High-Contrast",
+      "core_values": ["Clarity", "Precision", "Print-Fidelity"],
+      "vibe": "The interface should feel like a digital sheet of high-quality A4 paper. Objective, grid-based, and distraction-free."
+    },
+    "typography": {
+      "font_family": {
+        "headings": "Manrope, sans-serif",
+        "body": "IBM Plex Sans, sans-serif",
+        "mono": "JetBrains Mono, monospace"
+      },
+      "scale": {
+        "h1": "text-4xl font-bold tracking-tight",
+        "h2": "text-2xl font-semibold tracking-tight",
+        "h3": "text-xl font-medium",
+        "body": "text-sm leading-relaxed",
+        "small": "text-xs font-medium tracking-wider uppercase"
+      },
+      "rules": [
+        "Never use Inter for headings.",
+        "Use 'tracking-tight' for all headings larger than 24px.",
+        "Use 'tracking-wider' for all table headers and overlines.",
+        "Data numbers (Taxa, Total) must use tabular-nums or the Mono font for alignment."
+      ]
+    },
+    "colors": {
+      "palette": {
+        "background": "#f4f4f5",
+        "paper": "#ffffff",
+        "foreground": "#09090b",
+        "muted": "#71717a",
+        "border": "#e4e4e7",
+        "primary": "#2563eb",
+        "primary_foreground": "#ffffff",
+        "destructive": "#ef4444",
+        "success": "#10b981"
+      },
+      "usage": {
+        "app_bg": "bg-zinc-100",
+        "card_bg": "bg-white",
+        "text_primary": "text-zinc-950",
+        "text_secondary": "text-zinc-500",
+        "border_subtle": "border-zinc-200",
+        "accent_action": "bg-blue-600 hover:bg-blue-700"
+      },
+      "print_overrides": {
+        "background": "white",
+        "text": "black",
+        "borders": "1px solid #000"
+      }
+    },
+    "layout": {
+      "spacing_scale": "Generous. Use p-6 or p-8 for card padding. Gap-6 for grids.",
+      "grid_system": {
+        "dashboard": "grid grid-cols-12 gap-6",
+        "sidebar_layout": "flex h-screen overflow-hidden",
+        "paper_container": "max-w-[210mm] mx-auto bg-white shadow-sm min-h-[297mm] p-8"
+      },
+      "radius": {
+        "default": "rounded-sm",
+        "button": "rounded-sm",
+        "card": "rounded-none md:rounded-sm"
+      }
+    },
+    "components": {
+      "buttons": {
+        "style": "Sharp or minimal radius (rounded-sm). High contrast.",
+        "primary": "bg-zinc-900 text-white hover:bg-zinc-800",
+        "secondary": "bg-white border border-zinc-200 text-zinc-900 hover:bg-zinc-50",
+        "ghost": "hover:bg-zinc-100 text-zinc-600"
+      },
+      "inputs": {
+        "style": "Flat, 1px border. Focus ring should be sharp.",
+        "classes": "rounded-sm border-zinc-300 focus:ring-2 focus:ring-blue-500/20"
+      },
+      "tables": {
+        "style": "Swiss Style. Minimal borders. Emphasis on alignment.",
+        "header": "border-b border-zinc-900 text-zinc-900 font-bold uppercase tracking-wider text-xs",
+        "row": "border-b border-zinc-100 hover:bg-zinc-50 transition-colors",
+        "cell": "py-3 px-4 text-sm"
+      },
+      "cards": {
+        "style": "Flat, subtle border, no shadow or very minimal shadow.",
+        "classes": "border border-zinc-200 shadow-sm bg-white"
+      }
+    },
+    "visual_enhancers": {
+      "shadows": "shadow-sm",
+      "borders": "1px solid #e4e4e7",
+      "glassmorphism": "None. Use solid opacity for print reliability.",
+      "textures": "Subtle noise allowed on the login page background only."
+    },
+    "motion": {
+      "duration": "duration-200",
+      "ease": "ease-out",
+      "hover_effects": "Subtle lift or color shift. No massive scaling."
+    },
+    "accessibility": {
+      "contrast": "WCAG AA compliant. Text must be Zinc-900 on White.",
+      "focus_states": "Visible focus rings on all interactive elements.",
+      "reduced_motion": "Respect prefers-reduced-motion."
+    }
+  },
+  "assets": {
+    "images": [
+      {
+        "category": "login_background",
+        "url": "https://images.unsplash.com/photo-1590235808792-673079562820?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1Nzl8MHwxfHNlYXJjaHwyfHxtaW5pbWFsaXN0JTIwYWJzdHJhY3QlMjB3aGl0ZSUyMG9mZmljZSUyMGFyY2hpdGVjdHVyZSUyMGdlb21ldHJ5fGVufDB8fHx8MTc2NTYxNzY4MHww&ixlib=rb-4.1.0&q=85",
+        "description": "Minimalist white architecture with geometric shadows. Use for Login Page split layout."
+      }
+    ],
+    "icons": "Lucide React (default). Use thin strokes (stroke-width={1.5}) for elegance."
+  },
+  "instructions_to_main_agent": {
+    "general": [
+      "Implement a strict Light Mode. Do not add a Dark Mode toggle as this is a print-first app.",
+      "Use the 'Manrope' font for all headings and 'IBM Plex Sans' for body text. Import them via Google Fonts in index.css.",
+      "The Dashboard should feel like a workspace. Use a light gray background (#f4f4f5) for the app, and pure white (#ffffff) for the content containers (tables/forms).",
+      "Ensure the 'Taxa' and 'Total' columns in tables are right-aligned and use tabular figures.",
+      "For the 'Membri' table, the 'Prezent' checkbox must be easily clickable.",
+      "The 'Invitati' table must be fully editable (inputs inside cells) except for the ID.",
+      "Implement a 'Print' button that triggers window.print(). Use CSS @media print to hide the sidebar, header, and buttons, leaving only the tables and date."
+    ],
+    "pages": {
+      "login": "Split screen layout. Left side: Login form (clean, minimal). Right side: The architectural image provided.",
+      "dashboard": "Sidebar navigation (left). Top header (Date display). Main content area with Tabs for 'Membri' and 'Invitati'.",
+      "members_management": "A separate view (CRUD) to add/edit/delete members. Keep it consistent with the dashboard style."
+    },
+    "components": {
+      "date_display": "Prominent display in the top right (e.g., 'Joi, 24 Octombrie 2024').",
+      "tables": "Use the Shadcn Table component. Customize it to remove the default 'muted' look and make it high-contrast for print."
+    }
+  },
+  "universal_guidelines": [
+    "Avoid generic centered layouts. Use asymmetry.",
+    "Use 2-3x more spacing than typical designs.",
+    "Every interaction needs micro-animations.",
+    "All interactive elements MUST include data-testid attributes.",
+    "Do not use gradients. Use solid colors and borders."
+  ]
+}
