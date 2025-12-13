@@ -26,6 +26,7 @@ import {
   Settings,
   PanelLeftClose,
   PanelLeft,
+  UserCheck,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ro } from 'date-fns/locale';
@@ -76,26 +77,85 @@ const DashboardPage = () => {
     navigate('/');
   };
 
+  // Handle attendance change and auto-add inlocuitor to guests
   const handleAttendanceChange = async (memberId, prezent, taxa, numeInlocuitor) => {
     try {
+      const membru = membri.find(m => m.id === memberId);
+      const oldNumeInlocuitor = membru?.nume_inlocuitor || '';
+      
       await axios.post(`${API_URL}/attendance/${dateString}`, {
         member_id: memberId,
         prezent,
         taxa,
         nume_inlocuitor: numeInlocuitor,
       });
-      // Update local state
+
+      // Update local state for members
       setMembri((prev) =>
         prev.map((m) =>
           m.id === memberId ? { ...m, prezent, taxa, nume_inlocuitor: numeInlocuitor } : m
         )
       );
+
       // Recalculate total
       const newTotal = membri.reduce((sum, m) => {
         if (m.id === memberId) return sum + taxa;
         return sum + m.taxa;
       }, 0);
       setTotalTaxaMembri(newTotal);
+
+      // If nume_inlocuitor changed and is not empty, add to guests
+      if (numeInlocuitor && numeInlocuitor !== oldNumeInlocuitor) {
+        // Parse prenume and nume from numeInlocuitor
+        const parts = numeInlocuitor.trim().split(' ');
+        const prenume = parts[0] || '';
+        const nume = parts.slice(1).join(' ') || '';
+        const membruNume = `${membru.prenume} ${membru.nume}`;
+
+        // Check if this inlocuitor already exists for this member
+        const existingInlocuitor = invitati.find(
+          g => g.is_inlocuitor && g.member_id === memberId
+        );
+
+        if (existingInlocuitor) {
+          // Update existing inlocuitor
+          await axios.put(`${API_URL}/guests/${existingInlocuitor.id}`, {
+            prenume,
+            nume,
+            invitat_de: membruNume,
+          });
+          setInvitati((prev) =>
+            prev.map((g) =>
+              g.id === existingInlocuitor.id
+                ? { ...g, prenume, nume, invitat_de: membruNume }
+                : g
+            )
+          );
+        } else {
+          // Create new guest as inlocuitor
+          const guestData = {
+            prenume,
+            nume,
+            companie: 'Înlocuitor',
+            invitat_de: membruNume,
+            taxa: 0,
+            is_inlocuitor: true,
+            member_id: memberId,
+          };
+          const response = await axios.post(`${API_URL}/guests?data=${dateString}`, guestData);
+          setInvitati([...invitati, response.data]);
+        }
+      } else if (!numeInlocuitor && oldNumeInlocuitor) {
+        // If numeInlocuitor was cleared, remove the inlocuitor guest
+        const existingInlocuitor = invitati.find(
+          g => g.is_inlocuitor && g.member_id === memberId
+        );
+        if (existingInlocuitor) {
+          await axios.delete(`${API_URL}/guests/${existingInlocuitor.id}`);
+          setInvitati((prev) => prev.filter((g) => g.id !== existingInlocuitor.id));
+          setTotalTaxaInvitati((prev) => prev - (existingInlocuitor.taxa || 0));
+        }
+      }
     } catch (error) {
       console.error('Error updating attendance:', error);
     }
@@ -104,7 +164,12 @@ const DashboardPage = () => {
   const handleAddGuest = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(`${API_URL}/guests?data=${dateString}`, newGuest);
+      const guestData = {
+        ...newGuest,
+        is_inlocuitor: false,
+        member_id: null,
+      };
+      const response = await axios.post(`${API_URL}/guests?data=${dateString}`, guestData);
       setInvitati([...invitati, response.data]);
       setTotalTaxaInvitati((prev) => prev + newGuest.taxa);
       setNewGuest({ prenume: '', nume: '', companie: '', invitat_de: '', taxa: 0 });
@@ -131,9 +196,50 @@ const DashboardPage = () => {
     }
   };
 
+  // Handle toggling inlocuitor status
+  const handleToggleInlocuitor = async (guestId, isInlocuitor, memberId = null) => {
+    try {
+      let updateData = { is_inlocuitor: isInlocuitor };
+      
+      if (isInlocuitor && memberId) {
+        // Find the member and set invitat_de to member's name
+        const membru = membri.find(m => m.id === memberId);
+        if (membru) {
+          updateData.invitat_de = `${membru.prenume} ${membru.nume}`;
+          updateData.member_id = memberId;
+        }
+      } else if (!isInlocuitor) {
+        updateData.member_id = null;
+      }
+
+      await axios.put(`${API_URL}/guests/${guestId}`, updateData);
+      setInvitati((prev) =>
+        prev.map((g) => (g.id === guestId ? { ...g, ...updateData } : g))
+      );
+    } catch (error) {
+      console.error('Error updating inlocuitor status:', error);
+    }
+  };
+
   const handleDeleteGuest = async (guestId) => {
     try {
       const guest = invitati.find((g) => g.id === guestId);
+      
+      // If deleting an inlocuitor, also clear the nume_inlocuitor from the member
+      if (guest?.is_inlocuitor && guest?.member_id) {
+        await axios.post(`${API_URL}/attendance/${dateString}`, {
+          member_id: guest.member_id,
+          prezent: membri.find(m => m.id === guest.member_id)?.prezent || false,
+          taxa: membri.find(m => m.id === guest.member_id)?.taxa || 0,
+          nume_inlocuitor: '',
+        });
+        setMembri((prev) =>
+          prev.map((m) =>
+            m.id === guest.member_id ? { ...m, nume_inlocuitor: '' } : m
+          )
+        );
+      }
+
       await axios.delete(`${API_URL}/guests/${guestId}`);
       setInvitati((prev) => prev.filter((g) => g.id !== guestId));
       setTotalTaxaInvitati((prev) => prev - (guest?.taxa || 0));
@@ -321,7 +427,7 @@ const DashboardPage = () => {
                                 e.target.value
                               )
                             }
-                            placeholder="-"
+                            placeholder="Prenume Nume"
                             className="table-input rounded-sm text-zinc-500"
                             data-testid={`inlocuitor-input-${membru.id}`}
                           />
@@ -445,13 +551,18 @@ const DashboardPage = () => {
                       <TableHead>Nume</TableHead>
                       <TableHead>Companie</TableHead>
                       <TableHead>Invitat de</TableHead>
+                      <TableHead className="w-24 text-center">Înlocuitor</TableHead>
                       <TableHead className="w-32 text-right">Taxa (RON)</TableHead>
                       <TableHead className="w-16 no-print"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {invitati.map((invitat) => (
-                      <TableRow key={invitat.id} data-testid={`invitat-row-${invitat.id}`}>
+                      <TableRow 
+                        key={invitat.id} 
+                        data-testid={`invitat-row-${invitat.id}`}
+                        className={invitat.is_inlocuitor ? 'bg-blue-50' : ''}
+                      >
                         <TableCell className="font-medium tabular-nums">
                           {invitat.nr}
                         </TableCell>
@@ -491,9 +602,30 @@ const DashboardPage = () => {
                             onChange={(e) =>
                               handleUpdateGuest(invitat.id, 'invitat_de', e.target.value)
                             }
-                            className="table-input rounded-sm"
+                            className={`table-input rounded-sm ${invitat.is_inlocuitor ? 'bg-blue-100' : ''}`}
+                            readOnly={invitat.is_inlocuitor}
                             data-testid={`invitat-invitat-de-${invitat.id}`}
                           />
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex items-center justify-center">
+                            <Checkbox
+                              checked={invitat.is_inlocuitor || false}
+                              onCheckedChange={(checked) => {
+                                if (checked && !invitat.member_id) {
+                                  // If checking and no member assigned, just toggle
+                                  handleToggleInlocuitor(invitat.id, checked);
+                                } else {
+                                  handleToggleInlocuitor(invitat.id, checked, invitat.member_id);
+                                }
+                              }}
+                              className="attendance-checkbox"
+                              data-testid={`inlocuitor-checkbox-${invitat.id}`}
+                            />
+                            {invitat.is_inlocuitor && (
+                              <UserCheck className="w-4 h-4 ml-1 text-blue-600" strokeWidth={1.5} />
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell className="text-right">
                           <Input
@@ -524,7 +656,7 @@ const DashboardPage = () => {
                       </TableRow>
                     ))}
                     <TableRow className="total-row">
-                      <TableCell colSpan={5} className="text-right font-bold">
+                      <TableCell colSpan={6} className="text-right font-bold">
                         TOTAL
                       </TableCell>
                       <TableCell className="text-right font-bold tabular-nums" data-testid="total-taxa-invitati">
