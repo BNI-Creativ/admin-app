@@ -143,15 +143,34 @@ button.calendar-has-data[aria-selected="true"] {
         display: none !important;
     }
     
-    .main-content {
-        margin-left: 0 !important;
+    .main-content, main {
+        margin: 0 !important;
         padding: 0 !important;
+        width: 100% !important;
     }
     
     .paper-container {
         box-shadow: none !important;
         width: 100% !important;
         max-width: none !important;
+        padding: 5mm !important;
+        margin: 0 !important;
+    }
+    
+    .flex.h-screen {
+        display: block !important;
+    }
+    
+    section {
+        page-break-inside: avoid;
+    }
+    
+    h2 {
+        margin-bottom: 3mm !important;
+    }
+    
+    .space-y-12 > * + * {
+        margin-top: 8mm !important;
     }
 }
 
