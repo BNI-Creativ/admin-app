@@ -223,7 +223,7 @@ async def get_me(current_user: dict = Depends(get_current_user)):
 
 @api_router.get("/members", response_model=List[MemberResponse])
 async def get_members(current_user: dict = Depends(get_current_user)):
-    members = await db.members.find({}, {"_id": 0}).sort("nr", 1).to_list(1000)
+    members = await db.members.find({}, {"_id": 0}).sort([("prenume", 1), ("nume", 1)]).to_list(1000)
     return [MemberResponse(**m) for m in members]
 
 @api_router.post("/members", response_model=MemberResponse)
