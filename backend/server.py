@@ -269,12 +269,6 @@ async def update_guest(guest_id: str, guest: GuestUpdate, current_user: dict = D
     if not update_data:
         raise HTTPException(status_code=400, detail="Nu există date de actualizat")
     
-    result = await db.members.find_one_and_update(
-        {"id": guest_id},
-        {"$set": update_data},
-        return_document=True
-    )
-    # Fix: query guests collection, not members
     result = await db.guests.find_one_and_update(
         {"id": guest_id},
         {"$set": update_data},
