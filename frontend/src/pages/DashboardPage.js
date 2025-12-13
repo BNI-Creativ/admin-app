@@ -436,10 +436,10 @@ const DashboardPage = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {membri.map((membru) => (
+                    {membri.map((membru, index) => (
                       <TableRow key={membru.id} data-testid={`membru-row-${membru.id}`}>
                         <TableCell className="font-medium tabular-nums">
-                          {membru.nr}
+                          {index + 1}
                         </TableCell>
                         <TableCell>{membru.prenume}</TableCell>
                         <TableCell>{membru.nume}</TableCell>
