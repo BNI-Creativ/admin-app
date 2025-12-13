@@ -219,6 +219,25 @@ async def login(credentials: UserLogin):
 async def get_me(current_user: dict = Depends(get_current_user)):
     return UserResponse(id=current_user["id"], email=current_user["email"], name=current_user["name"])
 
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+@api_router.post("/auth/change-password")
+async def change_password(request: ChangePasswordRequest, current_user: dict = Depends(get_current_user)):
+    # Verify current password
+    user = await db.users.find_one({"id": current_user["id"]}, {"_id": 0})
+    if not user or not verify_password(request.current_password, user["password"]):
+        raise HTTPException(status_code=400, detail="Parola curentă este incorectă")
+    
+    # Update password
+    new_hashed = hash_password(request.new_password)
+    await db.users.update_one(
+        {"id": current_user["id"]},
+        {"$set": {"password": new_hashed}}
+    )
+    return {"message": "Parola a fost schimbată cu succes"}
+
 # ============= MEMBERS ROUTES =============
 
 @api_router.get("/members", response_model=List[MemberResponse])
