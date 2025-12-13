@@ -595,14 +595,14 @@ const DashboardPage = () => {
                 <Table className="swiss-table" data-testid="invitati-table">
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-16">Nr.</TableHead>
-                      <TableHead>Prenume</TableHead>
-                      <TableHead>Nume</TableHead>
+                      <TableHead className="w-10">Nr.</TableHead>
+                      <TableHead className="w-1/5">Prenume</TableHead>
+                      <TableHead className="w-1/5">Nume</TableHead>
                       <TableHead>Companie</TableHead>
                       <TableHead>Invitat de</TableHead>
-                      <TableHead className="w-24 text-center">Înlocuitor</TableHead>
-                      <TableHead className="w-32 text-right">Taxa (RON)</TableHead>
-                      <TableHead className="w-16 no-print"></TableHead>
+                      <TableHead className="w-16 text-center">Înloc.</TableHead>
+                      <TableHead className="w-20 text-right">Taxa</TableHead>
+                      <TableHead className="w-12 no-print"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
