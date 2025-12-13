@@ -125,6 +125,24 @@
     letter-spacing: -0.02em;
 }
 
+/* Calendar - dates with data marker */
+.has-data-marker {
+    position: relative;
+}
+
+.has-data-marker::after {
+    content: '';
+    position: absolute;
+    bottom: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 4px;
+    border: 1.5px solid #3b82f6;
+    border-radius: 50%;
+    background: transparent;
+}
+
 /* Print specific */
 @media print {
     .sidebar, .no-print {
