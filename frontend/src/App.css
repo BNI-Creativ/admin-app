@@ -125,16 +125,10 @@
     letter-spacing: -0.02em;
 }
 
-/* Calendar - dates with data marker */
+/* Calendar - dates with data marker - using border ring */
 button.calendar-has-data {
-    position: relative !important;
-    box-shadow: inset 0 -6px 0 0 transparent, 0 4px 0 0 #3b82f6 !important;
-    border-radius: 8px !important;
-}
-
-/* When day is selected (has black background) */
-button.calendar-has-data[aria-selected="true"] {
-    box-shadow: inset 0 -6px 0 0 transparent, 0 4px 0 0 white !important;
+    outline: 2px solid #3b82f6 !important;
+    outline-offset: -2px !important;
 }
 
 /* Print specific */
