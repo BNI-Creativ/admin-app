@@ -125,10 +125,10 @@ const MembersPage = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-zinc-100">
+    <div className="flex h-screen bg-zinc-100 overflow-hidden">
       {/* Sidebar */}
       <aside 
-        className={`${sidebarOpen ? 'w-[280px]' : 'w-[60px]'} bg-white border-r border-zinc-200 flex flex-col transition-all duration-300 ease-in-out`}
+        className={`${sidebarOpen ? 'w-[280px]' : 'w-[60px]'} h-screen bg-white border-r border-zinc-200 flex flex-col transition-all duration-300 ease-in-out flex-shrink-0`}
       >
         <div className="p-4 border-b border-zinc-200">
           <div className="flex items-center gap-3">
@@ -146,7 +146,7 @@ const MembersPage = () => {
           </div>
         </div>
 
-        <nav className="flex-1 p-2">
+        <nav className="flex-1 p-2 overflow-y-auto">
           <div className="space-y-1">
             <Link
               to="/dashboard"
@@ -169,7 +169,7 @@ const MembersPage = () => {
           </div>
         </nav>
 
-        <div className="p-2 border-t border-zinc-200 space-y-1">
+        <div className="p-2 border-t border-zinc-200 space-y-1 flex-shrink-0">
           <Button
             variant="ghost"
             className={`w-full ${sidebarOpen ? 'justify-start' : 'justify-center'} text-zinc-600 hover:bg-zinc-100`}
