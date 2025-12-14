@@ -615,46 +615,17 @@ const DashboardPage = () => {
                         <TableCell className="font-medium tabular-nums">
                           {invitat.nr}
                         </TableCell>
-                        <TableCell>
-                          <Input
-                            value={invitat.prenume}
-                            onChange={(e) =>
-                              handleUpdateGuest(invitat.id, 'prenume', e.target.value)
-                            }
-                            className="table-input rounded-sm"
-                            data-testid={`invitat-prenume-${invitat.id}`}
-                          />
+                        <TableCell data-testid={`invitat-prenume-${invitat.id}`}>
+                          {invitat.prenume}
                         </TableCell>
-                        <TableCell>
-                          <Input
-                            value={invitat.nume}
-                            onChange={(e) =>
-                              handleUpdateGuest(invitat.id, 'nume', e.target.value)
-                            }
-                            className="table-input rounded-sm"
-                            data-testid={`invitat-nume-${invitat.id}`}
-                          />
+                        <TableCell data-testid={`invitat-nume-${invitat.id}`}>
+                          {invitat.nume}
                         </TableCell>
-                        <TableCell>
-                          <Input
-                            value={invitat.companie}
-                            onChange={(e) =>
-                              handleUpdateGuest(invitat.id, 'companie', e.target.value)
-                            }
-                            className="table-input rounded-sm"
-                            data-testid={`invitat-companie-${invitat.id}`}
-                          />
+                        <TableCell data-testid={`invitat-companie-${invitat.id}`}>
+                          {invitat.companie}
                         </TableCell>
-                        <TableCell>
-                          <Input
-                            value={invitat.invitat_de}
-                            onChange={(e) =>
-                              handleUpdateGuest(invitat.id, 'invitat_de', e.target.value)
-                            }
-                            className={`table-input rounded-sm ${invitat.is_inlocuitor ? 'bg-blue-100' : ''}`}
-                            readOnly={invitat.is_inlocuitor}
-                            data-testid={`invitat-invitat-de-${invitat.id}`}
-                          />
+                        <TableCell data-testid={`invitat-invitat-de-${invitat.id}`}>
+                          {invitat.invitat_de}
                         </TableCell>
                         <TableCell className="text-center">
                           <div className="flex items-center justify-center">
@@ -669,15 +640,8 @@ const DashboardPage = () => {
                             )}
                           </div>
                         </TableCell>
-                        <TableCell className="text-right">
-                          <Input
-                            type="number"
-                            value={invitat.taxa}
-                            onChange={(e) =>
-                              handleUpdateGuest(
-                                invitat.id,
-                                'taxa',
-                                parseFloat(e.target.value) || 0
+                        <TableCell className="text-right tabular-nums" data-testid={`invitat-taxa-${invitat.id}`}>
+                          {invitat.taxa}
                               )
                             }
                             className="taxa-input table-input rounded-sm"
