@@ -642,11 +642,6 @@ const DashboardPage = () => {
                         </TableCell>
                         <TableCell className="text-right tabular-nums" data-testid={`invitat-taxa-${invitat.id}`}>
                           {invitat.taxa}
-                              )
-                            }
-                            className="taxa-input table-input rounded-sm"
-                            data-testid={`invitat-taxa-${invitat.id}`}
-                          />
                         </TableCell>
                         <TableCell className="no-print">
                           <Button
