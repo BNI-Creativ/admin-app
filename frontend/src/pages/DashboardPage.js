@@ -492,11 +492,14 @@ const DashboardPage = () => {
                       </TableRow>
                     ))}
                     <TableRow className="total-row">
-                      <TableCell colSpan={5} className="text-right font-bold">
+                      <TableCell colSpan={4} className="text-right font-bold">
                         TOTAL
                       </TableCell>
+                      <TableCell className="text-center font-bold tabular-nums" data-testid="total-prezenti">
+                        {membri.filter(m => m.prezent).length}
+                      </TableCell>
                       <TableCell className="text-right font-bold tabular-nums" data-testid="total-taxa-membri">
-                        {totalTaxaMembri.toFixed(2)} RON
+                        {totalTaxaMembri.toFixed(2)}
                       </TableCell>
                     </TableRow>
                   </TableBody>
