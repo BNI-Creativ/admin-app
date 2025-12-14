@@ -254,24 +254,6 @@ const DashboardPage = () => {
     }
   };
 
-  const handleUpdateGuest = async (guestId, field, value) => {
-    try {
-      await axios.put(`${API_URL}/guests/${guestId}`, { [field]: value });
-      setInvitati((prev) =>
-        prev.map((g) => (g.id === guestId ? { ...g, [field]: value } : g))
-      );
-      if (field === 'taxa') {
-        const newTotal = invitati.reduce((sum, g) => {
-          if (g.id === guestId) return sum + value;
-          return sum + g.taxa;
-        }, 0);
-        setTotalTaxaInvitati(newTotal);
-      }
-    } catch (error) {
-      console.error('Error updating guest:', error);
-    }
-  };
-
   const handleDeleteGuest = async (guestId) => {
     try {
       const guest = invitati.find((g) => g.id === guestId);
