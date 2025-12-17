@@ -292,11 +292,11 @@ body > div:last-child:not(.App):not([class]) {
     font-size: 0.85rem !important;
 }
 
-/* Inputs - centered text */
+/* Inputs - centered text, dark */
 .pdf-export-mode input,
 .pdf-export-mode .table-input {
     color: #000000 !important;
-    font-weight: 500 !important;
+    font-weight: 700 !important;
     padding: 2px 4px !important;
     vertical-align: middle !important;
     font-size: 0.75rem !important;
@@ -305,10 +305,18 @@ body > div:last-child:not(.App):not([class]) {
 .pdf-export-mode .tabular-nums,
 .pdf-export-mode .font-medium {
     color: #000000 !important;
+    font-weight: 700 !important;
 }
 
 .pdf-export-mode span {
     color: #000000 !important;
+    font-weight: 600 !important;
+}
+
+/* Make all table text bold for print */
+.pdf-export-mode table,
+.pdf-export-mode table * {
+    font-weight: 700 !important;
 }
 
 /* Reduce spacing between sections */
