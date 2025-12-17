@@ -198,7 +198,7 @@ body > div:last-child:not(.App):not([class]) {
     display: none !important;
 }
 
-/* PDF Export Mode - Darker colors for better print quality */
+/* PDF Export Mode - DARK colors for print */
 .pdf-export-mode,
 .pdf-export-mode *,
 .pdf-export-mode *::before,
@@ -216,26 +216,36 @@ body > div:last-child:not(.App):not([class]) {
     color: #000000 !important;
 }
 
+/* Table - full border */
+.pdf-export-mode .swiss-table {
+    border: 2px solid #000000 !important;
+    border-collapse: collapse !important;
+    page-break-inside: auto !important;
+}
+
 /* Table header - compact and centered */
 .pdf-export-mode .swiss-table th {
     color: #000000 !important;
+    border: 1px solid #000000 !important;
     border-bottom: 2px solid #000000 !important;
-    font-weight: 700 !important;
+    font-weight: 900 !important;
     padding: 4px 6px !important;
     vertical-align: middle !important;
     font-size: 0.7rem !important;
     line-height: 1.2 !important;
+    background-color: #f0f0f0 !important;
 }
 
 /* Table cells - compact height and vertically centered */
 .pdf-export-mode .swiss-table td {
     color: #000000 !important;
-    border-bottom: 1px solid #555555 !important;
+    border: 1px solid #000000 !important;
     padding: 3px 6px !important;
     vertical-align: middle !important;
     font-size: 0.75rem !important;
     line-height: 1.2 !important;
     height: auto !important;
+    font-weight: 600 !important;
 }
 
 .pdf-export-mode .swiss-table tr td {
@@ -248,10 +258,6 @@ body > div:last-child:not(.App):not([class]) {
     break-inside: avoid !important;
 }
 
-.pdf-export-mode .swiss-table {
-    page-break-inside: auto !important;
-}
-
 .pdf-export-mode .swiss-table thead {
     display: table-header-group !important;
 }
@@ -261,14 +267,14 @@ body > div:last-child:not(.App):not([class]) {
     break-inside: avoid !important;
 }
 
-/* Total row - compact */
+/* Total row - with full border */
 .pdf-export-mode .total-row,
 .pdf-export-mode .total-row td {
     color: #000000 !important;
-    border-top: 2px solid #000000 !important;
-    background-color: #e8e8e8 !important;
-    font-weight: 700 !important;
-    padding: 3px 6px !important;
+    border: 2px solid #000000 !important;
+    background-color: #d0d0d0 !important;
+    font-weight: 900 !important;
+    padding: 4px 6px !important;
     vertical-align: middle !important;
 }
 
