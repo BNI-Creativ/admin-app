@@ -445,6 +445,7 @@ const DashboardPage = () => {
                       <TableHead>Nume Înlocuitor</TableHead>
                       <TableHead className="w-20 text-center">Prezent</TableHead>
                       <TableHead className="w-20 text-right">Taxa</TableHead>
+                      <TableHead className="w-24 text-right">Total Lună</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -489,6 +490,9 @@ const DashboardPage = () => {
                             data-testid={`taxa-input-${membru.id}`}
                           />
                         </TableCell>
+                        <TableCell className="text-right tabular-nums text-zinc-500" data-testid={`taxa-lunara-${membru.id}`}>
+                          {(membru.taxa_lunara || 0).toFixed(2)}
+                        </TableCell>
                       </TableRow>
                     ))}
                     <TableRow className="total-row">
@@ -500,6 +504,9 @@ const DashboardPage = () => {
                       </TableCell>
                       <TableCell className="text-right font-bold tabular-nums" data-testid="total-taxa-membri">
                         {totalTaxaMembri.toFixed(2)}
+                      </TableCell>
+                      <TableCell className="text-right font-bold tabular-nums" data-testid="total-taxa-lunara">
+                        {membri.reduce((sum, m) => sum + (m.taxa_lunara || 0), 0).toFixed(2)}
                       </TableCell>
                     </TableRow>
                   </TableBody>
