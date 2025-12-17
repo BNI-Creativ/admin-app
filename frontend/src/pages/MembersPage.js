@@ -82,11 +82,19 @@ const MembersPage = () => {
     navigate('/');
   };
 
+  const sortMembers = (membersList) => {
+    return [...membersList].sort((a, b) => {
+      const prenumeCompare = a.prenume.localeCompare(b.prenume, 'ro');
+      if (prenumeCompare !== 0) return prenumeCompare;
+      return a.nume.localeCompare(b.nume, 'ro');
+    });
+  };
+
   const handleAddMember = async (e) => {
     e.preventDefault();
     try {
       const response = await axios.post(`${API_URL}/members`, newMember);
-      setMembers([...members, response.data]);
+      setMembers(sortMembers([...members, response.data]));
       setNewMember({ prenume: '', nume: '' });
       setIsAddDialogOpen(false);
     } catch (error) {
@@ -102,7 +110,8 @@ const MembersPage = () => {
         prenume: editingMember.prenume,
         nume: editingMember.nume,
       });
-      setMembers(members.map((m) => (m.id === editingMember.id ? response.data : m)));
+      const updatedMembers = members.map((m) => (m.id === editingMember.id ? response.data : m));
+      setMembers(sortMembers(updatedMembers));
       setEditingMember(null);
       setIsEditDialogOpen(false);
     } catch (error) {
