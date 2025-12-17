@@ -467,7 +467,7 @@ const DashboardPage = () => {
                       <TableHead className="w-1/4">Prenume</TableHead>
                       <TableHead className="w-1/4">Nume</TableHead>
                       <TableHead>Nume Înlocuitor</TableHead>
-                      <TableHead className="w-20 text-center">Prezent</TableHead>
+                      <TableHead className="w-20 text-center">Prez</TableHead>
                       <TableHead className="w-20 text-right">Taxa</TableHead>
                       <TableHead className="w-24 text-right">Total Lună</TableHead>
                     </TableRow>
@@ -484,7 +484,6 @@ const DashboardPage = () => {
                           <Input
                             value={membru.nume_inlocuitor || ''}
                             onChange={(e) => handleNumeInlocuitorChange(membru.id, e.target.value)}
-                            placeholder="Prenume Nume"
                             className="table-input rounded-sm text-zinc-500"
                             data-testid={`inlocuitor-input-${membru.id}`}
                           />
