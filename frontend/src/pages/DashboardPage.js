@@ -292,6 +292,9 @@ const DashboardPage = () => {
       return;
     }
     
+    // Add PDF export class for darker colors
+    element.classList.add('pdf-export-mode');
+    
     const opt = {
       margin: 0.3,
       filename: `prezenta_${dateString}.pdf`,
@@ -300,7 +303,10 @@ const DashboardPage = () => {
       jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
     };
     
-    html2pdf().from(element).set(opt).save();
+    html2pdf().from(element).set(opt).save().then(() => {
+      // Remove the class after PDF generation
+      element.classList.remove('pdf-export-mode');
+    });
   };
 
   const formattedDate = format(selectedDate, "EEEE, d MMMM yyyy", { locale: ro });
