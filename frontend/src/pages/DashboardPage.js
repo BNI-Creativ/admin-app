@@ -292,15 +292,30 @@ const DashboardPage = () => {
       return;
     }
     
-    // Add PDF export class for darker colors
+    // Add PDF export class for darker colors and compact layout
     element.classList.add('pdf-export-mode');
     
     const opt = {
-      margin: 0.3,
+      margin: [0.2, 0.2, 0.2, 0.2], // top, left, bottom, right in inches
       filename: `prezenta_${dateString}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, logging: false },
-      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+      html2canvas: { 
+        scale: 2, 
+        useCORS: true, 
+        logging: false,
+        letterRendering: true
+      },
+      jsPDF: { 
+        unit: 'in', 
+        format: 'a4', 
+        orientation: 'portrait'
+      },
+      pagebreak: { 
+        mode: ['avoid-all', 'css', 'legacy'],
+        before: '.page-break-before',
+        after: '.page-break-after',
+        avoid: ['tr', 'td', '.total-row']
+      }
     };
     
     html2pdf().from(element).set(opt).save().then(() => {
