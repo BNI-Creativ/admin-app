@@ -192,3 +192,55 @@ div[style*="position:fixed"][style*="bottom"] {
 body > div:last-child:not(.App):not([class]) {
     display: none !important;
 }
+
+/* PDF Export Mode - Darker colors for better print quality */
+.pdf-export-mode,
+.pdf-export-mode * {
+    color: #000000 !important;
+}
+
+.pdf-export-mode .text-zinc-500,
+.pdf-export-mode .text-zinc-600,
+.pdf-export-mode .text-zinc-700,
+.pdf-export-mode .text-zinc-900 {
+    color: #000000 !important;
+}
+
+.pdf-export-mode .swiss-table th {
+    color: #000000 !important;
+    border-bottom-color: #000000 !important;
+}
+
+.pdf-export-mode .swiss-table td {
+    color: #000000 !important;
+    border-bottom-color: #333333 !important;
+}
+
+.pdf-export-mode .total-row td {
+    color: #000000 !important;
+    border-top-color: #000000 !important;
+    background-color: #f0f0f0 !important;
+}
+
+.pdf-export-mode h2 {
+    color: #000000 !important;
+}
+
+.pdf-export-mode .date-display {
+    color: #000000 !important;
+}
+
+.pdf-export-mode input {
+    color: #000000 !important;
+}
+
+.pdf-export-mode .tabular-nums {
+    color: #000000 !important;
+}
+
+/* Hide form and buttons in PDF */
+.pdf-export-mode form,
+.pdf-export-mode .no-print,
+.pdf-export-mode button:not(.attendance-checkbox) {
+    display: none !important;
+}
