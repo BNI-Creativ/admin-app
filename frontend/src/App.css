@@ -216,43 +216,84 @@ body > div:last-child:not(.App):not([class]) {
     color: #000000 !important;
 }
 
+/* Table header - compact and centered */
 .pdf-export-mode .swiss-table th {
     color: #000000 !important;
     border-bottom: 2px solid #000000 !important;
     font-weight: 700 !important;
+    padding: 4px 6px !important;
+    vertical-align: middle !important;
+    font-size: 0.7rem !important;
+    line-height: 1.2 !important;
 }
 
+/* Table cells - compact height and vertically centered */
 .pdf-export-mode .swiss-table td {
     color: #000000 !important;
     border-bottom: 1px solid #555555 !important;
+    padding: 3px 6px !important;
+    vertical-align: middle !important;
+    font-size: 0.75rem !important;
+    line-height: 1.2 !important;
+    height: auto !important;
 }
 
 .pdf-export-mode .swiss-table tr td {
     color: #000000 !important;
 }
 
+/* Prevent rows from breaking across pages */
+.pdf-export-mode .swiss-table tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+}
+
+.pdf-export-mode .swiss-table {
+    page-break-inside: auto !important;
+}
+
+.pdf-export-mode .swiss-table thead {
+    display: table-header-group !important;
+}
+
+.pdf-export-mode .swiss-table tbody tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+}
+
+/* Total row - compact */
 .pdf-export-mode .total-row,
 .pdf-export-mode .total-row td {
     color: #000000 !important;
     border-top: 2px solid #000000 !important;
     background-color: #e8e8e8 !important;
     font-weight: 700 !important;
+    padding: 3px 6px !important;
+    vertical-align: middle !important;
 }
 
+/* Titles - smaller margin */
 .pdf-export-mode h2 {
     color: #000000 !important;
     font-weight: 700 !important;
+    font-size: 1rem !important;
+    margin-bottom: 6px !important;
 }
 
 .pdf-export-mode .date-display,
 .pdf-export-mode p {
     color: #000000 !important;
+    font-size: 0.85rem !important;
 }
 
+/* Inputs - centered text */
 .pdf-export-mode input,
 .pdf-export-mode .table-input {
     color: #000000 !important;
     font-weight: 500 !important;
+    padding: 2px 4px !important;
+    vertical-align: middle !important;
+    font-size: 0.75rem !important;
 }
 
 .pdf-export-mode .tabular-nums,
@@ -264,6 +305,16 @@ body > div:last-child:not(.App):not([class]) {
     color: #000000 !important;
 }
 
+/* Reduce spacing between sections */
+.pdf-export-mode .space-y-12 > * + * {
+    margin-top: 12px !important;
+}
+
+.pdf-export-mode section {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+}
+
 /* Hide form and buttons in PDF */
 .pdf-export-mode form,
 .pdf-export-mode .no-print,
@@ -271,7 +322,14 @@ body > div:last-child:not(.App):not([class]) {
     display: none !important;
 }
 
-/* Ensure checkbox borders are visible */
+/* Ensure checkbox borders are visible and compact */
 .pdf-export-mode .attendance-checkbox {
     border-color: #000000 !important;
+    width: 14px !important;
+    height: 14px !important;
+}
+
+/* Compact paper container */
+.pdf-export-mode {
+    padding: 8px !important;
 }
