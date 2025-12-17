@@ -101,3 +101,91 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: "Aplicație web pentru gestionarea prezenței membrilor și invitaților unui club. Bug prioritar: coloana 'Total Lună' nu se actualizează când se modifică 'Taxa'. Task secundar: implementarea exportului PDF cu html2pdf.js"
+
+backend:
+  - task: "Authentication JWT with default admin user"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Login works with admin/admin123"
+
+  - task: "Attendance CRUD API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "API endpoints for attendance work correctly"
+
+frontend:
+  - task: "Total Lună real-time update on Taxa change"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/DashboardPage.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "user"
+        comment: "User reported that Total Lună column does not update when Taxa is changed"
+      - working: true
+        agent: "main"
+        comment: "Fixed by updating handleAttendanceChange to recalculate taxa_lunara when taxa changes. Tested via screenshot - works correctly."
+
+  - task: "PDF Export with html2pdf.js"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/DashboardPage.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "main"
+        comment: "Library installed but handlePrint was using window.print() instead of html2pdf"
+      - working: true
+        agent: "main"
+        comment: "Implemented html2pdf export with A4 format, proper margins and quality settings"
+
+  - task: "Dashboard UI with Members and Guests tables"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/DashboardPage.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Dashboard displays both tables correctly"
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 1
+  run_ui: true
+
+test_plan:
+  current_focus:
+    - "Total Lună real-time update on Taxa change"
+    - "PDF Export with html2pdf.js"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+  - agent: "main"
+    message: "Am rezolvat bug-ul 'Total Lună' - acum se actualizează în timp real când se modifică Taxa. Am implementat și exportul PDF cu html2pdf.js. Te rog să testezi: 1) Modifică Taxa pentru un membru și verifică că Total Lună se actualizează instant, 2) Click pe butonul 'Exportă PDF' și verifică că se descarcă un PDF. Credențiale: admin/admin123"
