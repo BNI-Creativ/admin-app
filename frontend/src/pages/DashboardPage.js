@@ -286,7 +286,21 @@ const DashboardPage = () => {
   };
 
   const handlePrint = () => {
-    window.print();
+    const element = document.querySelector('.paper-container');
+    if (!element) {
+      console.error('Paper container not found');
+      return;
+    }
+    
+    const opt = {
+      margin: 0.3,
+      filename: `prezenta_${dateString}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, logging: false },
+      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+    };
+    
+    html2pdf().from(element).set(opt).save();
   };
 
   const formattedDate = format(selectedDate, "EEEE, d MMMM yyyy", { locale: ro });
