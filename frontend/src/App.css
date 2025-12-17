@@ -195,46 +195,67 @@ body > div:last-child:not(.App):not([class]) {
 
 /* PDF Export Mode - Darker colors for better print quality */
 .pdf-export-mode,
-.pdf-export-mode * {
+.pdf-export-mode *,
+.pdf-export-mode *::before,
+.pdf-export-mode *::after {
     color: #000000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
 }
 
 .pdf-export-mode .text-zinc-500,
 .pdf-export-mode .text-zinc-600,
 .pdf-export-mode .text-zinc-700,
-.pdf-export-mode .text-zinc-900 {
+.pdf-export-mode .text-zinc-900,
+.pdf-export-mode [class*="text-zinc"] {
     color: #000000 !important;
 }
 
 .pdf-export-mode .swiss-table th {
     color: #000000 !important;
-    border-bottom-color: #000000 !important;
+    border-bottom: 2px solid #000000 !important;
+    font-weight: 700 !important;
 }
 
 .pdf-export-mode .swiss-table td {
     color: #000000 !important;
-    border-bottom-color: #333333 !important;
+    border-bottom: 1px solid #555555 !important;
 }
 
+.pdf-export-mode .swiss-table tr td {
+    color: #000000 !important;
+}
+
+.pdf-export-mode .total-row,
 .pdf-export-mode .total-row td {
     color: #000000 !important;
-    border-top-color: #000000 !important;
-    background-color: #f0f0f0 !important;
+    border-top: 2px solid #000000 !important;
+    background-color: #e8e8e8 !important;
+    font-weight: 700 !important;
 }
 
 .pdf-export-mode h2 {
     color: #000000 !important;
+    font-weight: 700 !important;
 }
 
-.pdf-export-mode .date-display {
+.pdf-export-mode .date-display,
+.pdf-export-mode p {
     color: #000000 !important;
 }
 
-.pdf-export-mode input {
+.pdf-export-mode input,
+.pdf-export-mode .table-input {
+    color: #000000 !important;
+    font-weight: 500 !important;
+}
+
+.pdf-export-mode .tabular-nums,
+.pdf-export-mode .font-medium {
     color: #000000 !important;
 }
 
-.pdf-export-mode .tabular-nums {
+.pdf-export-mode span {
     color: #000000 !important;
 }
 
@@ -243,4 +264,9 @@ body > div:last-child:not(.App):not([class]) {
 .pdf-export-mode .no-print,
 .pdf-export-mode button:not(.attendance-checkbox) {
     display: none !important;
+}
+
+/* Ensure checkbox borders are visible */
+.pdf-export-mode .attendance-checkbox {
+    border-color: #000000 !important;
 }
