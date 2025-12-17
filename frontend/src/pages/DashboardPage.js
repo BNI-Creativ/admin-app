@@ -211,17 +211,20 @@ const DashboardPage = () => {
   const handleAttendanceChange = async (memberId, prezent, taxa) => {
     const membru = membri.find(m => m.id === memberId);
     const numeInlocuitor = membru?.nume_inlocuitor || '';
+    const oldTaxa = membru?.taxa || 0;
 
-    // Update UI immediately
+    // Calculate new taxa_lunara (monthly total)
+    const newTaxaLunara = (membru?.taxa_lunara || 0) - oldTaxa + taxa;
+
+    // Update UI immediately with both taxa and taxa_lunara
     setMembri((prev) =>
       prev.map((m) =>
-        m.id === memberId ? { ...m, prezent, taxa } : m
+        m.id === memberId ? { ...m, prezent, taxa, taxa_lunara: newTaxaLunara } : m
       )
     );
 
-    // Recalculate total
+    // Recalculate daily total
     setTotalTaxaMembri((prev) => {
-      const oldTaxa = membru?.taxa || 0;
       return prev - oldTaxa + taxa;
     });
 
