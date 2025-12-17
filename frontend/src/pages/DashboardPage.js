@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ro } from 'date-fns/locale';
+import html2pdf from 'html2pdf.js';
 
 const API_URL = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
