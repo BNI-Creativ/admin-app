@@ -367,6 +367,26 @@ async def get_daily_attendance(data: str, current_user: dict = Depends(get_curre
     attendance_records = await db.attendance.find({"data": data}, {"_id": 0}).to_list(1000)
     attendance_map = {r["member_id"]: r for r in attendance_records}
     
+    # Calculate monthly totals for each member
+    # Extract year and month from the date
+    year_month = data[:7]  # "2025-12" format
+    start_date = f"{year_month}-01"
+    end_date = f"{year_month}-31"
+    
+    # Get all attendance records for the current month
+    monthly_records = await db.attendance.find({
+        "data": {"$gte": start_date, "$lte": end_date}
+    }, {"_id": 0}).to_list(10000)
+    
+    # Calculate monthly totals per member
+    monthly_totals = {}
+    for record in monthly_records:
+        member_id = record.get("member_id")
+        taxa = record.get("taxa", 0)
+        if member_id not in monthly_totals:
+            monthly_totals[member_id] = 0
+        monthly_totals[member_id] += taxa
+    
     # Combine members with their attendance
     membri_with_attendance = []
     total_taxa_membri = 0
@@ -381,7 +401,8 @@ async def get_daily_attendance(data: str, current_user: dict = Depends(get_curre
             "nume": m["nume"],
             "nume_inlocuitor": nume_inlocuitor,
             "prezent": att.get("prezent", False),
-            "taxa": att.get("taxa", 0)
+            "taxa": att.get("taxa", 0),
+            "taxa_lunara": monthly_totals.get(m["id"], 0)
         })
         total_taxa_membri += att.get("taxa", 0)
     
