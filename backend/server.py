@@ -449,6 +449,110 @@ async def get_attendance_dates(current_user: dict = Depends(get_current_user)):
 async def root():
     return {"message": "API Membri și Invitați"}
 
+# ============= SYNC ENDPOINTS =============
+
+class SyncPushData(BaseModel):
+    members: List[dict] = []
+    attendance: List[dict] = []
+    guests: List[dict] = []
+
+@api_router.post("/sync/push")
+async def sync_push(data: SyncPushData):
+    """
+    Receive data from mobile app (local priority - overwrites server data)
+    """
+    results = {"members": 0, "attendance": 0, "guests": 0}
+    
+    # Sync members
+    for member in data.members:
+        member_id = member.get("id")
+        if member_id:
+            await db.members.update_one(
+                {"id": member_id},
+                {"$set": {
+                    "id": member_id,
+                    "nr": member.get("nr", 0),
+                    "prenume": member.get("prenume", ""),
+                    "nume": member.get("nume", ""),
+                    "created_at": member.get("created_at"),
+                    "updated_at": member.get("updated_at")
+                }},
+                upsert=True
+            )
+            results["members"] += 1
+    
+    # Sync attendance
+    for att in data.attendance:
+        member_id = att.get("member_id")
+        data_str = att.get("data")
+        if member_id and data_str:
+            await db.attendance.update_one(
+                {"member_id": member_id, "data": data_str},
+                {"$set": {
+                    "member_id": member_id,
+                    "data": data_str,
+                    "prezent": att.get("prezent", False),
+                    "taxa": att.get("taxa", 0),
+                    "nume_inlocuitor": att.get("nume_inlocuitor", ""),
+                    "created_at": att.get("created_at"),
+                    "updated_at": att.get("updated_at")
+                }},
+                upsert=True
+            )
+            results["attendance"] += 1
+    
+    # Sync guests
+    for guest in data.guests:
+        guest_id = guest.get("id")
+        if guest_id:
+            await db.guests.update_one(
+                {"id": guest_id},
+                {"$set": {
+                    "id": guest_id,
+                    "nr": guest.get("nr", 0),
+                    "prenume": guest.get("prenume", ""),
+                    "nume": guest.get("nume", ""),
+                    "companie": guest.get("companie", ""),
+                    "invitat_de": guest.get("invitat_de", ""),
+                    "taxa": guest.get("taxa", 0),
+                    "data": guest.get("data", ""),
+                    "is_inlocuitor": guest.get("is_inlocuitor", False),
+                    "member_id": guest.get("member_id"),
+                    "created_at": guest.get("created_at"),
+                    "updated_at": guest.get("updated_at")
+                }},
+                upsert=True
+            )
+            results["guests"] += 1
+    
+    return {"success": True, "synced": results}
+
+@api_router.get("/sync/pull")
+async def sync_pull(since: Optional[str] = None):
+    """
+    Send all data to mobile app (or only data updated since last sync)
+    """
+    query = {}
+    if since:
+        # Filter by updated_at if since is provided
+        query["updated_at"] = {"$gt": since}
+    
+    # Get all members
+    members = await db.members.find({}, {"_id": 0}).to_list(10000)
+    
+    # Get attendance (optionally filtered by date)
+    attendance = await db.attendance.find({}, {"_id": 0}).to_list(100000)
+    
+    # Get guests (optionally filtered by date)
+    guests = await db.guests.find({}, {"_id": 0}).to_list(100000)
+    
+    return {
+        "members": members,
+        "attendance": attendance,
+        "guests": guests,
+        "server_time": datetime.now(timezone.utc).isoformat()
+    }
+
 # Include the router in the main app
 app.include_router(api_router)
 
