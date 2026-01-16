@@ -3,6 +3,10 @@
   "appName": "BNI Prezenta",
   "webDir": "build",
   "server": {
-    "androidScheme": "https"
+    "androidScheme": "https",
+    "cleartext": true
+  },
+  "android": {
+    "allowMixedContent": true
   }
 }
