@@ -1,0 +1,8 @@
+{
+  "appId": "com.bni.prezenta",
+  "appName": "BNI Prezenta",
+  "webDir": "build",
+  "server": {
+    "androidScheme": "https"
+  }
+}
