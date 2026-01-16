@@ -2,7 +2,7 @@
   "name": "frontend",
   "version": "0.1.0",
   "private": true,
-  "homepage": "/bni-creativ-prezenta",
+  "homepage": ".",
   "dependencies": {
     "@capacitor/android": "5",
     "@capacitor/cli": "5",
