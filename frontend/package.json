@@ -4,6 +4,7 @@
   "private": true,
   "homepage": ".",
   "dependencies": {
+    "@capacitor-community/sqlite": "^7.0.3",
     "@capacitor/android": "5",
     "@capacitor/cli": "5",
     "@capacitor/core": "5",
