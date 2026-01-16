@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">BNI Prezenta</string>
+    <string name="title_activity_main">BNI Prezenta</string>
+    <string name="package_name">com.bni.prezenta</string>
+    <string name="custom_url_scheme">com.bni.prezenta</string>
+</resources>
