@@ -3,24 +3,28 @@ import { CapacitorSQLite, SQLiteConnection, SQLiteDBConnection } from '@capacito
 import { Capacitor } from '@capacitor/core';
 
 class DatabaseService {
-  sqlite = new SQLiteConnection(CapacitorSQLite);
+  sqlite = null;
   db = null;
   platform = Capacitor.getPlatform();
   initialized = false;
+  useLocalStorage = false; // Fallback for web
 
   async initialize() {
     if (this.initialized) return;
 
     try {
+      // On web, use localStorage as fallback
       if (this.platform === 'web') {
-        // For web/browser testing, use jeep-sqlite
-        const jeepSqliteEl = document.querySelector('jeep-sqlite');
-        if (jeepSqliteEl != null) {
-          await customElements.whenDefined('jeep-sqlite');
-          await this.sqlite.initWebStore();
-        }
+        console.log('Running on web - using localStorage fallback');
+        this.useLocalStorage = true;
+        this.initLocalStorage();
+        this.initialized = true;
+        return;
       }
 
+      // On native platforms, use SQLite
+      this.sqlite = new SQLiteConnection(CapacitorSQLite);
+      
       // Create/open database
       this.db = await this.sqlite.createConnection(
         'bni_prezenta',
@@ -33,11 +37,43 @@ class DatabaseService {
       await this.db.open();
       await this.createTables();
       this.initialized = true;
-      console.log('Database initialized successfully');
+      console.log('SQLite database initialized successfully');
     } catch (error) {
       console.error('Database initialization error:', error);
-      throw error;
+      // Fallback to localStorage on any error
+      console.log('Falling back to localStorage');
+      this.useLocalStorage = true;
+      this.initLocalStorage();
+      this.initialized = true;
     }
+  }
+
+  // Initialize localStorage with default structure
+  initLocalStorage() {
+    if (!localStorage.getItem('bni_members')) {
+      localStorage.setItem('bni_members', JSON.stringify([]));
+    }
+    if (!localStorage.getItem('bni_attendance')) {
+      localStorage.setItem('bni_attendance', JSON.stringify([]));
+    }
+    if (!localStorage.getItem('bni_guests')) {
+      localStorage.setItem('bni_guests', JSON.stringify([]));
+    }
+    if (!localStorage.getItem('bni_monthly_totals')) {
+      localStorage.setItem('bni_monthly_totals', JSON.stringify([]));
+    }
+    if (!localStorage.getItem('bni_sync_log')) {
+      localStorage.setItem('bni_sync_log', JSON.stringify([]));
+    }
+  }
+
+  // LocalStorage helpers
+  getLS(key) {
+    return JSON.parse(localStorage.getItem(`bni_${key}`) || '[]');
+  }
+
+  setLS(key, data) {
+    localStorage.setItem(`bni_${key}`, JSON.stringify(data));
   }
 
   async createTables() {
