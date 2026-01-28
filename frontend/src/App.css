@@ -330,12 +330,17 @@ body > div:last-child:not(.App):not([class]) {
 
 /* Reduce spacing between sections */
 .pdf-export-mode .space-y-12 > * + * {
-    margin-top: 12px !important;
+    margin-top: 8px !important;
 }
 
 .pdf-export-mode section {
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
+    page-break-inside: auto !important;
+    break-inside: auto !important;
+}
+
+/* Add page break before Invitati section if needed */
+.pdf-export-mode section:last-child {
+    page-break-before: auto !important;
 }
 
 /* Hide form and buttons in PDF */
@@ -348,11 +353,18 @@ body > div:last-child:not(.App):not([class]) {
 /* Ensure checkbox borders are visible and compact */
 .pdf-export-mode .attendance-checkbox {
     border-color: #000000 !important;
-    width: 14px !important;
-    height: 14px !important;
+    width: 12px !important;
+    height: 12px !important;
 }
 
 /* Compact paper container */
 .pdf-export-mode {
-    padding: 8px !important;
+    padding: 4px !important;
+}
+
+/* Titles for PDF */
+.pdf-export-mode h2 {
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+    margin-top: 8px !important;
 }
