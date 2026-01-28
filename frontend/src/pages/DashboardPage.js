@@ -175,84 +175,16 @@ const DashboardPage = () => {
     if (!guest) return;
 
     let updatedGuest = { ...guest, [field]: value };
-    let oldMemberId = guest.member_id;
-
-    // Special handling for invitat_de change
-    if (field === 'invitat_de') {
-      // If clearing invitat_de, also clear is_inlocuitor
-      if (!value || value === 'none') {
-        updatedGuest.invitat_de = '';
-        updatedGuest.is_inlocuitor = false;
-        
-        // Clear the inlocuitor from old member if was set
-        if (guest.is_inlocuitor && oldMemberId) {
-          setMembri((prev) =>
-            prev.map((m) =>
-              m.id === oldMemberId ? { ...m, nume_inlocuitor: '' } : m
-            )
-          );
-          // Update member attendance
-          const oldMember = membri.find(m => m.id === oldMemberId);
-          if (oldMember) {
-            await axios.post(`${API_URL}/attendance/${dateString}`, {
-              member_id: oldMemberId,
-              prezent: oldMember.prezent || false,
-              taxa: oldMember.taxa || 0,
-              nume_inlocuitor: '',
-            });
-          }
-        }
-        updatedGuest.member_id = null;
-      } else {
-        // Find the member by their full name
-        const selectedMember = membri.find(m => `${m.prenume} ${m.nume}` === value);
-        updatedGuest.member_id = selectedMember?.id || null;
-        
-        // If changing member and was inlocuitor, update old member
-        if (guest.is_inlocuitor && oldMemberId && oldMemberId !== selectedMember?.id) {
-          setMembri((prev) =>
-            prev.map((m) =>
-              m.id === oldMemberId ? { ...m, nume_inlocuitor: '' } : m
-            )
-          );
-          const oldMember = membri.find(m => m.id === oldMemberId);
-          if (oldMember) {
-            await axios.post(`${API_URL}/attendance/${dateString}`, {
-              member_id: oldMemberId,
-              prezent: oldMember.prezent || false,
-              taxa: oldMember.taxa || 0,
-              nume_inlocuitor: '',
-            });
-          }
-          
-          // Set inlocuitor on new member
-          if (selectedMember) {
-            const guestName = `${guest.prenume} ${guest.nume}`;
-            setMembri((prev) =>
-              prev.map((m) =>
-                m.id === selectedMember.id ? { ...m, nume_inlocuitor: guestName } : m
-              )
-            );
-            await axios.post(`${API_URL}/attendance/${dateString}`, {
-              member_id: selectedMember.id,
-              prezent: selectedMember.prezent || false,
-              taxa: selectedMember.taxa || 0,
-              nume_inlocuitor: guestName,
-            });
-          }
-        }
-      }
-    }
 
     // Special handling for is_inlocuitor change
     if (field === 'is_inlocuitor') {
-      // Can only set inlocuitor if invitat_de is set
-      if (value && (!guest.invitat_de || guest.invitat_de === '-------')) {
+      // Can only set inlocuitor if invitat_de is set and matches a member
+      if (value && (!guest.invitat_de || guest.invitat_de === '-------' || !guest.member_id)) {
         return;
       }
       updatedGuest.is_inlocuitor = value;
       
-      const memberId = updatedGuest.member_id;
+      const memberId = guest.member_id;
       const membru = membri.find(m => m.id === memberId);
       
       if (value && memberId) {
