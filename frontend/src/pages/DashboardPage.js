@@ -716,28 +716,8 @@ const DashboardPage = () => {
                         <TableCell data-testid={`invitat-companie-${invitat.id}`}>
                           {invitat.companie}
                         </TableCell>
-                        <TableCell>
-                          <Select
-                            value={invitat.invitat_de || 'none'}
-                            onValueChange={(value) => handleUpdateGuest(invitat.id, 'invitat_de', value === 'none' ? '' : value)}
-                          >
-                            <SelectTrigger className="w-full h-8 text-sm">
-                              <SelectValue>
-                                {invitat.invitat_de || '-------'}
-                              </SelectValue>
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="none">-------</SelectItem>
-                              {sortedMembersForDropdown.map((membru) => (
-                                <SelectItem 
-                                  key={membru.id} 
-                                  value={`${membru.prenume} ${membru.nume}`}
-                                >
-                                  {membru.prenume} {membru.nume}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                        <TableCell data-testid={`invitat-invitat-de-${invitat.id}`}>
+                          {invitat.invitat_de || '-------'}
                         </TableCell>
                         <TableCell className="text-center">
                           <Checkbox
