@@ -321,11 +321,6 @@ const DashboardPage = () => {
   const formattedDate = format(selectedDate, "EEEE, d MMMM yyyy", { locale: ro });
   const capitalizedDate = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
 
-  // Get sorted members for dropdown
-  const sortedMembersForDropdown = [...membri].sort((a, b) => 
-    `${a.prenume} ${a.nume}`.localeCompare(`${b.prenume} ${b.nume}`)
-  );
-
   // Calculate total present guests
   const totalInvitatiPrezenti = invitati.filter(g => g.prezent).length;
 
