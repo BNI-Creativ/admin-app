@@ -398,7 +398,7 @@ const DashboardPage = () => {
           </div>
         </nav>
 
-        <div className="p-2 border-t border-zinc-200 space-y-1 flex-shrink-0">
+        <div className="p-2 border-t border-zinc-200 flex-shrink-0">
           <Button
             variant="ghost"
             className={`w-full ${sidebarOpen ? 'justify-start' : 'justify-center'} text-zinc-600 hover:bg-zinc-100`}
@@ -408,22 +408,6 @@ const DashboardPage = () => {
           >
             <LogOut className="w-4 h-4 flex-shrink-0" strokeWidth={1.5} />
             {sidebarOpen && <span className="ml-2">Deconectare</span>}
-          </Button>
-          <Button
-            variant="ghost"
-            className={`w-full ${sidebarOpen ? 'justify-start' : 'justify-center'} text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600`}
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            data-testid="toggle-sidebar"
-            title={sidebarOpen ? 'Restrânge meniu' : 'Extinde meniu'}
-          >
-            {sidebarOpen ? (
-              <>
-                <PanelLeftClose className="w-4 h-4 flex-shrink-0" strokeWidth={1.5} />
-                <span className="ml-2">Restrânge</span>
-              </>
-            ) : (
-              <PanelLeft className="w-4 h-4 flex-shrink-0" strokeWidth={1.5} />
-            )}
           </Button>
         </div>
       </aside>
