@@ -602,13 +602,27 @@ const DashboardPage = () => {
                     className="rounded-sm"
                     data-testid="guest-companie-input"
                   />
-                  <Input
-                    placeholder="Invitat de"
-                    value={newGuest.invitat_de}
-                    onChange={(e) => setNewGuest({ ...newGuest, invitat_de: e.target.value })}
-                    className="rounded-sm"
-                    data-testid="guest-invitat-de-input"
-                  />
+                  <Select
+                    value={newGuest.invitat_de || 'none'}
+                    onValueChange={(value) => setNewGuest({ ...newGuest, invitat_de: value === 'none' ? '' : value })}
+                  >
+                    <SelectTrigger className="rounded-sm w-40" data-testid="guest-invitat-de-select">
+                      <SelectValue placeholder="Invitat de">
+                        {newGuest.invitat_de || '-------'}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">-------</SelectItem>
+                      {sortedMembersForDropdown.map((membru) => (
+                        <SelectItem 
+                          key={membru.id} 
+                          value={`${membru.prenume} ${membru.nume}`}
+                        >
+                          {membru.prenume} {membru.nume}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <Input
                     type="number"
                     placeholder="Taxa"
