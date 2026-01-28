@@ -530,9 +530,10 @@ const DashboardPage = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-10">Nr.</TableHead>
-                      <TableHead className="w-1/3">Prenume</TableHead>
-                      <TableHead className="w-1/3">Nume</TableHead>
-                      <TableHead className="w-20 text-center">Prez</TableHead>
+                      <TableHead>Prenume</TableHead>
+                      <TableHead>Nume</TableHead>
+                      <TableHead>Înlocuitor</TableHead>
+                      <TableHead className="w-16 text-center">Prez</TableHead>
                       <TableHead className="w-20 text-right">Taxa</TableHead>
                       <TableHead className="w-24 text-right">Total Lună</TableHead>
                     </TableRow>
@@ -545,6 +546,9 @@ const DashboardPage = () => {
                         </TableCell>
                         <TableCell>{membru.prenume}</TableCell>
                         <TableCell>{membru.nume}</TableCell>
+                        <TableCell className="text-zinc-500 text-sm">
+                          {membru.nume_inlocuitor || ''}
+                        </TableCell>
                         <TableCell className="text-center">
                           <Checkbox
                             checked={membru.prezent}
