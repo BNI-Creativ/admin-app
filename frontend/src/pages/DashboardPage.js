@@ -501,7 +501,11 @@ const DashboardPage = () => {
                   </TableHeader>
                   <TableBody>
                     {membri.map((membru, index) => (
-                      <TableRow key={membru.id} data-testid={`membru-row-${membru.id}`}>
+                      <TableRow 
+                        key={membru.id} 
+                        data-testid={`membru-row-${membru.id}`}
+                        className={membru.prezent ? 'bg-green-100' : ''}
+                      >
                         <TableCell className="font-medium tabular-nums">
                           {index + 1}
                         </TableCell>
