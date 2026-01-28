@@ -662,6 +662,13 @@ const DashboardPage = () => {
                     data-testid="guest-companie-input"
                   />
                   <Input
+                    placeholder="Invitat de"
+                    value={newGuest.invitat_de}
+                    onChange={(e) => setNewGuest({ ...newGuest, invitat_de: e.target.value })}
+                    className="rounded-sm"
+                    data-testid="guest-invitat-de-input"
+                  />
+                  <Input
                     type="number"
                     placeholder="Taxa"
                     value={newGuest.taxa}
