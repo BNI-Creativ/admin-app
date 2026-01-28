@@ -429,6 +429,14 @@ async def get_daily_attendance(data: str, current_user: dict = Depends(get_curre
     
     # Get guests for this date
     guests = await db.guests.find({"data": data}, {"_id": 0}).sort("nr", 1).to_list(1000)
+    # Ensure default values
+    for g in guests:
+        if "is_inlocuitor" not in g:
+            g["is_inlocuitor"] = False
+        if "member_id" not in g:
+            g["member_id"] = None
+        if "prezent" not in g:
+            g["prezent"] = False
     total_taxa_invitati = sum(g.get("taxa", 0) for g in guests)
     
     return DailyAttendanceResponse(
