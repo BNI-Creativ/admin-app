@@ -580,7 +580,7 @@ const DashboardPage = () => {
                       </TableRow>
                     ))}
                     <TableRow className="total-row">
-                      <TableCell colSpan={3} className="text-right font-bold">
+                      <TableCell colSpan={4} className="text-right font-bold">
                         TOTAL
                       </TableCell>
                       <TableCell className="text-center font-bold tabular-nums" data-testid="total-prezenti">
