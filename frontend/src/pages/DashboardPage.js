@@ -664,7 +664,7 @@ const DashboardPage = () => {
                       <TableRow 
                         key={invitat.id} 
                         data-testid={`invitat-row-${invitat.id}`}
-                        className={invitat.is_inlocuitor ? 'bg-blue-50' : ''}
+                        className={invitat.prezent ? 'bg-green-100' : (invitat.is_inlocuitor ? 'bg-blue-50' : '')}
                       >
                         <TableCell className="font-medium tabular-nums">
                           {invitat.nr}
