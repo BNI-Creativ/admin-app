@@ -694,8 +694,14 @@ const DashboardPage = () => {
                             data-testid={`inlocuitor-checkbox-${invitat.id}`}
                           />
                         </TableCell>
-                        <TableCell className="text-right tabular-nums" data-testid={`invitat-taxa-${invitat.id}`}>
-                          {invitat.taxa}
+                        <TableCell className="text-right">
+                          <Input
+                            type="number"
+                            value={invitat.taxa}
+                            onChange={(e) => handleUpdateGuest(invitat.id, 'taxa', parseFloat(e.target.value) || 0)}
+                            className="taxa-input table-input rounded-sm w-16"
+                            data-testid={`invitat-taxa-input-${invitat.id}`}
+                          />
                         </TableCell>
                         <TableCell className="no-print">
                           <Button
