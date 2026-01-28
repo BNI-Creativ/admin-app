@@ -48,7 +48,7 @@ const DashboardPage = () => {
   const [totalTaxaMembri, setTotalTaxaMembri] = useState(0);
   const [totalTaxaInvitati, setTotalTaxaInvitati] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [datesWithData, setDatesWithData] = useState([]);
   const [newGuest, setNewGuest] = useState({
     prenume: '',
