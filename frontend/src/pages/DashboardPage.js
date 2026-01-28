@@ -413,7 +413,7 @@ const DashboardPage = () => {
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto p-6">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8 no-print">
+        <div className="flex items-center justify-between mb-6 no-print">
           <div className="flex items-center gap-4">
             <Popover>
               <PopoverTrigger asChild>
