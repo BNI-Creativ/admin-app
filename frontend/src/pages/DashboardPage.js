@@ -30,8 +30,6 @@ import {
   Plus,
   Trash2,
   Settings,
-  PanelLeftClose,
-  PanelLeft,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ro } from 'date-fns/locale';
