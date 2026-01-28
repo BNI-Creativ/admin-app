@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
@@ -7,6 +7,13 @@ import { Input } from '../components/ui/input';
 import { Checkbox } from '../components/ui/checkbox';
 import { Calendar } from '../components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '../components/ui/popover';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../components/ui/select';
 import {
   Table,
   TableBody,
@@ -25,37 +32,12 @@ import {
   Settings,
   PanelLeftClose,
   PanelLeft,
-  UserCheck,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ro } from 'date-fns/locale';
 import html2pdf from 'html2pdf.js';
 
 const API_URL = `${process.env.REACT_APP_BACKEND_URL}/api`;
-
-// Debounce hook
-function useDebounce(callback, delay) {
-  const timeoutRef = useRef(null);
-  
-  const debouncedCallback = useCallback((...args) => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-    timeoutRef.current = setTimeout(() => {
-      callback(...args);
-    }, delay);
-  }, [callback, delay]);
-
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
-
-  return debouncedCallback;
-}
 
 const DashboardPage = () => {
   const { user, logout } = useAuth();
@@ -75,9 +57,6 @@ const DashboardPage = () => {
     invitat_de: '',
     taxa: 0,
   });
-  
-  // Track pending inlocuitor updates
-  const pendingInlocuitorRef = useRef({});
 
   const dateString = format(selectedDate, 'yyyy-MM-dd');
 
@@ -119,133 +98,39 @@ const DashboardPage = () => {
     navigate('/');
   };
 
-  // Save attendance to API (called with debounce for text fields)
-  const saveAttendanceToAPI = useCallback(async (memberId, prezent, taxa, numeInlocuitor, oldNumeInlocuitor) => {
-    try {
-      const membru = membri.find(m => m.id === memberId);
-      
-      await axios.post(`${API_URL}/attendance/${dateString}`, {
-        member_id: memberId,
-        prezent,
-        taxa,
-        nume_inlocuitor: numeInlocuitor,
-      });
-
-      // Handle inlocuitor guest creation/update/deletion
-      if (numeInlocuitor && numeInlocuitor.trim()) {
-        const parts = numeInlocuitor.trim().split(' ');
-        const prenume = parts[0] || '';
-        const nume = parts.slice(1).join(' ') || '';
-        const membruNume = `${membru?.prenume || ''} ${membru?.nume || ''}`;
-
-        const existingInlocuitor = invitati.find(
-          g => g.is_inlocuitor && g.member_id === memberId
-        );
-
-        if (existingInlocuitor) {
-          await axios.put(`${API_URL}/guests/${existingInlocuitor.id}`, {
-            prenume,
-            nume,
-            invitat_de: membruNume,
-          });
-          setInvitati((prev) =>
-            prev.map((g) =>
-              g.id === existingInlocuitor.id
-                ? { ...g, prenume, nume, invitat_de: membruNume }
-                : g
-            )
-          );
-        } else {
-          const guestData = {
-            prenume,
-            nume,
-            companie: 'Înlocuitor',
-            invitat_de: membruNume,
-            taxa: 0,
-            is_inlocuitor: true,
-            member_id: memberId,
-          };
-          const response = await axios.post(`${API_URL}/guests?data=${dateString}`, guestData);
-          setInvitati((prev) => [...prev, response.data]);
-        }
-      } else if (!numeInlocuitor && oldNumeInlocuitor) {
-        const existingInlocuitor = invitati.find(
-          g => g.is_inlocuitor && g.member_id === memberId
-        );
-        if (existingInlocuitor) {
-          await axios.delete(`${API_URL}/guests/${existingInlocuitor.id}`);
-          setInvitati((prev) => prev.filter((g) => g.id !== existingInlocuitor.id));
-          setTotalTaxaInvitati((prev) => prev - (existingInlocuitor.taxa || 0));
-        }
-      }
-    } catch (error) {
-      console.error('Error saving attendance:', error);
-    }
-  }, [dateString, membri, invitati]);
-
-  // Debounced version for text input (800ms delay)
-  const debouncedSaveInlocuitor = useDebounce(saveAttendanceToAPI, 800);
-
-  // Update local state immediately, debounce API call for text fields
-  const handleNumeInlocuitorChange = (memberId, numeInlocuitor) => {
-    const membru = membri.find(m => m.id === memberId);
-    const oldNumeInlocuitor = pendingInlocuitorRef.current[memberId]?.old || membru?.nume_inlocuitor || '';
-    
-    // Store the original value for comparison
-    if (!pendingInlocuitorRef.current[memberId]) {
-      pendingInlocuitorRef.current[memberId] = { old: membru?.nume_inlocuitor || '' };
-    }
-
-    // Update UI immediately
-    setMembri((prev) =>
-      prev.map((m) =>
-        m.id === memberId ? { ...m, nume_inlocuitor: numeInlocuitor } : m
-      )
-    );
-
-    // Debounce API call
-    debouncedSaveInlocuitor(memberId, membru?.prezent || false, membru?.taxa || 0, numeInlocuitor, oldNumeInlocuitor);
-  };
-
-  // Handle checkbox and taxa changes (immediate API call)
+  // Handle member attendance (checkbox and taxa)
   const handleAttendanceChange = async (memberId, prezent, taxa) => {
     const membru = membri.find(m => m.id === memberId);
-    const numeInlocuitor = membru?.nume_inlocuitor || '';
     const oldTaxa = membru?.taxa || 0;
-
-    // Calculate new taxa_lunara (monthly total)
     const newTaxaLunara = (membru?.taxa_lunara || 0) - oldTaxa + taxa;
 
-    // Update UI immediately with both taxa and taxa_lunara
     setMembri((prev) =>
       prev.map((m) =>
         m.id === memberId ? { ...m, prezent, taxa, taxa_lunara: newTaxaLunara } : m
       )
     );
 
-    // Recalculate daily total
-    setTotalTaxaMembri((prev) => {
-      return prev - oldTaxa + taxa;
-    });
+    setTotalTaxaMembri((prev) => prev - oldTaxa + taxa);
 
-    // Save to API immediately for checkbox/taxa
     try {
       await axios.post(`${API_URL}/attendance/${dateString}`, {
         member_id: memberId,
         prezent,
         taxa,
-        nume_inlocuitor: numeInlocuitor,
+        nume_inlocuitor: '',
       });
     } catch (error) {
       console.error('Error updating attendance:', error);
     }
   };
 
+  // Add new guest
   const handleAddGuest = async (e) => {
     e.preventDefault();
     try {
       const guestData = {
         ...newGuest,
+        prezent: false,
         is_inlocuitor: false,
         member_id: null,
       };
@@ -258,25 +143,74 @@ const DashboardPage = () => {
     }
   };
 
+  // Update guest field
+  const handleUpdateGuest = async (guestId, field, value) => {
+    const guest = invitati.find(g => g.id === guestId);
+    if (!guest) return;
+
+    let updatedGuest = { ...guest, [field]: value };
+
+    // Special handling for invitat_de change
+    if (field === 'invitat_de') {
+      // If clearing invitat_de, also clear is_inlocuitor
+      if (!value || value === 'none') {
+        updatedGuest.invitat_de = '';
+        updatedGuest.is_inlocuitor = false;
+        updatedGuest.member_id = null;
+      } else {
+        // Find the member by their full name
+        const selectedMember = membri.find(m => `${m.prenume} ${m.nume}` === value);
+        updatedGuest.member_id = selectedMember?.id || null;
+      }
+    }
+
+    // Special handling for is_inlocuitor change
+    if (field === 'is_inlocuitor') {
+      // Can only set inlocuitor if invitat_de is set
+      if (value && (!guest.invitat_de || guest.invitat_de === '-------')) {
+        return;
+      }
+      updatedGuest.is_inlocuitor = value;
+    }
+
+    // Special handling for prezent change
+    if (field === 'prezent') {
+      updatedGuest.prezent = value;
+    }
+
+    // Update local state
+    setInvitati((prev) =>
+      prev.map((g) => (g.id === guestId ? updatedGuest : g))
+    );
+
+    // Update taxa total if taxa changed
+    if (field === 'taxa') {
+      const oldTaxa = guest.taxa || 0;
+      const newTaxa = value || 0;
+      setTotalTaxaInvitati((prev) => prev - oldTaxa + newTaxa);
+    }
+
+    // Save to API
+    try {
+      await axios.put(`${API_URL}/guests/${guestId}`, {
+        prenume: updatedGuest.prenume,
+        nume: updatedGuest.nume,
+        companie: updatedGuest.companie,
+        invitat_de: updatedGuest.invitat_de,
+        taxa: updatedGuest.taxa,
+        prezent: updatedGuest.prezent,
+        is_inlocuitor: updatedGuest.is_inlocuitor,
+        member_id: updatedGuest.member_id,
+      });
+    } catch (error) {
+      console.error('Error updating guest:', error);
+    }
+  };
+
+  // Delete guest
   const handleDeleteGuest = async (guestId) => {
     try {
       const guest = invitati.find((g) => g.id === guestId);
-      
-      // If deleting an inlocuitor, also clear the nume_inlocuitor from the member
-      if (guest?.is_inlocuitor && guest?.member_id) {
-        await axios.post(`${API_URL}/attendance/${dateString}`, {
-          member_id: guest.member_id,
-          prezent: membri.find(m => m.id === guest.member_id)?.prezent || false,
-          taxa: membri.find(m => m.id === guest.member_id)?.taxa || 0,
-          nume_inlocuitor: '',
-        });
-        setMembri((prev) =>
-          prev.map((m) =>
-            m.id === guest.member_id ? { ...m, nume_inlocuitor: '' } : m
-          )
-        );
-      }
-
       await axios.delete(`${API_URL}/guests/${guestId}`);
       setInvitati((prev) => prev.filter((g) => g.id !== guestId));
       setTotalTaxaInvitati((prev) => prev - (guest?.taxa || 0));
@@ -285,6 +219,7 @@ const DashboardPage = () => {
     }
   };
 
+  // PDF Export
   const handlePrint = () => {
     const element = document.querySelector('.paper-container');
     if (!element) {
@@ -292,11 +227,10 @@ const DashboardPage = () => {
       return;
     }
     
-    // Add PDF export class for darker colors and compact layout
     element.classList.add('pdf-export-mode');
     
     const opt = {
-      margin: [0.2, 0.2, 0.2, 0.2], // top, left, bottom, right in inches
+      margin: [0.2, 0.2, 0.2, 0.2],
       filename: `prezenta_${dateString}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { 
@@ -319,13 +253,20 @@ const DashboardPage = () => {
     };
     
     html2pdf().from(element).set(opt).save().then(() => {
-      // Remove the class after PDF generation
       element.classList.remove('pdf-export-mode');
     });
   };
 
   const formattedDate = format(selectedDate, "EEEE, d MMMM yyyy", { locale: ro });
   const capitalizedDate = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
+
+  // Get sorted members for dropdown
+  const sortedMembersForDropdown = [...membri].sort((a, b) => 
+    `${a.prenume} ${a.nume}`.localeCompare(`${b.prenume} ${b.nume}`)
+  );
+
+  // Calculate total present guests
+  const totalInvitatiPrezenti = invitati.filter(g => g.prezent).length;
 
   return (
     <div className="flex h-screen bg-zinc-100 overflow-hidden">
@@ -479,9 +420,8 @@ const DashboardPage = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-10">Nr.</TableHead>
-                      <TableHead className="w-1/4">Prenume</TableHead>
-                      <TableHead className="w-1/4">Nume</TableHead>
-                      <TableHead>Nume Înlocuitor</TableHead>
+                      <TableHead className="w-1/3">Prenume</TableHead>
+                      <TableHead className="w-1/3">Nume</TableHead>
                       <TableHead className="w-20 text-center">Prez</TableHead>
                       <TableHead className="w-20 text-right">Taxa</TableHead>
                       <TableHead className="w-24 text-right">Total Lună</TableHead>
@@ -495,14 +435,6 @@ const DashboardPage = () => {
                         </TableCell>
                         <TableCell>{membru.prenume}</TableCell>
                         <TableCell>{membru.nume}</TableCell>
-                        <TableCell>
-                          <Input
-                            value={membru.nume_inlocuitor || ''}
-                            onChange={(e) => handleNumeInlocuitorChange(membru.id, e.target.value)}
-                            className="table-input rounded-sm text-zinc-500"
-                            data-testid={`inlocuitor-input-${membru.id}`}
-                          />
-                        </TableCell>
                         <TableCell className="text-center">
                           <Checkbox
                             checked={membru.prezent}
@@ -534,7 +466,7 @@ const DashboardPage = () => {
                       </TableRow>
                     ))}
                     <TableRow className="total-row">
-                      <TableCell colSpan={4} className="text-right font-bold">
+                      <TableCell colSpan={3} className="text-right font-bold">
                         TOTAL
                       </TableCell>
                       <TableCell className="text-center font-bold tabular-nums" data-testid="total-prezenti">
@@ -596,16 +528,7 @@ const DashboardPage = () => {
                     value={newGuest.companie}
                     onChange={(e) => setNewGuest({ ...newGuest, companie: e.target.value })}
                     className="rounded-sm"
-                    required
                     data-testid="guest-companie-input"
-                  />
-                  <Input
-                    placeholder="Invitat de"
-                    value={newGuest.invitat_de}
-                    onChange={(e) => setNewGuest({ ...newGuest, invitat_de: e.target.value })}
-                    className="rounded-sm"
-                    required
-                    data-testid="guest-invitat-input"
                   />
                   <Input
                     type="number"
@@ -614,7 +537,7 @@ const DashboardPage = () => {
                     onChange={(e) =>
                       setNewGuest({ ...newGuest, taxa: parseFloat(e.target.value) || 0 })
                     }
-                    className="rounded-sm w-20"
+                    className="rounded-sm w-24"
                     data-testid="guest-taxa-input"
                   />
                   <Button type="submit" className="bg-zinc-900 hover:bg-zinc-800 rounded-sm" data-testid="add-guest-button">
@@ -626,11 +549,12 @@ const DashboardPage = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-10">Nr.</TableHead>
-                      <TableHead className="w-1/5">Prenume</TableHead>
-                      <TableHead className="w-1/5">Nume</TableHead>
+                      <TableHead>Prenume</TableHead>
+                      <TableHead>Nume</TableHead>
                       <TableHead>Companie</TableHead>
-                      <TableHead>Invitat de</TableHead>
-                      <TableHead className="w-16 text-center">Înloc.</TableHead>
+                      <TableHead className="w-40">Invitat de</TableHead>
+                      <TableHead className="w-16 text-center">Prez</TableHead>
+                      <TableHead className="w-16 text-center">Înloc</TableHead>
                       <TableHead className="w-20 text-right">Taxa</TableHead>
                       <TableHead className="w-12 no-print"></TableHead>
                     </TableRow>
@@ -654,21 +578,45 @@ const DashboardPage = () => {
                         <TableCell data-testid={`invitat-companie-${invitat.id}`}>
                           {invitat.companie}
                         </TableCell>
-                        <TableCell data-testid={`invitat-invitat-de-${invitat.id}`}>
-                          {invitat.invitat_de}
+                        <TableCell>
+                          <Select
+                            value={invitat.invitat_de || 'none'}
+                            onValueChange={(value) => handleUpdateGuest(invitat.id, 'invitat_de', value === 'none' ? '' : value)}
+                          >
+                            <SelectTrigger className="w-full h-8 text-sm">
+                              <SelectValue>
+                                {invitat.invitat_de || '-------'}
+                              </SelectValue>
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">-------</SelectItem>
+                              {sortedMembersForDropdown.map((membru) => (
+                                <SelectItem 
+                                  key={membru.id} 
+                                  value={`${membru.prenume} ${membru.nume}`}
+                                >
+                                  {membru.prenume} {membru.nume}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </TableCell>
                         <TableCell className="text-center">
-                          <div className="flex items-center justify-center">
-                            <Checkbox
-                              checked={invitat.is_inlocuitor || false}
-                              disabled={true}
-                              className="attendance-checkbox cursor-not-allowed"
-                              data-testid={`inlocuitor-checkbox-${invitat.id}`}
-                            />
-                            {invitat.is_inlocuitor && (
-                              <UserCheck className="w-4 h-4 ml-1 text-blue-600" strokeWidth={1.5} />
-                            )}
-                          </div>
+                          <Checkbox
+                            checked={invitat.prezent || false}
+                            onCheckedChange={(checked) => handleUpdateGuest(invitat.id, 'prezent', checked)}
+                            className="attendance-checkbox"
+                            data-testid={`prezent-checkbox-${invitat.id}`}
+                          />
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Checkbox
+                            checked={invitat.is_inlocuitor || false}
+                            onCheckedChange={(checked) => handleUpdateGuest(invitat.id, 'is_inlocuitor', checked)}
+                            disabled={!invitat.invitat_de || invitat.invitat_de === '-------'}
+                            className={`attendance-checkbox ${(!invitat.invitat_de || invitat.invitat_de === '-------') ? 'opacity-30 cursor-not-allowed' : ''}`}
+                            data-testid={`inlocuitor-checkbox-${invitat.id}`}
+                          />
                         </TableCell>
                         <TableCell className="text-right tabular-nums" data-testid={`invitat-taxa-${invitat.id}`}>
                           {invitat.taxa}
@@ -687,11 +635,15 @@ const DashboardPage = () => {
                       </TableRow>
                     ))}
                     <TableRow className="total-row">
-                      <TableCell colSpan={6} className="text-right font-bold">
+                      <TableCell colSpan={5} className="text-right font-bold">
                         TOTAL
                       </TableCell>
+                      <TableCell className="text-center font-bold tabular-nums" data-testid="total-invitati-prezenti">
+                        {totalInvitatiPrezenti}
+                      </TableCell>
+                      <TableCell></TableCell>
                       <TableCell className="text-right font-bold tabular-nums" data-testid="total-taxa-invitati">
-                        {totalTaxaInvitati.toFixed(2)} RON
+                        {totalTaxaInvitati.toFixed(2)}
                       </TableCell>
                       <TableCell className="no-print"></TableCell>
                     </TableRow>
