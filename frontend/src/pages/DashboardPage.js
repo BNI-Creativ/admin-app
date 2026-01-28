@@ -145,11 +145,20 @@ const DashboardPage = () => {
   const handleAddGuest = async (e) => {
     e.preventDefault();
     try {
+      // Find member_id if invitat_de matches a member's name
+      let memberId = null;
+      if (newGuest.invitat_de) {
+        const matchingMember = membri.find(m => 
+          `${m.prenume} ${m.nume}`.toLowerCase() === newGuest.invitat_de.toLowerCase()
+        );
+        memberId = matchingMember?.id || null;
+      }
+      
       const guestData = {
         ...newGuest,
         prezent: false,
         is_inlocuitor: false,
-        member_id: null,
+        member_id: memberId,
       };
       const response = await axios.post(`${API_URL}/guests?data=${dateString}`, guestData);
       setInvitati([...invitati, response.data]);
