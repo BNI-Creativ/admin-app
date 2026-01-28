@@ -221,6 +221,7 @@ body > div:last-child:not(.App):not([class]) {
     border: 2px solid #000000 !important;
     border-collapse: collapse !important;
     page-break-inside: auto !important;
+    width: 100% !important;
 }
 
 /* Table header - compact and centered */
@@ -229,10 +230,10 @@ body > div:last-child:not(.App):not([class]) {
     border: 1px solid #000000 !important;
     border-bottom: 2px solid #000000 !important;
     font-weight: 900 !important;
-    padding: 4px 6px !important;
+    padding: 2px 4px !important;
     vertical-align: middle !important;
-    font-size: 0.7rem !important;
-    line-height: 1.2 !important;
+    font-size: 0.65rem !important;
+    line-height: 1.1 !important;
     background-color: #f0f0f0 !important;
 }
 
@@ -240,10 +241,10 @@ body > div:last-child:not(.App):not([class]) {
 .pdf-export-mode .swiss-table td {
     color: #000000 !important;
     border: 1px solid #000000 !important;
-    padding: 3px 6px !important;
+    padding: 2px 4px !important;
     vertical-align: middle !important;
-    font-size: 0.75rem !important;
-    line-height: 1.2 !important;
+    font-size: 0.6rem !important;
+    line-height: 1.1 !important;
     height: auto !important;
     font-weight: 600 !important;
 }
@@ -260,6 +261,12 @@ body > div:last-child:not(.App):not([class]) {
 
 .pdf-export-mode .swiss-table thead {
     display: table-header-group !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+}
+
+.pdf-export-mode .swiss-table tbody {
+    page-break-before: avoid !important;
 }
 
 .pdf-export-mode .swiss-table tbody tr {
@@ -274,8 +281,10 @@ body > div:last-child:not(.App):not([class]) {
     border: 2px solid #000000 !important;
     background-color: #d0d0d0 !important;
     font-weight: 900 !important;
-    padding: 4px 6px !important;
+    padding: 2px 4px !important;
     vertical-align: middle !important;
+    page-break-before: avoid !important;
+    break-before: avoid !important;
 }
 
 /* Titles - smaller margin */
