@@ -145,11 +145,11 @@ const DashboardPage = () => {
   const handleAddGuest = async (e) => {
     e.preventDefault();
     try {
-      // Find member_id if invitat_de matches a member's name
+      // Find member_id if invitat_de is set
       let memberId = null;
       if (newGuest.invitat_de) {
         const matchingMember = membri.find(m => 
-          `${m.prenume} ${m.nume}`.toLowerCase() === newGuest.invitat_de.toLowerCase()
+          `${m.prenume} ${m.nume}` === newGuest.invitat_de
         );
         memberId = matchingMember?.id || null;
       }
