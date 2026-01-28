@@ -500,50 +500,61 @@ const DashboardPage = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {membri.map((membru, index) => (
-                      <TableRow 
-                        key={membru.id} 
-                        data-testid={`membru-row-${membru.id}`}
-                        className={membru.prezent ? 'bg-green-100' : ''}
-                      >
-                        <TableCell className="font-medium tabular-nums">
-                          {index + 1}
-                        </TableCell>
-                        <TableCell>{membru.prenume}</TableCell>
-                        <TableCell>{membru.nume}</TableCell>
-                        <TableCell className="text-zinc-500 text-sm">
-                          {membru.nume_inlocuitor || ''}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <Checkbox
-                            checked={membru.prezent}
-                            onCheckedChange={(checked) =>
-                              handleAttendanceChange(membru.id, checked, membru.taxa)
-                            }
-                            className="attendance-checkbox"
-                            data-testid={`checkbox-${membru.id}`}
-                          />
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Input
-                            type="number"
-                            value={membru.taxa}
-                            onChange={(e) =>
-                              handleAttendanceChange(
-                                membru.id,
-                                membru.prezent,
-                                parseFloat(e.target.value) || 0
-                              )
-                            }
-                            className="taxa-input table-input rounded-sm"
-                            data-testid={`taxa-input-${membru.id}`}
-                          />
-                        </TableCell>
-                        <TableCell className="text-right tabular-nums text-zinc-500" data-testid={`taxa-lunara-${membru.id}`}>
-                          {(membru.taxa_lunara || 0).toFixed(2)}
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {membri.map((membru, index) => {
+                      const hasInlocuitor = membru.nume_inlocuitor && membru.nume_inlocuitor.length > 0;
+                      let rowClass = '';
+                      if (hasInlocuitor) {
+                        rowClass = 'bg-yellow-100';
+                      } else if (membru.prezent) {
+                        rowClass = 'bg-green-100';
+                      }
+                      
+                      return (
+                        <TableRow 
+                          key={membru.id} 
+                          data-testid={`membru-row-${membru.id}`}
+                          className={rowClass}
+                        >
+                          <TableCell className="font-medium tabular-nums">
+                            {index + 1}
+                          </TableCell>
+                          <TableCell>{membru.prenume}</TableCell>
+                          <TableCell>{membru.nume}</TableCell>
+                          <TableCell className="text-zinc-500 text-sm">
+                            {membru.nume_inlocuitor || ''}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <Checkbox
+                              checked={hasInlocuitor ? false : membru.prezent}
+                              onCheckedChange={(checked) =>
+                                handleAttendanceChange(membru.id, checked, membru.taxa)
+                              }
+                              disabled={hasInlocuitor}
+                              className={`attendance-checkbox ${hasInlocuitor ? 'opacity-30 cursor-not-allowed' : ''}`}
+                              data-testid={`checkbox-${membru.id}`}
+                            />
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Input
+                              type="number"
+                              value={membru.taxa}
+                              onChange={(e) =>
+                                handleAttendanceChange(
+                                  membru.id,
+                                  membru.prezent,
+                                  parseFloat(e.target.value) || 0
+                                )
+                              }
+                              className="taxa-input table-input rounded-sm"
+                              data-testid={`taxa-input-${membru.id}`}
+                            />
+                          </TableCell>
+                          <TableCell className="text-right tabular-nums text-zinc-500" data-testid={`taxa-lunara-${membru.id}`}>
+                            {(membru.taxa_lunara || 0).toFixed(2)}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                     <TableRow className="total-row">
                       <TableCell colSpan={4} className="text-right font-bold">
                         TOTAL
