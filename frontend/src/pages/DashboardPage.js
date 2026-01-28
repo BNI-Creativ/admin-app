@@ -456,7 +456,7 @@ const DashboardPage = () => {
         {/* Paper Container */}
         <div className="paper-container print-container">
           {/* Date Display */}
-          <div className="text-right mb-8">
+          <div className="text-right mb-6">
             <p className="date-display text-xl text-zinc-900" data-testid="current-date">
               {capitalizedDate}
             </p>
