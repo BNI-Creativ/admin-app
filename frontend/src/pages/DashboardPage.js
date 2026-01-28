@@ -298,25 +298,28 @@ const DashboardPage = () => {
     element.classList.add('pdf-export-mode');
     
     const opt = {
-      margin: [0.2, 0.2, 0.2, 0.2],
+      margin: [0.3, 0.3, 0.3, 0.3],
       filename: `prezenta_${dateString}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
+      image: { type: 'jpeg', quality: 0.95 },
       html2canvas: { 
-        scale: 2, 
+        scale: 1.5,
         useCORS: true, 
         logging: false,
-        letterRendering: true
+        letterRendering: true,
+        scrollY: 0,
+        windowWidth: element.scrollWidth
       },
       jsPDF: { 
         unit: 'in', 
         format: 'a4', 
-        orientation: 'portrait'
+        orientation: 'portrait',
+        compress: true
       },
       pagebreak: { 
-        mode: ['avoid-all', 'css', 'legacy'],
+        mode: 'css',
         before: '.page-break-before',
         after: '.page-break-after',
-        avoid: ['tr', 'td', '.total-row']
+        avoid: ['tr', 'thead', '.total-row', 'section']
       }
     };
     
