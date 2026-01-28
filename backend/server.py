@@ -333,6 +333,18 @@ async def create_guest(guest: GuestCreate, data: str, current_user: dict = Depen
 @api_router.put("/guests/{guest_id}", response_model=GuestResponse)
 async def update_guest(guest_id: str, guest: GuestUpdate, current_user: dict = Depends(get_current_user)):
     update_data = {k: v for k, v in guest.model_dump().items() if v is not None}
+    
+    # Handle boolean fields that could be explicitly set to False
+    if guest.prezent is not None:
+        update_data["prezent"] = guest.prezent
+    if guest.is_inlocuitor is not None:
+        update_data["is_inlocuitor"] = guest.is_inlocuitor
+    # Handle invitat_de being set to empty string
+    if guest.invitat_de is not None:
+        update_data["invitat_de"] = guest.invitat_de
+    if guest.member_id is not None:
+        update_data["member_id"] = guest.member_id
+    
     if not update_data:
         raise HTTPException(status_code=400, detail="Nu există date de actualizat")
     
@@ -349,10 +361,13 @@ async def update_guest(guest_id: str, guest: GuestUpdate, current_user: dict = D
         nr=result["nr"],
         prenume=result["prenume"],
         nume=result["nume"],
-        companie=result["companie"],
-        invitat_de=result["invitat_de"],
-        taxa=result["taxa"],
-        data=result["data"]
+        companie=result.get("companie", ""),
+        invitat_de=result.get("invitat_de", ""),
+        taxa=result.get("taxa", 0),
+        data=result["data"],
+        prezent=result.get("prezent", False),
+        is_inlocuitor=result.get("is_inlocuitor", False),
+        member_id=result.get("member_id")
     )
 
 @api_router.delete("/guests/{guest_id}")
