@@ -74,8 +74,25 @@ const DashboardPage = () => {
     try {
       setLoading(true);
       const response = await axios.get(`${API_URL}/attendance/${dateString}`);
-      setMembri(response.data.membri);
-      setInvitati(response.data.invitati);
+      let membriData = response.data.membri;
+      const invitatiData = response.data.invitati;
+      
+      // Sync inlocuitori from guests to members
+      // For each guest marked as inlocuitor, update the corresponding member's nume_inlocuitor
+      invitatiData.forEach(invitat => {
+        if (invitat.is_inlocuitor && invitat.member_id) {
+          const memberIndex = membriData.findIndex(m => m.id === invitat.member_id);
+          if (memberIndex >= 0) {
+            membriData[memberIndex] = {
+              ...membriData[memberIndex],
+              nume_inlocuitor: `${invitat.prenume} ${invitat.nume}`
+            };
+          }
+        }
+      });
+      
+      setMembri(membriData);
+      setInvitati(invitatiData);
       setTotalTaxaMembri(response.data.total_taxa_membri);
       setTotalTaxaInvitati(response.data.total_taxa_invitati);
     } catch (error) {
