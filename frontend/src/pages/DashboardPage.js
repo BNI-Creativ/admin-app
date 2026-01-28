@@ -149,6 +149,7 @@ const DashboardPage = () => {
     if (!guest) return;
 
     let updatedGuest = { ...guest, [field]: value };
+    let oldMemberId = guest.member_id;
 
     // Special handling for invitat_de change
     if (field === 'invitat_de') {
@@ -156,11 +157,64 @@ const DashboardPage = () => {
       if (!value || value === 'none') {
         updatedGuest.invitat_de = '';
         updatedGuest.is_inlocuitor = false;
+        
+        // Clear the inlocuitor from old member if was set
+        if (guest.is_inlocuitor && oldMemberId) {
+          setMembri((prev) =>
+            prev.map((m) =>
+              m.id === oldMemberId ? { ...m, nume_inlocuitor: '' } : m
+            )
+          );
+          // Update member attendance
+          const oldMember = membri.find(m => m.id === oldMemberId);
+          if (oldMember) {
+            await axios.post(`${API_URL}/attendance/${dateString}`, {
+              member_id: oldMemberId,
+              prezent: oldMember.prezent || false,
+              taxa: oldMember.taxa || 0,
+              nume_inlocuitor: '',
+            });
+          }
+        }
         updatedGuest.member_id = null;
       } else {
         // Find the member by their full name
         const selectedMember = membri.find(m => `${m.prenume} ${m.nume}` === value);
         updatedGuest.member_id = selectedMember?.id || null;
+        
+        // If changing member and was inlocuitor, update old member
+        if (guest.is_inlocuitor && oldMemberId && oldMemberId !== selectedMember?.id) {
+          setMembri((prev) =>
+            prev.map((m) =>
+              m.id === oldMemberId ? { ...m, nume_inlocuitor: '' } : m
+            )
+          );
+          const oldMember = membri.find(m => m.id === oldMemberId);
+          if (oldMember) {
+            await axios.post(`${API_URL}/attendance/${dateString}`, {
+              member_id: oldMemberId,
+              prezent: oldMember.prezent || false,
+              taxa: oldMember.taxa || 0,
+              nume_inlocuitor: '',
+            });
+          }
+          
+          // Set inlocuitor on new member
+          if (selectedMember) {
+            const guestName = `${guest.prenume} ${guest.nume}`;
+            setMembri((prev) =>
+              prev.map((m) =>
+                m.id === selectedMember.id ? { ...m, nume_inlocuitor: guestName } : m
+              )
+            );
+            await axios.post(`${API_URL}/attendance/${dateString}`, {
+              member_id: selectedMember.id,
+              prezent: selectedMember.prezent || false,
+              taxa: selectedMember.taxa || 0,
+              nume_inlocuitor: guestName,
+            });
+          }
+        }
       }
     }
 
@@ -171,6 +225,43 @@ const DashboardPage = () => {
         return;
       }
       updatedGuest.is_inlocuitor = value;
+      
+      const memberId = updatedGuest.member_id;
+      const membru = membri.find(m => m.id === memberId);
+      
+      if (value && memberId) {
+        // Set guest name as inlocuitor for the member
+        const guestName = `${guest.prenume} ${guest.nume}`;
+        setMembri((prev) =>
+          prev.map((m) =>
+            m.id === memberId ? { ...m, nume_inlocuitor: guestName } : m
+          )
+        );
+        // Update attendance with inlocuitor name
+        if (membru) {
+          await axios.post(`${API_URL}/attendance/${dateString}`, {
+            member_id: memberId,
+            prezent: membru.prezent || false,
+            taxa: membru.taxa || 0,
+            nume_inlocuitor: guestName,
+          });
+        }
+      } else if (!value && memberId) {
+        // Clear inlocuitor from member
+        setMembri((prev) =>
+          prev.map((m) =>
+            m.id === memberId ? { ...m, nume_inlocuitor: '' } : m
+          )
+        );
+        if (membru) {
+          await axios.post(`${API_URL}/attendance/${dateString}`, {
+            member_id: memberId,
+            prezent: membru.prezent || false,
+            taxa: membru.taxa || 0,
+            nume_inlocuitor: '',
+          });
+        }
+      }
     }
 
     // Special handling for prezent change
@@ -190,7 +281,7 @@ const DashboardPage = () => {
       setTotalTaxaInvitati((prev) => prev - oldTaxa + newTaxa);
     }
 
-    // Save to API
+    // Save guest to API
     try {
       await axios.put(`${API_URL}/guests/${guestId}`, {
         prenume: updatedGuest.prenume,
@@ -211,6 +302,25 @@ const DashboardPage = () => {
   const handleDeleteGuest = async (guestId) => {
     try {
       const guest = invitati.find((g) => g.id === guestId);
+      
+      // If deleting an inlocuitor, clear the nume_inlocuitor from member
+      if (guest?.is_inlocuitor && guest?.member_id) {
+        const membru = membri.find(m => m.id === guest.member_id);
+        if (membru) {
+          setMembri((prev) =>
+            prev.map((m) =>
+              m.id === guest.member_id ? { ...m, nume_inlocuitor: '' } : m
+            )
+          );
+          await axios.post(`${API_URL}/attendance/${dateString}`, {
+            member_id: guest.member_id,
+            prezent: membru.prezent || false,
+            taxa: membru.taxa || 0,
+            nume_inlocuitor: '',
+          });
+        }
+      }
+      
       await axios.delete(`${API_URL}/guests/${guestId}`);
       setInvitati((prev) => prev.filter((g) => g.id !== guestId));
       setTotalTaxaInvitati((prev) => prev - (guest?.taxa || 0));
