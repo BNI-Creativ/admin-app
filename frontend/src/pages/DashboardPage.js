@@ -465,7 +465,7 @@ const DashboardPage = () => {
           {loading ? (
             <div className="text-center py-12 text-zinc-500">Se încarcă...</div>
           ) : (
-            <div className="space-y-12">
+            <div className="space-y-8">
               {/* Membri Table */}
               <section className="animate-fade-in">
                 <h2
