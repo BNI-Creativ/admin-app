@@ -582,6 +582,200 @@ async def sync_pull(since: Optional[str] = None):
         "server_time": datetime.now(timezone.utc).isoformat()
     }
 
+# ============= EXPORT/IMPORT ENDPOINTS =============
+
+EXPORT_VERSION = "1.0"
+
+class ImportData(BaseModel):
+    version: str = "1.0"
+    members: List[dict] = []
+    attendance: List[dict] = []
+    guests: List[dict] = []
+
+@api_router.get("/export")
+async def export_all_data(current_user: dict = Depends(get_current_user)):
+    """
+    Export all data from the database as JSON.
+    Includes version for future compatibility.
+    """
+    # Get all members
+    members = await db.members.find({}, {"_id": 0}).to_list(100000)
+    
+    # Get all attendance records
+    attendance = await db.attendance.find({}, {"_id": 0}).to_list(100000)
+    
+    # Get all guests
+    guests = await db.guests.find({}, {"_id": 0}).to_list(100000)
+    
+    export_data = {
+        "version": EXPORT_VERSION,
+        "export_date": datetime.now(timezone.utc).isoformat(),
+        "app_name": "BNI Prezenta",
+        "data": {
+            "members": members,
+            "attendance": attendance,
+            "guests": guests
+        },
+        "counts": {
+            "members": len(members),
+            "attendance": len(attendance),
+            "guests": len(guests)
+        }
+    }
+    
+    return export_data
+
+@api_router.post("/import")
+async def import_all_data(import_data: dict, current_user: dict = Depends(get_current_user)):
+    """
+    Import data into the database from JSON export.
+    Supports version migration for future compatibility.
+    """
+    version = import_data.get("version", "1.0")
+    data = import_data.get("data", import_data)  # Support both nested and flat structure
+    
+    # Handle different versions
+    if version.startswith("1."):
+        # Version 1.x - current format
+        members = data.get("members", [])
+        attendance = data.get("attendance", [])
+        guests = data.get("guests", [])
+    else:
+        # Unknown version - try to import anyway
+        members = data.get("members", [])
+        attendance = data.get("attendance", [])
+        guests = data.get("guests", [])
+    
+    results = {
+        "members": {"imported": 0, "updated": 0, "errors": 0},
+        "attendance": {"imported": 0, "updated": 0, "errors": 0},
+        "guests": {"imported": 0, "updated": 0, "errors": 0}
+    }
+    
+    # Import members
+    for member in members:
+        try:
+            member_id = member.get("id")
+            if not member_id:
+                member_id = str(uuid.uuid4())
+                member["id"] = member_id
+            
+            existing = await db.members.find_one({"id": member_id})
+            
+            member_doc = {
+                "id": member_id,
+                "nr": member.get("nr", 0),
+                "prenume": member.get("prenume", ""),
+                "nume": member.get("nume", ""),
+                "created_at": member.get("created_at", datetime.now(timezone.utc).isoformat()),
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+            
+            if existing:
+                await db.members.update_one({"id": member_id}, {"$set": member_doc})
+                results["members"]["updated"] += 1
+            else:
+                await db.members.insert_one(member_doc)
+                results["members"]["imported"] += 1
+        except Exception as e:
+            logger.error(f"Error importing member: {e}")
+            results["members"]["errors"] += 1
+    
+    # Import attendance
+    for att in attendance:
+        try:
+            member_id = att.get("member_id")
+            data_str = att.get("data")
+            
+            if not member_id or not data_str:
+                continue
+            
+            existing = await db.attendance.find_one({"member_id": member_id, "data": data_str})
+            
+            att_doc = {
+                "member_id": member_id,
+                "data": data_str,
+                "prezent": att.get("prezent", False),
+                "taxa": att.get("taxa", 0),
+                "nume_inlocuitor": att.get("nume_inlocuitor", ""),
+                "created_at": att.get("created_at", datetime.now(timezone.utc).isoformat()),
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+            
+            if existing:
+                await db.attendance.update_one(
+                    {"member_id": member_id, "data": data_str},
+                    {"$set": att_doc}
+                )
+                results["attendance"]["updated"] += 1
+            else:
+                await db.attendance.insert_one(att_doc)
+                results["attendance"]["imported"] += 1
+        except Exception as e:
+            logger.error(f"Error importing attendance: {e}")
+            results["attendance"]["errors"] += 1
+    
+    # Import guests
+    for guest in guests:
+        try:
+            guest_id = guest.get("id")
+            if not guest_id:
+                guest_id = str(uuid.uuid4())
+            
+            existing = await db.guests.find_one({"id": guest_id})
+            
+            guest_doc = {
+                "id": guest_id,
+                "nr": guest.get("nr", 0),
+                "prenume": guest.get("prenume", ""),
+                "nume": guest.get("nume", ""),
+                "companie": guest.get("companie", ""),
+                "invitat_de": guest.get("invitat_de", ""),
+                "taxa": guest.get("taxa", 0),
+                "data": guest.get("data", ""),
+                "prezent": guest.get("prezent", False),
+                "is_inlocuitor": guest.get("is_inlocuitor", False),
+                "member_id": guest.get("member_id"),
+                "created_at": guest.get("created_at", datetime.now(timezone.utc).isoformat()),
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+            
+            if existing:
+                await db.guests.update_one({"id": guest_id}, {"$set": guest_doc})
+                results["guests"]["updated"] += 1
+            else:
+                await db.guests.insert_one(guest_doc)
+                results["guests"]["imported"] += 1
+        except Exception as e:
+            logger.error(f"Error importing guest: {e}")
+            results["guests"]["errors"] += 1
+    
+    return {
+        "success": True,
+        "version_imported": version,
+        "results": results
+    }
+
+@api_router.delete("/clear-all")
+async def clear_all_data(current_user: dict = Depends(get_current_user)):
+    """
+    Clear all data from database (members, attendance, guests).
+    Use with caution - this cannot be undone!
+    """
+    # Delete all data
+    members_result = await db.members.delete_many({})
+    attendance_result = await db.attendance.delete_many({})
+    guests_result = await db.guests.delete_many({})
+    
+    return {
+        "success": True,
+        "deleted": {
+            "members": members_result.deleted_count,
+            "attendance": attendance_result.deleted_count,
+            "guests": guests_result.deleted_count
+        }
+    }
+
 # Include the router in the main app
 app.include_router(api_router)
 
