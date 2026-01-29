@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
@@ -11,10 +11,11 @@ import {
   CalendarDays,
   LogOut,
   Settings,
-  PanelLeftClose,
-  PanelLeft,
   Key,
   Check,
+  Download,
+  Upload,
+  AlertTriangle,
 } from 'lucide-react';
 
 const API_URL = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -22,14 +23,16 @@ const API_URL = `${process.env.REACT_APP_BACKEND_URL}/api`;
 const SettingsPage = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
+  const [exportMessage, setExportMessage] = useState({ type: '', text: '' });
   const [passwords, setPasswords] = useState({
     currentPassword: '',
     newPassword: '',
     confirmPassword: '',
   });
+  const fileInputRef = useRef(null);
 
   const handleLogout = () => {
     logout();
@@ -68,6 +71,88 @@ const SettingsPage = () => {
     }
   };
 
+  // Export all data
+  const handleExport = async () => {
+    setExportMessage({ type: '', text: '' });
+    setIsLoading(true);
+    
+    try {
+      const response = await axios.get(`${API_URL}/export`);
+      const data = response.data;
+      
+      // Create filename with date
+      const date = new Date().toISOString().split('T')[0];
+      const filename = `bni-prezenta-export-${date}.json`;
+      
+      // Create blob and download
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      setExportMessage({ 
+        type: 'success', 
+        text: `Export reușit! ${data.counts.members} membri, ${data.counts.attendance} prezențe, ${data.counts.guests} invitați` 
+      });
+    } catch (error) {
+      setExportMessage({ 
+        type: 'error', 
+        text: error.response?.data?.detail || 'Eroare la export' 
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Import data from file
+  const handleImport = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    setExportMessage({ type: '', text: '' });
+    setIsLoading(true);
+    
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      
+      const response = await axios.post(`${API_URL}/import`, data);
+      const results = response.data.results;
+      
+      const summary = [
+        `Membri: ${results.members.imported} noi, ${results.members.updated} actualizați`,
+        `Prezențe: ${results.attendance.imported} noi, ${results.attendance.updated} actualizate`,
+        `Invitați: ${results.guests.imported} noi, ${results.guests.updated} actualizați`
+      ].join(' | ');
+      
+      setExportMessage({ 
+        type: 'success', 
+        text: `Import reușit! ${summary}` 
+      });
+      
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    } catch (error) {
+      if (error instanceof SyntaxError) {
+        setExportMessage({ type: 'error', text: 'Fișier JSON invalid' });
+      } else {
+        setExportMessage({ 
+          type: 'error', 
+          text: error.response?.data?.detail || 'Eroare la import' 
+        });
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="flex h-screen bg-zinc-100 overflow-hidden">
       {/* Sidebar */}
@@ -76,7 +161,11 @@ const SettingsPage = () => {
       >
         <div className="p-4 border-b border-zinc-200">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-zinc-900 rounded-sm flex items-center justify-center flex-shrink-0">
+            <div 
+              className="w-10 h-10 bg-zinc-900 rounded-sm flex items-center justify-center flex-shrink-0 cursor-pointer hover:bg-zinc-700 transition-colors"
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              title={sidebarOpen ? 'Restrânge meniu' : 'Extinde meniu'}
+            >
               <Users className="w-5 h-5 text-white" strokeWidth={1.5} />
             </div>
             {sidebarOpen && (
@@ -117,12 +206,12 @@ const SettingsPage = () => {
               title="Setări"
             >
               <Key className="w-4 h-4 flex-shrink-0" strokeWidth={1.5} />
-              {sidebarOpen && <span>Schimbă Parola</span>}
+              {sidebarOpen && <span>Setări</span>}
             </Link>
           </div>
         </nav>
 
-        <div className="p-2 border-t border-zinc-200 space-y-1 flex-shrink-0">
+        <div className="p-2 border-t border-zinc-200 flex-shrink-0">
           <Button
             variant="ghost"
             className={`w-full ${sidebarOpen ? 'justify-start' : 'justify-center'} text-zinc-600 hover:bg-zinc-100`}
@@ -133,40 +222,97 @@ const SettingsPage = () => {
             <LogOut className="w-4 h-4 flex-shrink-0" strokeWidth={1.5} />
             {sidebarOpen && <span className="ml-2">Deconectare</span>}
           </Button>
-          <Button
-            variant="ghost"
-            className={`w-full ${sidebarOpen ? 'justify-start' : 'justify-center'} text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600`}
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            data-testid="toggle-sidebar"
-            title={sidebarOpen ? 'Restrânge meniu' : 'Extinde meniu'}
-          >
-            {sidebarOpen ? (
-              <>
-                <PanelLeftClose className="w-4 h-4 flex-shrink-0" strokeWidth={1.5} />
-                <span className="ml-2">Restrânge</span>
-              </>
-            ) : (
-              <PanelLeft className="w-4 h-4 flex-shrink-0" strokeWidth={1.5} />
-            )}
-          </Button>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto p-8">
-        <div className="max-w-md mx-auto">
+      <main className="flex-1 overflow-y-auto p-6">
+        <div className="max-w-2xl mx-auto space-y-6">
           <h1
-            className="text-3xl font-bold tracking-tight text-zinc-900 mb-8"
+            className="text-3xl font-bold tracking-tight text-zinc-900 mb-6"
             style={{ fontFamily: 'Manrope, sans-serif' }}
           >
-            Schimbă Parola
+            Setări
           </h1>
 
+          {/* Export/Import Card */}
+          <Card className="border-zinc-200 shadow-sm rounded-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2" style={{ fontFamily: 'Manrope, sans-serif' }}>
+                <Download className="w-5 h-5" strokeWidth={1.5} />
+                Export / Import Date
+              </CardTitle>
+              <CardDescription>
+                Exportă toate datele într-un fișier JSON sau importă date dintr-un fișier existent
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex gap-4">
+                <Button
+                  onClick={handleExport}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 rounded-sm"
+                  disabled={isLoading}
+                  data-testid="export-button"
+                >
+                  <Download className="w-4 h-4 mr-2" strokeWidth={1.5} />
+                  {isLoading ? 'Se exportă...' : 'Exportă Date'}
+                </Button>
+                
+                <div className="flex-1">
+                  <input
+                    type="file"
+                    accept=".json"
+                    onChange={handleImport}
+                    ref={fileInputRef}
+                    className="hidden"
+                    id="import-file"
+                    data-testid="import-file-input"
+                  />
+                  <Button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full bg-green-600 hover:bg-green-700 rounded-sm"
+                    disabled={isLoading}
+                    data-testid="import-button"
+                  >
+                    <Upload className="w-4 h-4 mr-2" strokeWidth={1.5} />
+                    {isLoading ? 'Se importă...' : 'Importă Date'}
+                  </Button>
+                </div>
+              </div>
+
+              {exportMessage.text && (
+                <div
+                  className={`p-3 rounded-sm text-sm ${
+                    exportMessage.type === 'success'
+                      ? 'bg-green-50 text-green-700 border border-green-200'
+                      : 'bg-red-50 text-red-700 border border-red-200'
+                  }`}
+                  data-testid="export-message"
+                >
+                  {exportMessage.type === 'success' && (
+                    <Check className="w-4 h-4 inline mr-2" strokeWidth={1.5} />
+                  )}
+                  {exportMessage.type === 'error' && (
+                    <AlertTriangle className="w-4 h-4 inline mr-2" strokeWidth={1.5} />
+                  )}
+                  {exportMessage.text}
+                </div>
+              )}
+
+              <div className="text-xs text-zinc-500 space-y-1">
+                <p>• Exportul include: membri, prezențe și invitați</p>
+                <p>• Formatul JSON este versionat pentru compatibilitate în viitor</p>
+                <p>• La import, datele existente vor fi actualizate, cele noi vor fi adăugate</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Change Password Card */}
           <Card className="border-zinc-200 shadow-sm rounded-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2" style={{ fontFamily: 'Manrope, sans-serif' }}>
                 <Key className="w-5 h-5" strokeWidth={1.5} />
-                Parolă Nouă
+                Schimbă Parola
               </CardTitle>
               <CardDescription>
                 Completează formularul pentru a schimba parola
