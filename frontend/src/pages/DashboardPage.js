@@ -658,14 +658,20 @@ const DashboardPage = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {invitati.map((invitat) => (
+                    {[...invitati]
+                      .sort((a, b) => {
+                        const nameA = `${a.prenume} ${a.nume}`.toLowerCase();
+                        const nameB = `${b.prenume} ${b.nume}`.toLowerCase();
+                        return nameA.localeCompare(nameB);
+                      })
+                      .map((invitat, index) => (
                       <TableRow 
                         key={invitat.id} 
                         data-testid={`invitat-row-${invitat.id}`}
                         className={invitat.prezent ? 'bg-green-100' : (invitat.is_inlocuitor ? 'bg-blue-50' : '')}
                       >
                         <TableCell className="font-medium tabular-nums">
-                          {invitat.nr}
+                          {index + 1}
                         </TableCell>
                         <TableCell data-testid={`invitat-prenume-${invitat.id}`}>
                           {invitat.prenume}
