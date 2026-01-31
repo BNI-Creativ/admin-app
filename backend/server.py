@@ -629,6 +629,7 @@ async def export_all_data(current_user: dict = Depends(get_current_user)):
 async def import_all_data(import_data: dict, current_user: dict = Depends(get_current_user)):
     """
     Import data into the database from JSON export.
+    REPLACES all existing data (does not merge).
     Supports version migration for future compatibility.
     """
     version = import_data.get("version", "1.0")
@@ -646,10 +647,18 @@ async def import_all_data(import_data: dict, current_user: dict = Depends(get_cu
         attendance = data.get("attendance", [])
         guests = data.get("guests", [])
     
+    # First, delete ALL existing data
+    deleted = {
+        "members": (await db.members.delete_many({})).deleted_count,
+        "attendance": (await db.attendance.delete_many({})).deleted_count,
+        "guests": (await db.guests.delete_many({})).deleted_count
+    }
+    logger.info(f"Deleted existing data: {deleted}")
+    
     results = {
-        "members": {"imported": 0, "updated": 0, "errors": 0},
-        "attendance": {"imported": 0, "updated": 0, "errors": 0},
-        "guests": {"imported": 0, "updated": 0, "errors": 0}
+        "members": {"imported": 0, "errors": 0},
+        "attendance": {"imported": 0, "errors": 0},
+        "guests": {"imported": 0, "errors": 0}
     }
     
     # Import members
@@ -658,25 +667,19 @@ async def import_all_data(import_data: dict, current_user: dict = Depends(get_cu
             member_id = member.get("id")
             if not member_id:
                 member_id = str(uuid.uuid4())
-                member["id"] = member_id
-            
-            existing = await db.members.find_one({"id": member_id})
             
             member_doc = {
                 "id": member_id,
                 "nr": member.get("nr", 0),
                 "prenume": member.get("prenume", ""),
                 "nume": member.get("nume", ""),
+                "nume_inlocuitor": member.get("nume_inlocuitor", ""),
                 "created_at": member.get("created_at", datetime.now(timezone.utc).isoformat()),
                 "updated_at": datetime.now(timezone.utc).isoformat()
             }
             
-            if existing:
-                await db.members.update_one({"id": member_id}, {"$set": member_doc})
-                results["members"]["updated"] += 1
-            else:
-                await db.members.insert_one(member_doc)
-                results["members"]["imported"] += 1
+            await db.members.insert_one(member_doc)
+            results["members"]["imported"] += 1
         except Exception as e:
             logger.error(f"Error importing member: {e}")
             results["members"]["errors"] += 1
@@ -690,8 +693,6 @@ async def import_all_data(import_data: dict, current_user: dict = Depends(get_cu
             if not member_id or not data_str:
                 continue
             
-            existing = await db.attendance.find_one({"member_id": member_id, "data": data_str})
-            
             att_doc = {
                 "member_id": member_id,
                 "data": data_str,
@@ -702,15 +703,8 @@ async def import_all_data(import_data: dict, current_user: dict = Depends(get_cu
                 "updated_at": datetime.now(timezone.utc).isoformat()
             }
             
-            if existing:
-                await db.attendance.update_one(
-                    {"member_id": member_id, "data": data_str},
-                    {"$set": att_doc}
-                )
-                results["attendance"]["updated"] += 1
-            else:
-                await db.attendance.insert_one(att_doc)
-                results["attendance"]["imported"] += 1
+            await db.attendance.insert_one(att_doc)
+            results["attendance"]["imported"] += 1
         except Exception as e:
             logger.error(f"Error importing attendance: {e}")
             results["attendance"]["errors"] += 1
@@ -721,8 +715,6 @@ async def import_all_data(import_data: dict, current_user: dict = Depends(get_cu
             guest_id = guest.get("id")
             if not guest_id:
                 guest_id = str(uuid.uuid4())
-            
-            existing = await db.guests.find_one({"id": guest_id})
             
             guest_doc = {
                 "id": guest_id,
@@ -740,12 +732,8 @@ async def import_all_data(import_data: dict, current_user: dict = Depends(get_cu
                 "updated_at": datetime.now(timezone.utc).isoformat()
             }
             
-            if existing:
-                await db.guests.update_one({"id": guest_id}, {"$set": guest_doc})
-                results["guests"]["updated"] += 1
-            else:
-                await db.guests.insert_one(guest_doc)
-                results["guests"]["imported"] += 1
+            await db.guests.insert_one(guest_doc)
+            results["guests"]["imported"] += 1
         except Exception as e:
             logger.error(f"Error importing guest: {e}")
             results["guests"]["errors"] += 1
@@ -753,6 +741,7 @@ async def import_all_data(import_data: dict, current_user: dict = Depends(get_cu
     return {
         "success": True,
         "version_imported": version,
+        "deleted": deleted,
         "results": results
     }
 
