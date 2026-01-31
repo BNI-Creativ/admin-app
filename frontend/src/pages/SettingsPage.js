@@ -114,6 +114,19 @@ const SettingsPage = () => {
     const file = event.target.files?.[0];
     if (!file) return;
     
+    // Confirm before replacing all data
+    const confirmed = window.confirm(
+      '⚠️ ATENȚIE!\n\nImportul va ÎNLOCUI toate datele existente cu datele din fișier.\n\nDatele actuale vor fi șterse permanent.\n\nEști sigur că vrei să continui?'
+    );
+    
+    if (!confirmed) {
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      return;
+    }
+    
     setExportMessage({ type: '', text: '' });
     setIsLoading(true);
     
@@ -123,16 +136,19 @@ const SettingsPage = () => {
       
       const response = await axios.post(`${API_URL}/import`, data);
       const results = response.data.results;
+      const deleted = response.data.deleted;
       
       const summary = [
-        `Membri: ${results.members.imported} noi, ${results.members.updated} actualizați`,
-        `Prezențe: ${results.attendance.imported} noi, ${results.attendance.updated} actualizate`,
-        `Invitați: ${results.guests.imported} noi, ${results.guests.updated} actualizați`
+        `Membri: ${results.members.imported} importați`,
+        `Prezențe: ${results.attendance.imported} importate`,
+        `Invitați: ${results.guests.imported} importați`
       ].join(' | ');
+      
+      const deletedInfo = `(Șterse: ${deleted.members} membri, ${deleted.attendance} prezențe, ${deleted.guests} invitați)`;
       
       setExportMessage({ 
         type: 'success', 
-        text: `Import reușit! ${summary}` 
+        text: `Import reușit! ${summary} ${deletedInfo}` 
       });
       
       // Reset file input
