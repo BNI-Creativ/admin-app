@@ -318,7 +318,7 @@ const SettingsPage = () => {
               <div className="text-xs text-zinc-500 space-y-1">
                 <p>• Exportul include: membri, prezențe și invitați</p>
                 <p>• Formatul JSON este versionat pentru compatibilitate în viitor</p>
-                <p>• La import, datele existente vor fi actualizate, cele noi vor fi adăugate</p>
+                <p>• <strong className="text-amber-600">⚠️ La import, datele existente vor fi ÎNLOCUITE complet</strong></p>
               </div>
             </CardContent>
           </Card>
