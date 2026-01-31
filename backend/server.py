@@ -78,7 +78,7 @@ class MemberResponse(BaseModel):
     nr: int
     prenume: str
     nume: str
-    nume_inlocuitor: str
+    nume_inlocuitor: str = ""
 
 class GuestCreate(BaseModel):
     prenume: str
