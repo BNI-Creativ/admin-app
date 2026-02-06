@@ -407,6 +407,9 @@ const DashboardPage = () => {
         </div>
       </aside>
 
+      {/* Sidebar spacer for fixed sidebar */}
+      <div className={`${sidebarOpen ? 'w-[280px]' : 'w-[60px]'} flex-shrink-0 transition-all duration-300 ease-in-out no-print`}></div>
+
       {/* Main Content */}
       <main className="flex-1 p-8 pb-16">
         {/* Header */}
