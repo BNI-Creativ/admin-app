@@ -92,15 +92,7 @@ const DashboardPage = () => {
     try {
       setLoading(true);
       
-      // Step 1: Load from local database first (instant)
-      const localData = await db.getAttendanceByDate(dateString);
-      
-      if (localData.membri.length > 0 || localData.invitati.length > 0) {
-        // We have local data - use it immediately
-        processAndSetData(localData);
-      }
-      
-      // Step 2: If online, fetch from server and update local
+      // Step 1: If online, always fetch from server first to get latest data
       if (isOnline) {
         try {
           const response = await axios.get(`${API_URL}/attendance/${dateString}`);
@@ -126,12 +118,16 @@ const DashboardPage = () => {
           setInvitati(invitatiData);
           setTotalTaxaMembri(serverData.total_taxa_membri);
           setTotalTaxaInvitati(serverData.total_taxa_invitati);
+          return; // Server data loaded successfully
           
         } catch (serverError) {
-          console.warn('Server fetch failed, using local data:', serverError.message);
-          // Local data is already set, so we're good
+          console.warn('Server fetch failed, falling back to local data:', serverError.message);
         }
       }
+      
+      // Step 2: Fallback to local database (when offline or server failed)
+      const localData = await db.getAttendanceByDate(dateString);
+      processAndSetData(localData);
       
     } catch (error) {
       console.error('Error fetching data:', error);
