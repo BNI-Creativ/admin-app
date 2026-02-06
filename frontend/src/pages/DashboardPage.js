@@ -335,7 +335,7 @@ const DashboardPage = () => {
   const totalInvitatiPrezenti = invitati.filter(g => g.prezent).length;
 
   return (
-    <div className="flex h-screen bg-zinc-100 overflow-hidden">
+    <div className="flex min-h-screen bg-zinc-100">
       {/* Sidebar */}
       <aside 
         className={`${sidebarOpen ? 'w-[280px]' : 'w-[60px]'} h-screen bg-white border-r border-zinc-200 flex flex-col no-print transition-all duration-300 ease-in-out flex-shrink-0`}
