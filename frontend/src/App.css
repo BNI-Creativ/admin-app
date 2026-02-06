@@ -242,14 +242,12 @@ body > div:last-child:not(.App):not([class]) {
     display: none !important;
 }
 
-/* PDF Export Mode */
+/* JPEG Export Mode - clean styling for image export */
 .pdf-export-mode,
 .pdf-export-mode *,
 .pdf-export-mode *::before,
 .pdf-export-mode *::after {
     color: #000000 !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
 }
 
 .pdf-export-mode .text-zinc-500,
