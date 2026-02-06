@@ -246,46 +246,11 @@ body > div:last-child:not(.App):not([class]) {
 @media (max-width: 1024px) and (min-width: 768px) {
     .swiss-table th:nth-child(4),
     .swiss-table td:nth-child(4) {
-        max-width: 160px; /* smaller width on tablet */
+        max-width: 160px;
         width: 160px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-    }
-    
-    /* PDF Export fonts for tablet - ultra specific selectors */
-    body .pdf-export-mode .swiss-table th {
-        font-size: 0.9rem !important;
-        padding: 11px 6px !important;
-        vertical-align: middle !important;
-        line-height: 1.3 !important;
-    }
-
-    body .pdf-export-mode .swiss-table td {
-        font-size: 0.95rem !important;
-        padding: 11px 6px !important;
-        height: 40px !important;
-        vertical-align: middle !important;
-        line-height: 1.1 !important;
-    }
-    
-    body .pdf-export-mode .swiss-table td input:not([type="checkbox"]),
-    body .pdf-export-mode .swiss-table td .table-input,
-    body .pdf-export-mode .swiss-table td span {
-        font-size: 0.95rem !important;
-        line-height: 1.1 !important;
-        vertical-align: middle !important;
-    }
-    
-    body .pdf-export-mode h2 {
-        margin-bottom: 6px !important;
-        margin-top: 0 !important;
-        font-size: 1.2rem !important;
-    }
-    
-    body .pdf-export-mode .date-display,
-    body .pdf-export-mode p {
-        font-size: 0.9rem !important;
     }
 
     aside.w-\[60px\],
@@ -321,13 +286,7 @@ body > div:last-child:not(.App):not([class]) {
     aside.w-\[60px\] > div:first-child div:not(:first-child) {
         display: none !important;
     }
-
-    /* JPEG Export - simplified for tablet */
-    body .pdf-export-mode section {
-        margin-bottom: 12px !important;
-    }
-    
-    /* Reduce spacing to fit more content */
+}
     body .pdf-export-mode .space-y-12 > * + * {
         margin-top: 10px !important;
     }
