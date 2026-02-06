@@ -642,12 +642,12 @@ const DashboardPage = () => {
             )}
           </div>
           <Button
-            onClick={handlePrint}
+            onClick={handleExportJpeg}
             className="bg-zinc-900 hover:bg-zinc-800 rounded-sm"
-            data-testid="print-button"
+            data-testid="export-jpeg-button"
           >
-            <Printer className="w-4 h-4 mr-2" strokeWidth={1.5} />
-            Exportă PDF
+            <Image className="w-4 h-4 mr-2" strokeWidth={1.5} />
+            Exportă JPEG
           </Button>
         </div>
 
