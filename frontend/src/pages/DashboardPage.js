@@ -437,42 +437,41 @@ const DashboardPage = () => {
     }
   };
 
-  // PDF Export
-  const handlePrint = () => {
+  // JPEG Export
+  const handleExportJpeg = async () => {
     const element = document.querySelector('.paper-container');
     if (!element) {
       console.error('Paper container not found');
       return;
     }
     
+    // Add export mode class for styling
     element.classList.add('pdf-export-mode');
     
-    const opt = {
-      margin: [0.2, 0.2, 0.2, 0.2],
-      filename: `prezenta_${dateString}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { 
-        scale: 2, 
-        useCORS: true, 
+    try {
+      // Use html2canvas to capture the element
+      const html2canvas = (await import('html2canvas')).default;
+      
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
         logging: false,
-        letterRendering: true
-      },
-      jsPDF: { 
-        unit: 'in', 
-        format: 'a4', 
-        orientation: 'portrait'
-      },
-      pagebreak: { 
-        mode: ['avoid-all', 'css', 'legacy'],
-        before: '.page-break-before',
-        after: '.page-break-after',
-        avoid: ['tr', 'td', '.total-row']
-      }
-    };
-    
-    html2pdf().from(element).set(opt).save().then(() => {
+        backgroundColor: '#ffffff',
+        windowWidth: element.scrollWidth,
+        windowHeight: element.scrollHeight
+      });
+      
+      // Convert to JPEG and download
+      const link = document.createElement('a');
+      link.download = `prezenta_${dateString}.jpg`;
+      link.href = canvas.toDataURL('image/jpeg', 0.92);
+      link.click();
+      
+    } catch (error) {
+      console.error('Error exporting JPEG:', error);
+    } finally {
       element.classList.remove('pdf-export-mode');
-    });
+    }
   };
 
   const formattedDate = format(selectedDate, "EEEE, d MMMM yyyy", { locale: ro });
