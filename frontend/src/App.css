@@ -591,26 +591,9 @@ body > div:last-child:not(.App):not([class]) {
         display: none !important;
     }
 
-    /* PDF Export - allow page breaks on tablet */
+    /* JPEG Export - simplified for tablet */
     body .pdf-export-mode section {
-        page-break-inside: auto !important;
-        break-inside: auto !important;
         margin-bottom: 12px !important;
-    }
-    
-    body .pdf-export-mode .swiss-table {
-        page-break-inside: auto !important;
-    }
-    
-    body .pdf-export-mode .swiss-table tbody tr {
-        page-break-inside: avoid !important;
-        break-inside: avoid !important;
-        page-break-after: auto !important;
-    }
-    
-    /* Ensure thead repeats on new pages */
-    body .pdf-export-mode .swiss-table thead {
-        display: table-header-group !important;
     }
     
     /* Reduce spacing to fit more content */
