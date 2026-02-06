@@ -287,7 +287,3 @@ body > div:last-child:not(.App):not([class]) {
         display: none !important;
     }
 }
-    body .pdf-export-mode .space-y-12 > * + * {
-        margin-top: 10px !important;
-    }
-}
