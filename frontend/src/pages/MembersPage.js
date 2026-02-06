@@ -179,10 +179,10 @@ const MembersPage = () => {
               to="/settings"
               className="sidebar-link flex items-center gap-3 px-3 py-3 rounded-sm text-sm font-medium text-zinc-600"
               data-testid="nav-settings"
-              title="Schimbă Parola"
+              title="Setări"
             >
-              <Users className="w-4 h-4 flex-shrink-0" strokeWidth={1.5} />
-              {sidebarOpen && <span>Schimbă Parola</span>}
+              <Key className="w-4 h-4 flex-shrink-0" strokeWidth={1.5} />
+              {sidebarOpen && <span>Setări</span>}
             </Link>
           </div>
         </nav>
