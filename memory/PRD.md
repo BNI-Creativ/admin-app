@@ -123,6 +123,12 @@ Aplicație web în limba română pentru gestionarea prezenței membrilor și in
 ## Data: 6 Februarie 2026
 
 ### Actualizări Recente
+- **Offline-First Architecture** - COMPLET IMPLEMENTAT
+  - DashboardPage.js refactorizat pentru a utiliza useOffline hook
+  - Indicator vizual Online/Offline cu iconițe Wifi/WifiOff
+  - Buton de sincronizare manuală cu counter pentru modificări nesincronizate
+  - Datele se salvează local instant și se sincronizează cu serverul când e online
+  - Auto-sync la fiecare 5 minute când e online
 - Bug scroll excesiv - REZOLVAT
 - Export/Import JSON - TESTAT ȘI FUNCȚIONAL
-- Toate testele passed (27/27 backend, 100% frontend)
+- Toate testele passed (iteration_5.json: 100% frontend)
