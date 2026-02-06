@@ -338,7 +338,7 @@ const DashboardPage = () => {
     <div className="flex min-h-screen bg-zinc-100">
       {/* Sidebar */}
       <aside 
-        className={`${sidebarOpen ? 'w-[280px]' : 'w-[60px]'} h-screen bg-white border-r border-zinc-200 flex flex-col no-print transition-all duration-300 ease-in-out flex-shrink-0`}
+        className={`${sidebarOpen ? 'w-[280px]' : 'w-[60px]'} fixed top-0 left-0 h-screen bg-white border-r border-zinc-200 flex flex-col no-print transition-all duration-300 ease-in-out flex-shrink-0 z-40`}
       >
         <div className="p-4 border-b border-zinc-200">
           <div className="flex items-center gap-3">
