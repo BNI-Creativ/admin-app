@@ -309,32 +309,6 @@ body > div:last-child:not(.App):not([class]) {
     color: #000000 !important;
 }
 
-/* Prevent rows from breaking across pages */
-.pdf-export-mode .swiss-table tr {
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
-}
-
-.pdf-export-mode .swiss-table thead {
-    display: table-header-group !important;
-}
-
-.pdf-export-mode .swiss-table tbody tr {
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
-    page-break-after: auto !important;
-}
-
-.pdf-export-mode .swiss-table tbody tr td {
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
-}
-
-.pdf-export-mode .swiss-table thead tr {
-    page-break-after: avoid !important;
-    break-after: avoid !important;
-}
-
 /* Total row - with full border */
 .pdf-export-mode .total-row,
 .pdf-export-mode .total-row td {
@@ -410,7 +384,7 @@ body > div:last-child:not(.App):not([class]) {
     font-weight: 600 !important;
 }
 
-/* Make all table text bold for print */
+/* Make all table text bold for export */
 .pdf-export-mode table,
 .pdf-export-mode table * {
     font-weight: 700 !important;
@@ -422,12 +396,10 @@ body > div:last-child:not(.App):not([class]) {
 }
 
 .pdf-export-mode section {
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
     margin-bottom: 20px !important;
 }
 
-/* Hide form and buttons in PDF */
+/* Hide form and buttons in JPEG export */
 .pdf-export-mode form,
 .pdf-export-mode .no-print,
 .pdf-export-mode button:not(.attendance-checkbox) {
