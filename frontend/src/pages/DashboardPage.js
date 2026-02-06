@@ -296,28 +296,25 @@ const DashboardPage = () => {
     element.classList.add('pdf-export-mode');
     
     const opt = {
-      margin: [0.3, 0.3, 0.3, 0.3],
+      margin: [0.2, 0.2, 0.2, 0.2],
       filename: `prezenta_${dateString}.pdf`,
-      image: { type: 'jpeg', quality: 0.95 },
+      image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { 
-        scale: 1.5,
+        scale: 2, 
         useCORS: true, 
         logging: false,
-        letterRendering: true,
-        scrollY: 0,
-        windowWidth: element.scrollWidth
+        letterRendering: true
       },
       jsPDF: { 
         unit: 'in', 
         format: 'a4', 
-        orientation: 'portrait',
-        compress: true
+        orientation: 'portrait'
       },
       pagebreak: { 
-        mode: 'css',
+        mode: ['avoid-all', 'css', 'legacy'],
         before: '.page-break-before',
         after: '.page-break-after',
-        avoid: ['tr', 'thead', '.total-row', 'section']
+        avoid: ['tr', 'td', '.total-row']
       }
     };
     
@@ -411,9 +408,9 @@ const DashboardPage = () => {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto p-6">
+      <main className="flex-1 overflow-y-auto p-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6 no-print">
+        <div className="flex items-center justify-between mb-8 no-print">
           <div className="flex items-center gap-4">
             <Popover>
               <PopoverTrigger asChild>
@@ -456,7 +453,7 @@ const DashboardPage = () => {
         {/* Paper Container */}
         <div className="paper-container print-container">
           {/* Date Display */}
-          <div className="text-right mb-6">
+          <div className="text-right mb-8">
             <p className="date-display text-xl text-zinc-900" data-testid="current-date">
               {capitalizedDate}
             </p>
@@ -465,7 +462,7 @@ const DashboardPage = () => {
           {loading ? (
             <div className="text-center py-12 text-zinc-500">Se încarcă...</div>
           ) : (
-            <div className="space-y-8">
+            <div className="space-y-12">
               {/* Membri Table */}
               <section className="animate-fade-in">
                 <h2

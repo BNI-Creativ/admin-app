@@ -136,7 +136,7 @@ const MembersPage = () => {
   return (
     <div className="flex h-screen bg-zinc-100 overflow-hidden">
       {/* Sidebar */}
-      <aside 
+      <aside
         className={`${sidebarOpen ? 'w-[280px]' : 'w-[60px]'} h-screen bg-white border-r border-zinc-200 flex flex-col transition-all duration-300 ease-in-out flex-shrink-0`}
       >
         <div className="p-4 border-b border-zinc-200">

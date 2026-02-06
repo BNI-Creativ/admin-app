@@ -62,9 +62,9 @@ const SettingsPage = () => {
       setMessage({ type: 'success', text: 'Parola a fost schimbată cu succes!' });
       setPasswords({ currentPassword: '', newPassword: '', confirmPassword: '' });
     } catch (error) {
-      setMessage({ 
-        type: 'error', 
-        text: error.response?.data?.detail || 'Eroare la schimbarea parolei' 
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.detail || 'Eroare la schimbarea parolei'
       });
     } finally {
       setIsLoading(false);
@@ -172,7 +172,7 @@ const SettingsPage = () => {
   return (
     <div className="flex h-screen bg-zinc-100 overflow-hidden">
       {/* Sidebar */}
-      <aside 
+      <aside
         className={`${sidebarOpen ? 'w-[280px]' : 'w-[60px]'} h-screen bg-white border-r border-zinc-200 flex flex-col transition-all duration-300 ease-in-out flex-shrink-0`}
       >
         <div className="p-4 border-b border-zinc-200">

@@ -31,7 +31,7 @@ services:
     volumes:
       - ./backend:/app
     ports:
-      - "127.0.0.1:9002:8000"
+      - "127.0.0.1:9002:9002"
     networks:
       - bni-creativ-prezenta
 
