@@ -48,11 +48,11 @@ Aplicație web în limba română pentru gestionarea prezenței membrilor și in
 - Toggle prin icon în stânga-sus
 - Design minimalist Swiss-style
 
-### 8. Export PDF (✅ COMPLET)
-- Buton "Exportă PDF" în header
+### 8. Export JPEG (✅ COMPLET - înlocuit PDF)
+- Buton "Exportă JPEG" în header
 - Text negru pentru lizibilitate
-- Paginare pentru liste mari
-- Styling compact
+- Fișier mai mic decât PDF
+- Folosește html2canvas pentru generare imagine
 
 ### 9. Export/Import Date (✅ COMPLET)
 - Export JSON versionat cu toată baza de date
