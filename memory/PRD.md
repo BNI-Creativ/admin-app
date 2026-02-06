@@ -89,6 +89,7 @@ Aplicație web în limba română pentru gestionarea prezenței membrilor și in
 - Utilizare Capacitor toolchain
 - Ghid disponibil: `/app/frontend/ANDROID_BUILD_GUIDE.md`
 - Necesită Android Studio sau build CLI
+- **Pregătit pentru build** - arhitectura offline-first este completă
 
 ## Arhitectura Tehnică
 
