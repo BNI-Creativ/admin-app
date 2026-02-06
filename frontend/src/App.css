@@ -486,29 +486,9 @@ body > div:last-child:not(.App):not([class]) {
     color: #000000 !important;
 }
 
-.pdf-export-mode h2.second-title {
-    color: #ffffff !important;
-}
-
 .pdf-export-mode * {
     opacity: 1 !important;
     visibility: visible !important;
-}
-
-.pdf-export-mode .total-row td:first-child {
-    text-align: right !important;
-    font-weight: 900 !important;
-}
-
-.pdf-export-mode .tabular-nums,
-.pdf-export-mode td .tabular-nums {
-    font-family: 'JetBrains Mono', monospace !important;
-    font-weight: 900 !important;
-    color: #000000 !important;
-}
-
-.pdf-export-mode h2.second-title {
-    color: #ffffff !important;
 }
 
 /* Tablet-specific adjustments */
