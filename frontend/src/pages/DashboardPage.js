@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
+import { useOffline } from '../contexts/OfflineContext';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Checkbox } from '../components/ui/checkbox';
@@ -30,6 +31,9 @@ import {
   Plus,
   Trash2,
   Settings,
+  Wifi,
+  WifiOff,
+  RefreshCw,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ro } from 'date-fns/locale';
@@ -39,6 +43,7 @@ const API_URL = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 const DashboardPage = () => {
   const { user, logout } = useAuth();
+  const { isInitialized, isOnline, syncStatus, sync, db } = useOffline();
   const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [membri, setMembri] = useState([]);
@@ -48,6 +53,7 @@ const DashboardPage = () => {
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [datesWithData, setDatesWithData] = useState([]);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [newGuest, setNewGuest] = useState({
     prenume: '',
     nume: '',
@@ -61,113 +67,222 @@ const DashboardPage = () => {
   // Fetch dates that have saved data
   const fetchDatesWithData = useCallback(async () => {
     try {
-      const response = await axios.get(`${API_URL}/attendance/dates/list`);
-      setDatesWithData(response.data.dates || []);
+      // Try local first
+      if (isInitialized) {
+        const localDates = await db.getDatesWithData();
+        if (localDates.length > 0) {
+          setDatesWithData(localDates);
+        }
+      }
+      
+      // Then try server if online
+      if (isOnline) {
+        const response = await axios.get(`${API_URL}/attendance/dates/list`);
+        setDatesWithData(response.data.dates || []);
+      }
     } catch (error) {
       console.error('Error fetching dates:', error);
     }
-  }, []);
+  }, [isInitialized, isOnline, db]);
 
+  // Main data fetch - offline-first approach
   const fetchData = useCallback(async () => {
+    if (!isInitialized) return;
+    
     try {
       setLoading(true);
-      const response = await axios.get(`${API_URL}/attendance/${dateString}`);
-      let membriData = response.data.membri;
-      const invitatiData = response.data.invitati;
       
-      // Sync inlocuitori from guests to members
-      // For each guest marked as inlocuitor, update the corresponding member's nume_inlocuitor
-      invitatiData.forEach(invitat => {
-        if (invitat.is_inlocuitor && invitat.member_id) {
-          const memberIndex = membriData.findIndex(m => m.id === invitat.member_id);
-          if (memberIndex >= 0) {
-            membriData[memberIndex] = {
-              ...membriData[memberIndex],
-              nume_inlocuitor: `${invitat.prenume} ${invitat.nume}`
-            };
-          }
+      // Step 1: Load from local database first (instant)
+      const localData = await db.getAttendanceByDate(dateString);
+      
+      if (localData.membri.length > 0 || localData.invitati.length > 0) {
+        // We have local data - use it immediately
+        processAndSetData(localData);
+      }
+      
+      // Step 2: If online, fetch from server and update local
+      if (isOnline) {
+        try {
+          const response = await axios.get(`${API_URL}/attendance/${dateString}`);
+          const serverData = response.data;
+          
+          // Process server data with inlocuitori sync
+          let membriData = serverData.membri;
+          const invitatiData = serverData.invitati;
+          
+          invitatiData.forEach(invitat => {
+            if (invitat.is_inlocuitor && invitat.member_id) {
+              const memberIndex = membriData.findIndex(m => m.id === invitat.member_id);
+              if (memberIndex >= 0) {
+                membriData[memberIndex] = {
+                  ...membriData[memberIndex],
+                  nume_inlocuitor: `${invitat.prenume} ${invitat.nume}`
+                };
+              }
+            }
+          });
+          
+          setMembri(membriData);
+          setInvitati(invitatiData);
+          setTotalTaxaMembri(serverData.total_taxa_membri);
+          setTotalTaxaInvitati(serverData.total_taxa_invitati);
+          
+        } catch (serverError) {
+          console.warn('Server fetch failed, using local data:', serverError.message);
+          // Local data is already set, so we're good
         }
-      });
+      }
       
-      setMembri(membriData);
-      setInvitati(invitatiData);
-      setTotalTaxaMembri(response.data.total_taxa_membri);
-      setTotalTaxaInvitati(response.data.total_taxa_invitati);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
     }
-  }, [dateString]);
+  }, [dateString, isInitialized, isOnline, db]);
+
+  // Helper to process and set data
+  const processAndSetData = (data) => {
+    let membriData = [...data.membri];
+    const invitatiData = data.invitati;
+    
+    // Sync inlocuitori from guests to members
+    invitatiData.forEach(invitat => {
+      if (invitat.is_inlocuitor && invitat.member_id) {
+        const memberIndex = membriData.findIndex(m => m.id === invitat.member_id);
+        if (memberIndex >= 0) {
+          membriData[memberIndex] = {
+            ...membriData[memberIndex],
+            nume_inlocuitor: `${invitat.prenume} ${invitat.nume}`
+          };
+        }
+      }
+    });
+    
+    setMembri(membriData);
+    setInvitati(invitatiData);
+    setTotalTaxaMembri(data.total_taxa_membri);
+    setTotalTaxaInvitati(data.total_taxa_invitati);
+  };
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    if (isInitialized) {
+      fetchData();
+    }
+  }, [fetchData, isInitialized]);
 
   useEffect(() => {
-    fetchDatesWithData();
-  }, [fetchDatesWithData]);
+    if (isInitialized) {
+      fetchDatesWithData();
+    }
+  }, [fetchDatesWithData, isInitialized]);
 
   const handleLogout = () => {
     logout();
     navigate('/');
   };
 
-  // Handle member attendance (checkbox and taxa)
+  // Manual sync trigger
+  const handleManualSync = async () => {
+    if (isSyncing || !isOnline) return;
+    
+    setIsSyncing(true);
+    try {
+      await sync();
+      await fetchData(); // Refresh data after sync
+    } catch (error) {
+      console.error('Manual sync failed:', error);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  // Handle member attendance (checkbox and taxa) - OFFLINE FIRST
   const handleAttendanceChange = async (memberId, prezent, taxa) => {
     const membru = membri.find(m => m.id === memberId);
     const oldTaxa = membru?.taxa || 0;
     const newTaxaLunara = (membru?.taxa_lunara || 0) - oldTaxa + taxa;
 
+    // Update UI immediately (optimistic update)
     setMembri((prev) =>
       prev.map((m) =>
         m.id === memberId ? { ...m, prezent, taxa, taxa_lunara: newTaxaLunara } : m
       )
     );
-
     setTotalTaxaMembri((prev) => prev - oldTaxa + taxa);
 
+    // Save to local database first
     try {
-      await axios.post(`${API_URL}/attendance/${dateString}`, {
-        member_id: memberId,
-        prezent,
-        taxa,
-        nume_inlocuitor: '',
-      });
+      await db.saveAttendance(dateString, memberId, prezent, taxa, membru?.nume_inlocuitor || '');
     } catch (error) {
-      console.error('Error updating attendance:', error);
+      console.error('Error saving to local DB:', error);
+    }
+
+    // Then sync to server if online
+    if (isOnline) {
+      try {
+        await axios.post(`${API_URL}/attendance/${dateString}`, {
+          member_id: memberId,
+          prezent,
+          taxa,
+          nume_inlocuitor: membru?.nume_inlocuitor || '',
+        });
+      } catch (error) {
+        console.error('Error syncing attendance to server:', error);
+        // Data is already saved locally, will sync later
+      }
     }
   };
 
-  // Add new guest
+  // Add new guest - OFFLINE FIRST
   const handleAddGuest = async (e) => {
     e.preventDefault();
+    
+    // Find member_id if invitat_de is set
+    let memberId = null;
+    if (newGuest.invitat_de) {
+      const matchingMember = membri.find(m => 
+        `${m.prenume} ${m.nume}` === newGuest.invitat_de
+      );
+      memberId = matchingMember?.id || null;
+    }
+    
+    const guestData = {
+      ...newGuest,
+      data: dateString,
+      prezent: false,
+      is_inlocuitor: false,
+      member_id: memberId,
+    };
+
     try {
-      // Find member_id if invitat_de is set
-      let memberId = null;
-      if (newGuest.invitat_de) {
-        const matchingMember = membri.find(m => 
-          `${m.prenume} ${m.nume}` === newGuest.invitat_de
-        );
-        memberId = matchingMember?.id || null;
-      }
+      // Save to local database first
+      const localGuest = await db.addGuest(guestData);
       
-      const guestData = {
-        ...newGuest,
-        prezent: false,
-        is_inlocuitor: false,
-        member_id: memberId,
-      };
-      const response = await axios.post(`${API_URL}/guests?data=${dateString}`, guestData);
-      setInvitati([...invitati, response.data]);
+      // Update UI immediately
+      setInvitati([...invitati, localGuest]);
       setTotalTaxaInvitati((prev) => prev + newGuest.taxa);
       setNewGuest({ prenume: '', nume: '', companie: '', invitat_de: '', taxa: 0 });
+
+      // Sync to server if online
+      if (isOnline) {
+        try {
+          const response = await axios.post(`${API_URL}/guests?data=${dateString}`, guestData);
+          // Update with server ID if different
+          if (response.data.id !== localGuest.id) {
+            setInvitati(prev => prev.map(g => 
+              g.id === localGuest.id ? { ...g, id: response.data.id } : g
+            ));
+          }
+        } catch (error) {
+          console.error('Error syncing guest to server:', error);
+        }
+      }
     } catch (error) {
       console.error('Error adding guest:', error);
     }
   };
 
-  // Update guest field
+  // Update guest field - OFFLINE FIRST
   const handleUpdateGuest = async (guestId, field, value) => {
     const guest = invitati.find(g => g.id === guestId);
     if (!guest) return;
@@ -176,7 +291,6 @@ const DashboardPage = () => {
 
     // Special handling for is_inlocuitor change
     if (field === 'is_inlocuitor') {
-      // Can only set inlocuitor if invitat_de is set and matches a member
       if (value && (!guest.invitat_de || guest.invitat_de === '-------' || !guest.member_id)) {
         return;
       }
@@ -186,46 +300,58 @@ const DashboardPage = () => {
       const membru = membri.find(m => m.id === memberId);
       
       if (value && memberId) {
-        // Set guest name as inlocuitor for the member
         const guestName = `${guest.prenume} ${guest.nume}`;
         setMembri((prev) =>
           prev.map((m) =>
             m.id === memberId ? { ...m, nume_inlocuitor: guestName } : m
           )
         );
-        // Update attendance with inlocuitor name
+        
+        // Save to local DB
         if (membru) {
-          await axios.post(`${API_URL}/attendance/${dateString}`, {
-            member_id: memberId,
-            prezent: membru.prezent || false,
-            taxa: membru.taxa || 0,
-            nume_inlocuitor: guestName,
-          });
+          await db.saveAttendance(dateString, memberId, membru.prezent || false, membru.taxa || 0, guestName);
+        }
+        
+        // Sync to server if online
+        if (isOnline && membru) {
+          try {
+            await axios.post(`${API_URL}/attendance/${dateString}`, {
+              member_id: memberId,
+              prezent: membru.prezent || false,
+              taxa: membru.taxa || 0,
+              nume_inlocuitor: guestName,
+            });
+          } catch (error) {
+            console.error('Error syncing inlocuitor to server:', error);
+          }
         }
       } else if (!value && memberId) {
-        // Clear inlocuitor from member
         setMembri((prev) =>
           prev.map((m) =>
             m.id === memberId ? { ...m, nume_inlocuitor: '' } : m
           )
         );
+        
         if (membru) {
-          await axios.post(`${API_URL}/attendance/${dateString}`, {
-            member_id: memberId,
-            prezent: membru.prezent || false,
-            taxa: membru.taxa || 0,
-            nume_inlocuitor: '',
-          });
+          await db.saveAttendance(dateString, memberId, membru.prezent || false, membru.taxa || 0, '');
+          
+          if (isOnline) {
+            try {
+              await axios.post(`${API_URL}/attendance/${dateString}`, {
+                member_id: memberId,
+                prezent: membru.prezent || false,
+                taxa: membru.taxa || 0,
+                nume_inlocuitor: '',
+              });
+            } catch (error) {
+              console.error('Error clearing inlocuitor on server:', error);
+            }
+          }
         }
       }
     }
 
-    // Special handling for prezent change
-    if (field === 'prezent') {
-      updatedGuest.prezent = value;
-    }
-
-    // Update local state
+    // Update local state immediately
     setInvitati((prev) =>
       prev.map((g) => (g.id === guestId ? updatedGuest : g))
     );
@@ -237,51 +363,81 @@ const DashboardPage = () => {
       setTotalTaxaInvitati((prev) => prev - oldTaxa + newTaxa);
     }
 
-    // Save guest to API
+    // Save to local DB
     try {
-      await axios.put(`${API_URL}/guests/${guestId}`, {
-        prenume: updatedGuest.prenume,
-        nume: updatedGuest.nume,
-        companie: updatedGuest.companie,
-        invitat_de: updatedGuest.invitat_de,
-        taxa: updatedGuest.taxa,
-        prezent: updatedGuest.prezent,
-        is_inlocuitor: updatedGuest.is_inlocuitor,
-        member_id: updatedGuest.member_id,
-      });
+      await db.updateGuest(guestId, updatedGuest);
     } catch (error) {
-      console.error('Error updating guest:', error);
+      console.error('Error updating guest in local DB:', error);
+    }
+
+    // Sync to server if online
+    if (isOnline) {
+      try {
+        await axios.put(`${API_URL}/guests/${guestId}`, {
+          prenume: updatedGuest.prenume,
+          nume: updatedGuest.nume,
+          companie: updatedGuest.companie,
+          invitat_de: updatedGuest.invitat_de,
+          taxa: updatedGuest.taxa,
+          prezent: updatedGuest.prezent,
+          is_inlocuitor: updatedGuest.is_inlocuitor,
+          member_id: updatedGuest.member_id,
+        });
+      } catch (error) {
+        console.error('Error syncing guest update to server:', error);
+      }
     }
   };
 
-  // Delete guest
+  // Delete guest - OFFLINE FIRST
   const handleDeleteGuest = async (guestId) => {
-    try {
-      const guest = invitati.find((g) => g.id === guestId);
-      
-      // If deleting an inlocuitor, clear the nume_inlocuitor from member
-      if (guest?.is_inlocuitor && guest?.member_id) {
-        const membru = membri.find(m => m.id === guest.member_id);
-        if (membru) {
-          setMembri((prev) =>
-            prev.map((m) =>
-              m.id === guest.member_id ? { ...m, nume_inlocuitor: '' } : m
-            )
-          );
-          await axios.post(`${API_URL}/attendance/${dateString}`, {
-            member_id: guest.member_id,
-            prezent: membru.prezent || false,
-            taxa: membru.taxa || 0,
-            nume_inlocuitor: '',
-          });
+    const guest = invitati.find((g) => g.id === guestId);
+    
+    // If deleting an inlocuitor, clear the nume_inlocuitor from member
+    if (guest?.is_inlocuitor && guest?.member_id) {
+      const membru = membri.find(m => m.id === guest.member_id);
+      if (membru) {
+        setMembri((prev) =>
+          prev.map((m) =>
+            m.id === guest.member_id ? { ...m, nume_inlocuitor: '' } : m
+          )
+        );
+        
+        await db.saveAttendance(dateString, guest.member_id, membru.prezent || false, membru.taxa || 0, '');
+        
+        if (isOnline) {
+          try {
+            await axios.post(`${API_URL}/attendance/${dateString}`, {
+              member_id: guest.member_id,
+              prezent: membru.prezent || false,
+              taxa: membru.taxa || 0,
+              nume_inlocuitor: '',
+            });
+          } catch (error) {
+            console.error('Error clearing inlocuitor on server:', error);
+          }
         }
       }
-      
-      await axios.delete(`${API_URL}/guests/${guestId}`);
-      setInvitati((prev) => prev.filter((g) => g.id !== guestId));
-      setTotalTaxaInvitati((prev) => prev - (guest?.taxa || 0));
+    }
+    
+    // Update UI immediately
+    setInvitati((prev) => prev.filter((g) => g.id !== guestId));
+    setTotalTaxaInvitati((prev) => prev - (guest?.taxa || 0));
+
+    // Delete from local DB
+    try {
+      await db.deleteGuest(guestId);
     } catch (error) {
-      console.error('Error deleting guest:', error);
+      console.error('Error deleting guest from local DB:', error);
+    }
+
+    // Sync to server if online
+    if (isOnline) {
+      try {
+        await axios.delete(`${API_URL}/guests/${guestId}`);
+      } catch (error) {
+        console.error('Error deleting guest from server:', error);
+      }
     }
   };
 
@@ -333,6 +489,18 @@ const DashboardPage = () => {
 
   // Calculate total present guests
   const totalInvitatiPrezenti = invitati.filter(g => g.prezent).length;
+
+  // Show loading state while initializing
+  if (!isInitialized) {
+    return (
+      <div className="flex min-h-screen bg-zinc-100 items-center justify-center">
+        <div className="text-center">
+          <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-zinc-400" />
+          <p className="text-zinc-500">Se inițializează baza de date...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-zinc-100">
@@ -442,6 +610,42 @@ const DashboardPage = () => {
                 />
               </PopoverContent>
             </Popover>
+            
+            {/* Online/Offline indicator */}
+            <div 
+              className={`flex items-center gap-2 px-3 py-2 rounded-sm text-sm ${
+                isOnline ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'
+              }`}
+              title={isOnline ? 'Conectat la server' : 'Mod offline - datele se salvează local'}
+              data-testid="connection-status"
+            >
+              {isOnline ? (
+                <Wifi className="w-4 h-4" strokeWidth={1.5} />
+              ) : (
+                <WifiOff className="w-4 h-4" strokeWidth={1.5} />
+              )}
+              <span>{isOnline ? 'Online' : 'Offline'}</span>
+              {syncStatus.pendingChanges > 0 && (
+                <span className="bg-amber-200 text-amber-800 px-2 py-0.5 rounded-full text-xs">
+                  {syncStatus.pendingChanges} nesincronizate
+                </span>
+              )}
+            </div>
+            
+            {/* Manual sync button */}
+            {isOnline && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleManualSync}
+                disabled={isSyncing}
+                className="rounded-sm"
+                data-testid="sync-button"
+              >
+                <RefreshCw className={`w-4 h-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} strokeWidth={1.5} />
+                {isSyncing ? 'Sincronizare...' : 'Sincronizează'}
+              </Button>
+            )}
           </div>
           <Button
             onClick={handlePrint}
