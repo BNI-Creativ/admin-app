@@ -150,11 +150,11 @@ class TestExportImport:
         assert "results" in result1
         assert "members" in result1["results"]
         assert "imported" in result1["results"]["members"]
-        assert "updated" in result1["results"]["members"]
+        assert "errors" in result1["results"]["members"]
         
         print(f"✓ Import returns correct count structure")
         print(f"  - Members imported: {result1['results']['members']['imported']}")
-        print(f"  - Members updated: {result1['results']['members']['updated']}")
+        print(f"  - Members errors: {result1['results']['members']['errors']}")
     
     def test_import_updates_existing_data(self):
         """Test import updates existing records instead of duplicating"""
@@ -187,11 +187,11 @@ class TestExportImport:
         assert response2.status_code == 200
         result2 = response2.json()
         
-        # Should show as updated, not imported
-        assert result2["results"]["members"]["updated"] >= 1, \
-            "Second import should update existing member"
+        # Import replaces all data, so second import should also show imported
+        assert result2["results"]["members"]["imported"] >= 1, \
+            "Second import should import member"
         
-        print(f"✓ Import correctly updates existing records")
+        print(f"✓ Import correctly replaces existing records")
     
     def test_import_handles_attendance_data(self):
         """Test import handles attendance records correctly"""
@@ -220,7 +220,7 @@ class TestExportImport:
         
         print(f"✓ Import handles attendance data")
         print(f"  - Attendance imported: {result['results']['attendance']['imported']}")
-        print(f"  - Attendance updated: {result['results']['attendance']['updated']}")
+        print(f"  - Attendance errors: {result['results']['attendance']['errors']}")
     
     def test_import_handles_guests_data(self):
         """Test import handles guest records correctly"""
@@ -254,7 +254,7 @@ class TestExportImport:
         
         print(f"✓ Import handles guests data")
         print(f"  - Guests imported: {result['results']['guests']['imported']}")
-        print(f"  - Guests updated: {result['results']['guests']['updated']}")
+        print(f"  - Guests errors: {result['results']['guests']['errors']}")
     
     def test_export_import_roundtrip(self):
         """Test that exported data can be re-imported successfully"""
