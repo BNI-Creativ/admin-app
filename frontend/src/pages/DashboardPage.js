@@ -437,7 +437,7 @@ const DashboardPage = () => {
     }
   };
 
-  // JPEG Export
+  // JPEG Export - simplu, fără conversie de stil
   const handleExportJpeg = async () => {
     const element = document.querySelector('.paper-container');
     if (!element) {
@@ -445,32 +445,24 @@ const DashboardPage = () => {
       return;
     }
     
-    // Add export mode class for styling
-    element.classList.add('pdf-export-mode');
-    
     try {
-      // Use html2canvas to capture the element
       const html2canvas = (await import('html2canvas')).default;
       
       const canvas = await html2canvas(element, {
-        scale: 2,
+        scale: 1.5,  // Redus de la 2 pentru fișier mai mic
         useCORS: true,
         logging: false,
-        backgroundColor: '#ffffff',
-        windowWidth: element.scrollWidth,
-        windowHeight: element.scrollHeight
+        backgroundColor: '#ffffff'
       });
       
-      // Convert to JPEG and download
+      // Convert to JPEG cu compresie mai mare (0.6 = 60% calitate)
       const link = document.createElement('a');
       link.download = `prezenta_${dateString}.jpg`;
-      link.href = canvas.toDataURL('image/jpeg', 0.92);
+      link.href = canvas.toDataURL('image/jpeg', 0.6);
       link.click();
       
     } catch (error) {
       console.error('Error exporting JPEG:', error);
-    } finally {
-      element.classList.remove('pdf-export-mode');
     }
   };
 
