@@ -123,6 +123,10 @@ Aplicație web în limba română pentru gestionarea prezenței membrilor și in
 ## Data: 6 Februarie 2026
 
 ### Actualizări Recente
+- **Export JPEG** - Înlocuit PDF cu JPEG pentru fișiere mai mici
+  - Eliminat html2pdf.js, folosit html2canvas direct
+  - Buton "Exportă JPEG" cu icon Image
+  - Stiluri CSS simplificate (fără reguli de paginare)
 - **Offline-First Architecture** - COMPLET IMPLEMENTAT
   - DashboardPage.js refactorizat pentru a utiliza useOffline hook
   - Indicator vizual Online/Offline cu iconițe Wifi/WifiOff
@@ -131,4 +135,3 @@ Aplicație web în limba română pentru gestionarea prezenței membrilor și in
   - Auto-sync la fiecare 5 minute când e online
 - Bug scroll excesiv - REZOLVAT
 - Export/Import JSON - TESTAT ȘI FUNCȚIONAL
-- Toate testele passed (iteration_5.json: 100% frontend)
