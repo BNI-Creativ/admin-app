@@ -439,32 +439,80 @@ const DashboardPage = () => {
     }
   };
 
-  // JPEG Export - simplu, fără conversie de stil
-  const handleExportJpeg = async () => {
+  // PDF Export - convertește input-urile în text static pentru randare corectă
+  const handleExportPdf = async () => {
     const element = document.querySelector('.paper-container');
     if (!element) {
       console.error('Paper container not found');
       return;
     }
     
-    try {
-      const html2canvas = (await import('html2canvas')).default;
+    // Store original inputs to restore later
+    const inputs = element.querySelectorAll('input:not([type="checkbox"])');
+    const originalInputs = [];
+    
+    // Replace inputs with static text spans
+    inputs.forEach((input) => {
+      const value = input.value || '0';
+      const span = document.createElement('span');
+      span.textContent = value;
+      span.className = 'pdf-static-value';
+      span.style.cssText = `
+        display: inline-block;
+        font-weight: 600;
+        font-size: inherit;
+        color: #000;
+        text-align: ${input.style.textAlign || 'right'};
+        width: 100%;
+      `;
       
-      const canvas = await html2canvas(element, {
-        scale: 1.5,  // Redus de la 2 pentru fișier mai mic
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff'
+      originalInputs.push({
+        input: input,
+        parent: input.parentNode,
+        nextSibling: input.nextSibling
       });
       
-      // Convert to JPEG cu compresie mai mare (0.6 = 60% calitate)
-      const link = document.createElement('a');
-      link.download = `prezenta_${dateString}.jpg`;
-      link.href = canvas.toDataURL('image/jpeg', 0.6);
-      link.click();
+      input.parentNode.replaceChild(span, input);
+    });
+    
+    // Hide elements not needed in PDF
+    const noprint = element.querySelectorAll('.no-print, form, button:not(.attendance-checkbox)');
+    noprint.forEach(el => el.style.display = 'none');
+    
+    try {
+      const opt = {
+        margin: [5, 5, 5, 5],
+        filename: `prezenta_${dateString}.pdf`,
+        image: { type: 'jpeg', quality: 0.7 },
+        html2canvas: { 
+          scale: 1.2,
+          useCORS: true,
+          logging: false,
+          backgroundColor: '#ffffff'
+        },
+        jsPDF: { 
+          unit: 'mm', 
+          format: 'a4', 
+          orientation: 'portrait',
+          compress: true
+        }
+      };
+      
+      await html2pdf().from(element).set(opt).save();
       
     } catch (error) {
-      console.error('Error exporting JPEG:', error);
+      console.error('Error exporting PDF:', error);
+    } finally {
+      // Restore original inputs
+      const spans = element.querySelectorAll('.pdf-static-value');
+      spans.forEach((span, index) => {
+        if (originalInputs[index]) {
+          span.parentNode.replaceChild(originalInputs[index].input, span);
+        }
+      });
+      
+      // Restore hidden elements
+      noprint.forEach(el => el.style.display = '');
     }
   };
 
