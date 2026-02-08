@@ -183,9 +183,18 @@ const SettingsPage = () => {
     
     try {
       const text = await file.text();
+      console.log('Import file content (first 500 chars):', text.substring(0, 500));
+      
       const data = JSON.parse(text);
+      console.log('Parsed data:', {
+        version: data.version,
+        hasData: !!data.data,
+        membersCount: data.data?.members?.length || data.members?.length || 0
+      });
       
       const response = await axios.post(`${API_URL}/import`, data);
+      console.log('Import response:', response.data);
+      
       const results = response.data.results;
       const deleted = response.data.deleted;
       
