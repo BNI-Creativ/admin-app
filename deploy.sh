@@ -51,10 +51,6 @@ build_frontend() {
 		node:24-alpine \
 		sh -c "cd /app/ && npm install --force && npm run build"
 
-	rm -rf node_modules/
-	rm package-lock.json
-
-       
 	cd ..
 	mkdir -p production/
 	rm -rf production/frontend/
