@@ -17,36 +17,10 @@ const ProjectorPage = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`${API_URL}/attendance/${dateParam}`);
+        const response = await axios.get(`${API_URL}/proiector/${dateParam}`);
         const data = response.data;
         
-        // Combine present members and guests
-        const membriPrezenti = data.membri
-          .filter(m => m.prezent)
-          .map(m => ({
-            prenume: m.prenume,
-            nume: m.nume,
-            tip: 'Membru'
-          }));
-        
-        const invitatiPrezenti = data.invitati
-          .filter(g => g.prezent)
-          .map(g => ({
-            prenume: g.prenume,
-            nume: g.nume,
-            tip: 'Invitat',
-            companie: g.companie,
-            invitat_de: g.invitat_de
-          }));
-        
-        // Combine and sort alphabetically
-        const allPrezenti = [...membriPrezenti, ...invitatiPrezenti].sort((a, b) => {
-          const nameA = `${a.prenume} ${a.nume}`.toLowerCase();
-          const nameB = `${b.prenume} ${b.nume}`.toLowerCase();
-          return nameA.localeCompare(nameB);
-        });
-        
-        setPrezenti(allPrezenti);
+        setPrezenti(data.prezenti || []);
         setError(null);
       } catch (err) {
         console.error('Error fetching data:', err);
