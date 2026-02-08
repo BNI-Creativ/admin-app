@@ -15,7 +15,16 @@ const ProjectorPage = () => {
   const fetchData = async () => {
     try {
       const response = await axios.get(`${API_URL}/proiector/${dateParam}`);
-      setPrezenti(response.data.prezenti || []);
+      const data = response.data.prezenti || [];
+      
+      // Shuffle array randomly (Fisher-Yates algorithm)
+      const shuffled = [...data];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      
+      setPrezenti(shuffled);
     } catch (err) {
       console.error('Error fetching data:', err);
     } finally {
