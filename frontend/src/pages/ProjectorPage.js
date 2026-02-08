@@ -11,26 +11,25 @@ const ProjectorPage = () => {
   const dateParam = searchParams.get('data') || format(new Date(), 'yyyy-MM-dd');
   const [prezenti, setPrezenti] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+
+  const fetchData = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/proiector/${dateParam}`);
+      setPrezenti(response.data.prezenti || []);
+    } catch (err) {
+      console.error('Error fetching data:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get(`${API_URL}/proiector/${dateParam}`);
-        const data = response.data;
-        
-        setPrezenti(data.prezenti || []);
-        setError(null);
-      } catch (err) {
-        console.error('Error fetching data:', err);
-        setError('Nu s-au putut încărca datele');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchData();
+    
+    // Auto-refresh every 10 seconds
+    const interval = setInterval(fetchData, 10000);
+    
+    return () => clearInterval(interval);
   }, [dateParam]);
 
   const formattedDate = format(new Date(dateParam + 'T00:00:00'), "EEEE, d MMMM yyyy", { locale: ro });
@@ -44,78 +43,33 @@ const ProjectorPage = () => {
     );
   }
 
-  if (error) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <p className="text-2xl text-red-500">{error}</p>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-white p-8">
-      {/* Header */}
+      {/* Date and Total */}
       <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-zinc-900 mb-2" style={{ fontFamily: 'Manrope, sans-serif' }}>
-          Prezență
-        </h1>
-        <p className="text-2xl text-zinc-600">{capitalizedDate}</p>
-        <p className="text-xl text-zinc-500 mt-2">
-          Total prezenți: <span className="font-bold text-zinc-900">{prezenti.length}</span>
+        <p className="text-2xl text-zinc-700">{capitalizedDate}</p>
+        <p className="text-xl text-zinc-500 mt-1">
+          Total: <span className="font-bold text-zinc-900">{prezenti.length}</span>
         </p>
       </div>
 
-      {/* Table */}
+      {/* 5-column grid */}
       {prezenti.length > 0 ? (
-        <div className="max-w-4xl mx-auto">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="bg-zinc-100">
-                <th className="border-2 border-zinc-300 px-4 py-3 text-left text-lg font-bold w-16">Nr.</th>
-                <th className="border-2 border-zinc-300 px-4 py-3 text-left text-lg font-bold">Prenume</th>
-                <th className="border-2 border-zinc-300 px-4 py-3 text-left text-lg font-bold">Nume</th>
-                <th className="border-2 border-zinc-300 px-4 py-3 text-left text-lg font-bold w-24">Tip</th>
-              </tr>
-            </thead>
-            <tbody>
-              {prezenti.map((persoana, index) => (
-                <tr 
-                  key={index} 
-                  className={index % 2 === 0 ? 'bg-white' : 'bg-zinc-50'}
-                >
-                  <td className="border border-zinc-300 px-4 py-3 text-lg font-medium">
-                    {index + 1}
-                  </td>
-                  <td className="border border-zinc-300 px-4 py-3 text-lg">
-                    {persoana.prenume}
-                  </td>
-                  <td className="border border-zinc-300 px-4 py-3 text-lg">
-                    {persoana.nume}
-                  </td>
-                  <td className="border border-zinc-300 px-4 py-3 text-lg">
-                    <span className={`px-2 py-1 rounded text-sm font-medium ${
-                      persoana.tip === 'Membru' 
-                        ? 'bg-blue-100 text-blue-800' 
-                        : 'bg-green-100 text-green-800'
-                    }`}>
-                      {persoana.tip}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="grid grid-cols-5 gap-3 max-w-6xl mx-auto">
+          {prezenti.map((persoana, index) => (
+            <div 
+              key={index} 
+              className="bg-zinc-50 border border-zinc-200 rounded px-4 py-3 text-lg"
+            >
+              <span className="font-bold">{index + 1}.</span> {persoana.prenume} {persoana.nume}
+            </div>
+          ))}
         </div>
       ) : (
         <div className="text-center py-12">
-          <p className="text-2xl text-zinc-500">Nu există persoane prezente pentru această dată.</p>
+          <p className="text-xl text-zinc-500">Nu există persoane prezente.</p>
         </div>
       )}
-
-      {/* Footer */}
-      <div className="text-center mt-8 text-zinc-400 text-sm">
-        Pagină generată automat • Actualizare: apasă F5
-      </div>
     </div>
   );
 };
