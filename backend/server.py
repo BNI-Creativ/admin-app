@@ -819,6 +819,85 @@ async def clear_all_data(current_user: dict = Depends(get_current_user)):
         }
     }
 
+# ============= EMAIL SETTINGS =============
+
+@api_router.get("/settings/emails")
+async def get_email_settings(current_user: dict = Depends(get_current_user)):
+    """Get stored email addresses"""
+    settings = await db.settings.find_one({"type": "emails"}, {"_id": 0})
+    if settings:
+        return {"emails": settings.get("emails", [])}
+    return {"emails": []}
+
+@api_router.post("/settings/emails")
+async def save_email_settings(data: EmailSettings, current_user: dict = Depends(get_current_user)):
+    """Save email addresses"""
+    await db.settings.update_one(
+        {"type": "emails"},
+        {"$set": {"type": "emails", "emails": data.emails}},
+        upsert=True
+    )
+    return {"success": True, "emails": data.emails}
+
+@api_router.post("/send-pdf-email")
+async def send_pdf_email(request: SendPdfRequest, current_user: dict = Depends(get_current_user)):
+    """Send PDF via email to stored addresses"""
+    import base64
+    import smtplib
+    from email.mime.multipart import MIMEMultipart
+    from email.mime.base import MIMEBase
+    from email.mime.text import MIMEText
+    from email import encoders
+    
+    # Get stored emails
+    settings = await db.settings.find_one({"type": "emails"}, {"_id": 0})
+    if not settings or not settings.get("emails"):
+        raise HTTPException(status_code=400, detail="Nu există email-uri configurate")
+    
+    emails = settings["emails"]
+    
+    try:
+        # Decode PDF from base64
+        pdf_data = base64.b64decode(request.pdf_base64)
+        
+        # Get SMTP settings from environment or use defaults
+        smtp_host = os.environ.get('SMTP_HOST', 'localhost')
+        smtp_port = int(os.environ.get('SMTP_PORT', '25'))
+        smtp_user = os.environ.get('SMTP_USER', '')
+        smtp_pass = os.environ.get('SMTP_PASS', '')
+        smtp_from = os.environ.get('SMTP_FROM', 'prezenta@local')
+        
+        # Create message
+        msg = MIMEMultipart()
+        msg['From'] = smtp_from
+        msg['To'] = ', '.join(emails)
+        msg['Subject'] = f'Prezență - {request.data}'
+        
+        # Email body
+        body = f'Atașat găsiți raportul de prezență pentru data de {request.data}.'
+        msg.attach(MIMEText(body, 'plain'))
+        
+        # Attach PDF
+        attachment = MIMEBase('application', 'pdf')
+        attachment.set_payload(pdf_data)
+        encoders.encode_base64(attachment)
+        attachment.add_header('Content-Disposition', f'attachment; filename="prezenta_{request.data}.pdf"')
+        msg.attach(attachment)
+        
+        # Send email
+        with smtplib.SMTP(smtp_host, smtp_port) as server:
+            if smtp_user and smtp_pass:
+                server.starttls()
+                server.login(smtp_user, smtp_pass)
+            server.send_message(msg)
+        
+        logger.info(f"PDF sent to: {emails}")
+        return {"success": True, "sent_to": emails}
+        
+    except Exception as e:
+        logger.error(f"Error sending email: {e}")
+        raise HTTPException(status_code=500, detail=f"Eroare la trimiterea email-ului: {str(e)}")
+
 # Include the router in the main app
 app.include_router(api_router)
 
