@@ -11,20 +11,38 @@ const ProjectorPage = () => {
   const dateParam = searchParams.get('data') || format(new Date(), 'yyyy-MM-dd');
   const [prezenti, setPrezenti] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isFirstLoad, setIsFirstLoad] = useState(true);
 
   const fetchData = async () => {
     try {
       const response = await axios.get(`${API_URL}/proiector/${dateParam}`);
       const data = response.data.prezenti || [];
       
-      // Shuffle array randomly (Fisher-Yates algorithm)
-      const shuffled = [...data];
-      for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      if (isFirstLoad) {
+        // Shuffle array randomly only on first load (Fisher-Yates algorithm)
+        const shuffled = [...data];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        setPrezenti(shuffled);
+        setIsFirstLoad(false);
+      } else {
+        // On auto-refresh, keep same order but update data
+        // Match by name to preserve order
+        setPrezenti(prev => {
+          const newNames = new Set(data.map(p => `${p.prenume} ${p.nume}`));
+          const prevNames = new Set(prev.map(p => `${p.prenume} ${p.nume}`));
+          
+          // Keep existing order for people still present
+          const kept = prev.filter(p => newNames.has(`${p.prenume} ${p.nume}`));
+          
+          // Add new people at the end
+          const added = data.filter(p => !prevNames.has(`${p.prenume} ${p.nume}`));
+          
+          return [...kept, ...added];
+        });
       }
-      
-      setPrezenti(shuffled);
     } catch (err) {
       console.error('Error fetching data:', err);
     } finally {
