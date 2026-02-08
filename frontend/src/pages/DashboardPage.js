@@ -701,12 +701,12 @@ const DashboardPage = () => {
               Proiector
             </Button>
             <Button
-              onClick={handleExportJpeg}
+              onClick={handleExportPdf}
               className="bg-zinc-900 hover:bg-zinc-800 rounded-sm"
-              data-testid="export-jpeg-button"
+              data-testid="export-pdf-button"
             >
-              <Image className="w-4 h-4 mr-2" strokeWidth={1.5} />
-              Exportă JPEG
+              <FileText className="w-4 h-4 mr-2" strokeWidth={1.5} />
+              Exportă PDF
             </Button>
           </div>
         </div>
