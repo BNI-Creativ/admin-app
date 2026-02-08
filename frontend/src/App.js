@@ -6,6 +6,7 @@ import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import MembersPage from './pages/MembersPage';
 import SettingsPage from './pages/SettingsPage';
+import ProjectorPage from './pages/ProjectorPage';
 import './App.css';
 
 // Protected Route Component
