@@ -865,15 +865,53 @@ const DashboardPage = () => {
               Proiector
             </Button>
             <Button
-              onClick={handleExportPdf}
+              onClick={handleExportPdfClick}
               className="bg-zinc-900 hover:bg-zinc-800 rounded-sm"
+              disabled={isSendingEmail}
               data-testid="export-pdf-button"
             >
               <FileText className="w-4 h-4 mr-2" strokeWidth={1.5} />
-              Exportă PDF
+              {isSendingEmail ? 'Se trimite...' : 'Exportă PDF'}
             </Button>
           </div>
         </div>
+
+        {/* Email Prompt Dialog */}
+        {showEmailPrompt && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-md mx-4 shadow-xl">
+              <h3 className="text-lg font-semibold mb-4">Trimite PDF pe email?</h3>
+              <p className="text-zinc-600 mb-6">
+                Doriți ca PDF-ul să fie trimis pe email-urile stocate în setări?
+                <br />
+                <span className="text-sm text-zinc-500">
+                  PDF-ul nu va fi exportat local dacă se trimite pe email.
+                </span>
+              </p>
+              <div className="text-sm text-zinc-500 mb-4">
+                Email-uri: {storedEmails.join(', ')}
+              </div>
+              <div className="flex gap-3 justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowEmailPrompt(false);
+                    handleExportPdf();
+                  }}
+                  className="rounded-sm"
+                >
+                  Nu, exportă local
+                </Button>
+                <Button
+                  onClick={handleSendPdfEmail}
+                  className="bg-blue-600 hover:bg-blue-700 rounded-sm"
+                >
+                  Da, trimite pe email
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Paper Container */}
         <div className="paper-container print-container">
