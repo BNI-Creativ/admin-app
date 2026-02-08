@@ -640,14 +640,25 @@ const DashboardPage = () => {
               </Button>
             )}
           </div>
-          <Button
-            onClick={handleExportJpeg}
-            className="bg-zinc-900 hover:bg-zinc-800 rounded-sm"
-            data-testid="export-jpeg-button"
-          >
-            <Image className="w-4 h-4 mr-2" strokeWidth={1.5} />
-            Exportă JPEG
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={handleOpenProjector}
+              variant="outline"
+              className="rounded-sm border-zinc-300"
+              data-testid="projector-button"
+            >
+              <Monitor className="w-4 h-4 mr-2" strokeWidth={1.5} />
+              Proiector
+            </Button>
+            <Button
+              onClick={handleExportJpeg}
+              className="bg-zinc-900 hover:bg-zinc-800 rounded-sm"
+              data-testid="export-jpeg-button"
+            >
+              <Image className="w-4 h-4 mr-2" strokeWidth={1.5} />
+              Exportă JPEG
+            </Button>
+          </div>
         </div>
 
         {/* Paper Container */}
