@@ -455,6 +455,124 @@ const DashboardPage = () => {
     }
   };
 
+  // Handle PDF export button click
+  const handleExportPdfClick = () => {
+    if (storedEmails.length > 0) {
+      setShowEmailPrompt(true);
+    } else {
+      handleExportPdf();
+    }
+  };
+
+  // Generate PDF as base64
+  const generatePdfBase64 = async () => {
+    const element = document.querySelector('.paper-container');
+    if (!element) return null;
+    
+    // Prepare element for PDF
+    const inputs = element.querySelectorAll('input:not([type="checkbox"])');
+    const originalInputs = [];
+    
+    inputs.forEach((input) => {
+      const value = input.value || '0';
+      const span = document.createElement('span');
+      span.textContent = value;
+      span.className = 'pdf-static-value';
+      span.style.cssText = `
+        display: block;
+        font-weight: 600;
+        font-size: inherit;
+        color: #000;
+        text-align: ${input.className.includes('taxa') ? 'right' : 'left'};
+        width: 100%;
+        line-height: 1.3;
+      `;
+      originalInputs.push({ input, parent: input.parentNode });
+      input.parentNode.replaceChild(span, input);
+    });
+    
+    const noprint = element.querySelectorAll('.no-print, form, button:not(.attendance-checkbox)');
+    noprint.forEach(el => el.style.display = 'none');
+    
+    const tableCells = element.querySelectorAll('td, th');
+    const originalCellStyles = [];
+    tableCells.forEach((cell) => {
+      originalCellStyles.push(cell.style.cssText);
+      cell.style.verticalAlign = 'middle';
+      cell.style.lineHeight = '1.3';
+      cell.style.padding = '4px 8px';
+    });
+    
+    const cellContents = element.querySelectorAll('td span, td .tabular-nums, th span');
+    const originalContentStyles = [];
+    cellContents.forEach((content) => {
+      originalContentStyles.push(content.style.cssText);
+      content.style.lineHeight = '1.3';
+      content.style.verticalAlign = 'middle';
+    });
+    
+    try {
+      const opt = {
+        margin: [5, 5, 5, 5],
+        image: { type: 'jpeg', quality: 0.7 },
+        html2canvas: { scale: 1.2, useCORS: true, logging: false, backgroundColor: '#ffffff' },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true }
+      };
+      
+      const pdfBlob = await html2pdf().from(element).set(opt).outputPdf('blob');
+      
+      // Convert blob to base64
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64 = reader.result.split(',')[1];
+          resolve(base64);
+        };
+        reader.readAsDataURL(pdfBlob);
+      });
+    } finally {
+      // Restore everything
+      const spans = element.querySelectorAll('.pdf-static-value');
+      spans.forEach((span, index) => {
+        if (originalInputs[index]) {
+          span.parentNode.replaceChild(originalInputs[index].input, span);
+        }
+      });
+      noprint.forEach(el => el.style.display = '');
+      tableCells.forEach((cell, index) => {
+        cell.style.cssText = originalCellStyles[index] || '';
+      });
+      cellContents.forEach((content, index) => {
+        content.style.cssText = originalContentStyles[index] || '';
+      });
+    }
+  };
+
+  // Send PDF via email
+  const handleSendPdfEmail = async () => {
+    setIsSendingEmail(true);
+    setShowEmailPrompt(false);
+    
+    try {
+      const pdfBase64 = await generatePdfBase64();
+      if (!pdfBase64) {
+        alert('Eroare la generarea PDF-ului');
+        return;
+      }
+      
+      await axios.post(`${API_URL}/send-pdf-email`, {
+        data: dateString,
+        pdf_base64: pdfBase64
+      });
+      
+      alert(`PDF-ul a fost trimis pe: ${storedEmails.join(', ')}`);
+    } catch (error) {
+      alert('Eroare la trimiterea email-ului: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setIsSendingEmail(false);
+    }
+  };
+
   // PDF Export - convertește input-urile în text static pentru randare corectă
   const handleExportPdf = async () => {
     const element = document.querySelector('.paper-container');
