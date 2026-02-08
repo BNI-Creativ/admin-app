@@ -53,13 +53,13 @@ const ProjectorPage = () => {
         </p>
       </div>
 
-      {/* 5-column grid */}
+      {/* 6-column grid */}
       {prezenti.length > 0 ? (
-        <div className="grid grid-cols-5 gap-3 max-w-6xl mx-auto">
+        <div className="grid grid-cols-6 gap-2 max-w-7xl mx-auto">
           {prezenti.map((persoana, index) => (
             <div 
               key={index} 
-              className="bg-zinc-50 border border-zinc-200 rounded px-4 py-3 text-lg"
+              className="bg-zinc-50 border border-zinc-200 rounded px-3 py-2 text-base whitespace-nowrap overflow-hidden"
             >
               <span className="font-bold">{index + 1}.</span> {persoana.prenume} {persoana.nume}
             </div>
