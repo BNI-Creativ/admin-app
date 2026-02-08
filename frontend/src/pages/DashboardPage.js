@@ -483,9 +483,8 @@ const DashboardPage = () => {
         font-weight: 600;
         font-size: inherit;
         color: #000;
-        text-align: ${input.className.includes('taxa') ? 'right' : 'left'};
+        text-align: ${input.className.includes('taxa') ? 'right' : 'center'};
         width: 100%;
-        line-height: 1.3;
       `;
       originalInputs.push({ input, parent: input.parentNode });
       input.parentNode.replaceChild(span, input);
@@ -494,21 +493,31 @@ const DashboardPage = () => {
     const noprint = element.querySelectorAll('.no-print, form, button:not(.attendance-checkbox)');
     noprint.forEach(el => el.style.display = 'none');
     
+    // Apply flexbox centering to all table cells
     const tableCells = element.querySelectorAll('td, th');
     const originalCellStyles = [];
+    const originalCellHTML = [];
+    
     tableCells.forEach((cell) => {
       originalCellStyles.push(cell.style.cssText);
+      originalCellHTML.push(cell.innerHTML);
+      
+      const isCenter = cell.classList.contains('text-center');
+      const isRight = cell.classList.contains('text-right');
+      let justify = 'flex-start';
+      let textAlign = 'left';
+      if (isCenter) {
+        justify = 'center';
+        textAlign = 'center';
+      } else if (isRight) {
+        justify = 'flex-end';
+        textAlign = 'right';
+      }
+      
+      const content = cell.innerHTML;
+      cell.innerHTML = `<div style="display:flex;align-items:center;justify-content:${justify};min-height:28px;width:100%;text-align:${textAlign};">${content}</div>`;
+      cell.style.padding = '2px 6px';
       cell.style.verticalAlign = 'middle';
-      cell.style.lineHeight = '1.3';
-      cell.style.padding = '4px 8px';
-    });
-    
-    const cellContents = element.querySelectorAll('td span, td .tabular-nums, th span');
-    const originalContentStyles = [];
-    cellContents.forEach((content) => {
-      originalContentStyles.push(content.style.cssText);
-      content.style.lineHeight = '1.3';
-      content.style.verticalAlign = 'middle';
     });
     
     try {
@@ -521,7 +530,6 @@ const DashboardPage = () => {
       
       const pdfBlob = await html2pdf().from(element).set(opt).outputPdf('blob');
       
-      // Convert blob to base64
       return new Promise((resolve) => {
         const reader = new FileReader();
         reader.onloadend = () => {
@@ -540,10 +548,8 @@ const DashboardPage = () => {
       });
       noprint.forEach(el => el.style.display = '');
       tableCells.forEach((cell, index) => {
+        cell.innerHTML = originalCellHTML[index] || '';
         cell.style.cssText = originalCellStyles[index] || '';
-      });
-      cellContents.forEach((content, index) => {
-        content.style.cssText = originalContentStyles[index] || '';
       });
     }
   };
