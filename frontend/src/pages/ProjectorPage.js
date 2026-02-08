@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { format } from 'date-fns';
@@ -11,45 +11,30 @@ const ProjectorPage = () => {
   const dateParam = searchParams.get('data') || format(new Date(), 'yyyy-MM-dd');
   const [prezenti, setPrezenti] = useState([]);
   const [loading, setLoading] = useState(true);
-  const shuffledOrderRef = useRef(null);
 
-  const fetchData = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/proiector/${dateParam}`);
-      const data = response.data.prezenti || [];
-      
-      if (shuffledOrderRef.current === null) {
-        // First load - shuffle and save order
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/proiector/${dateParam}`);
+        const data = response.data.prezenti || [];
+        
+        // Shuffle array randomly (Fisher-Yates algorithm)
         const shuffled = [...data];
         for (let i = shuffled.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
           [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
         }
-        shuffledOrderRef.current = shuffled.map(p => `${p.prenume} ${p.nume}`);
+        
         setPrezenti(shuffled);
-      } else {
-        // Auto-refresh - maintain saved order
-        const orderMap = new Map(shuffledOrderRef.current.map((name, idx) => [name, idx]));
-        const sorted = [...data].sort((a, b) => {
-          const nameA = `${a.prenume} ${a.nume}`;
-          const nameB = `${b.prenume} ${b.nume}`;
-          const idxA = orderMap.has(nameA) ? orderMap.get(nameA) : 9999;
-          const idxB = orderMap.has(nameB) ? orderMap.get(nameB) : 9999;
-          return idxA - idxB;
-        });
-        
-        // Update order ref with any new people at the end
-        const newNames = sorted.map(p => `${p.prenume} ${p.nume}`);
-        shuffledOrderRef.current = newNames;
-        
-        setPrezenti(sorted);
+      } catch (err) {
+        console.error('Error fetching data:', err);
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      console.error('Error fetching data:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    fetchData();
+  }, [dateParam]);
 
   useEffect(() => {
     fetchData();
