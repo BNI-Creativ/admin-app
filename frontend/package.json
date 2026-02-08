@@ -2,7 +2,7 @@
   "name": "frontend",
   "version": "0.1.0",
   "private": true,
-  "homepage": ".",
+  "homepage": "/bni-creativ-prezenta",
   "dependencies": {
     "@capacitor-community/sqlite": "^7.0.3",
     "@capacitor/android": "5",

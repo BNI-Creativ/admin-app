@@ -2,6 +2,7 @@
 
 *.swp
 production/
+frontend/package-lock.json
 
 # IDE and editors
 .idea/
