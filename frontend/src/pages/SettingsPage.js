@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
@@ -16,6 +16,9 @@ import {
   Download,
   Upload,
   AlertTriangle,
+  Mail,
+  Plus,
+  Trash2,
 } from 'lucide-react';
 
 const API_URL = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -27,16 +30,64 @@ const SettingsPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
   const [exportMessage, setExportMessage] = useState({ type: '', text: '' });
+  const [emailMessage, setEmailMessage] = useState({ type: '', text: '' });
   const [passwords, setPasswords] = useState({
     currentPassword: '',
     newPassword: '',
     confirmPassword: '',
   });
+  const [emails, setEmails] = useState([]);
+  const [newEmail, setNewEmail] = useState('');
   const fileInputRef = useRef(null);
+
+  // Load email settings on mount
+  useEffect(() => {
+    const fetchEmails = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/settings/emails`);
+        setEmails(response.data.emails || []);
+      } catch (error) {
+        console.error('Error fetching emails:', error);
+      }
+    };
+    fetchEmails();
+  }, []);
 
   const handleLogout = () => {
     logout();
     navigate('/');
+  };
+
+  // Email management
+  const handleAddEmail = () => {
+    if (!newEmail || !newEmail.includes('@')) {
+      setEmailMessage({ type: 'error', text: 'Introduceți un email valid' });
+      return;
+    }
+    if (emails.includes(newEmail)) {
+      setEmailMessage({ type: 'error', text: 'Email-ul există deja' });
+      return;
+    }
+    setEmails([...emails, newEmail]);
+    setNewEmail('');
+    setEmailMessage({ type: '', text: '' });
+  };
+
+  const handleRemoveEmail = (emailToRemove) => {
+    setEmails(emails.filter(e => e !== emailToRemove));
+  };
+
+  const handleSaveEmails = async () => {
+    setIsLoading(true);
+    setEmailMessage({ type: '', text: '' });
+    try {
+      await axios.post(`${API_URL}/settings/emails`, { emails });
+      setEmailMessage({ type: 'success', text: 'Email-urile au fost salvate!' });
+    } catch (error) {
+      setEmailMessage({ type: 'error', text: 'Eroare la salvarea email-urilor' });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleChangePassword = async (e) => {
