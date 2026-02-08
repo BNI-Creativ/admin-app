@@ -56,6 +56,9 @@ const DashboardPage = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [datesWithData, setDatesWithData] = useState([]);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [storedEmails, setStoredEmails] = useState([]);
+  const [showEmailPrompt, setShowEmailPrompt] = useState(false);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [newGuest, setNewGuest] = useState({
     prenume: '',
     nume: '',
@@ -65,6 +68,19 @@ const DashboardPage = () => {
   });
 
   const dateString = format(selectedDate, 'yyyy-MM-dd');
+
+  // Fetch stored emails
+  useEffect(() => {
+    const fetchEmails = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/settings/emails`);
+        setStoredEmails(response.data.emails || []);
+      } catch (error) {
+        console.error('Error fetching emails:', error);
+      }
+    };
+    fetchEmails();
+  }, []);
 
   // Fetch dates that have saved data
   const fetchDatesWithData = useCallback(async () => {
