@@ -461,8 +461,7 @@ const DashboardPage = () => {
         </div>
       </aside>
 
-      <div className={`${sidebarOpen ? 'w-[280px]' : 'w-[60px]'} flex-shrink-0 transition-all duration-300 ease-in-out no-print`}></div>
-
+      {/* Main Content */}
       <main className="flex-1 p-8 pb-16">
         <div className="flex items-center justify-between mb-8 no-print">
           <Popover>
