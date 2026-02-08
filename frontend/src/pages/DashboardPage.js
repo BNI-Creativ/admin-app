@@ -596,9 +596,8 @@ const DashboardPage = () => {
         font-weight: 600;
         font-size: inherit;
         color: #000;
-        text-align: ${input.className.includes('taxa') ? 'right' : 'left'};
+        text-align: ${input.className.includes('taxa') ? 'right' : 'center'};
         width: 100%;
-        line-height: 1.3;
       `;
       
       originalInputs.push({
@@ -614,23 +613,33 @@ const DashboardPage = () => {
     const noprint = element.querySelectorAll('.no-print, form, button:not(.attendance-checkbox)');
     noprint.forEach(el => el.style.display = 'none');
     
-    // Apply vertical centering to all table cells
+    // Apply flexbox centering to all table cells
     const tableCells = element.querySelectorAll('td, th');
     const originalCellStyles = [];
+    const originalCellHTML = [];
+    
     tableCells.forEach((cell) => {
       originalCellStyles.push(cell.style.cssText);
+      originalCellHTML.push(cell.innerHTML);
+      
+      // Check alignment class
+      const isCenter = cell.classList.contains('text-center');
+      const isRight = cell.classList.contains('text-right');
+      let justify = 'flex-start';
+      let textAlign = 'left';
+      if (isCenter) {
+        justify = 'center';
+        textAlign = 'center';
+      } else if (isRight) {
+        justify = 'flex-end';
+        textAlign = 'right';
+      }
+      
+      // Wrap content in a flex container
+      const content = cell.innerHTML;
+      cell.innerHTML = `<div style="display:flex;align-items:center;justify-content:${justify};min-height:28px;width:100%;text-align:${textAlign};">${content}</div>`;
+      cell.style.padding = '2px 6px';
       cell.style.verticalAlign = 'middle';
-      cell.style.lineHeight = '1.3';
-      cell.style.padding = '4px 8px';
-    });
-    
-    // Also style spans and text inside cells
-    const cellContents = element.querySelectorAll('td span, td .tabular-nums, th span');
-    const originalContentStyles = [];
-    cellContents.forEach((content) => {
-      originalContentStyles.push(content.style.cssText);
-      content.style.lineHeight = '1.3';
-      content.style.verticalAlign = 'middle';
     });
     
     try {
@@ -668,14 +677,10 @@ const DashboardPage = () => {
       // Restore hidden elements
       noprint.forEach(el => el.style.display = '');
       
-      // Restore original cell styles
+      // Restore original cell content and styles
       tableCells.forEach((cell, index) => {
+        cell.innerHTML = originalCellHTML[index] || '';
         cell.style.cssText = originalCellStyles[index] || '';
-      });
-      
-      // Restore content styles
-      cellContents.forEach((content, index) => {
-        content.style.cssText = originalContentStyles[index] || '';
       });
     }
   };
