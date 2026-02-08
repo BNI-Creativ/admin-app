@@ -464,6 +464,7 @@ const DashboardPage = () => {
         color: #000;
         text-align: ${input.className.includes('taxa') ? 'right' : 'left'};
         width: 100%;
+        line-height: 36px;
       `;
       
       originalInputs.push({
@@ -479,17 +480,24 @@ const DashboardPage = () => {
     const noprint = element.querySelectorAll('.no-print, form, button:not(.attendance-checkbox)');
     noprint.forEach(el => el.style.display = 'none');
     
-    // Apply vertical centering to all table cells using flexbox
+    // Apply vertical centering to all table cells
     const tableCells = element.querySelectorAll('td, th');
     const originalCellStyles = [];
     tableCells.forEach((cell) => {
       originalCellStyles.push(cell.style.cssText);
-      cell.style.cssText += `
-        display: flex !important;
-        align-items: center !important;
-        justify-content: ${cell.classList.contains('text-center') ? 'center' : cell.classList.contains('text-right') ? 'flex-end' : 'flex-start'} !important;
-        min-height: 40px !important;
-      `;
+      cell.style.height = '40px';
+      cell.style.lineHeight = '36px';
+      cell.style.verticalAlign = 'middle';
+      cell.style.padding = '2px 8px';
+    });
+    
+    // Also style spans and text inside cells
+    const cellContents = element.querySelectorAll('td span, td .tabular-nums, th span');
+    const originalContentStyles = [];
+    cellContents.forEach((content) => {
+      originalContentStyles.push(content.style.cssText);
+      content.style.lineHeight = '36px';
+      content.style.verticalAlign = 'middle';
     });
     
     try {
@@ -521,6 +529,23 @@ const DashboardPage = () => {
       spans.forEach((span, index) => {
         if (originalInputs[index]) {
           span.parentNode.replaceChild(originalInputs[index].input, span);
+        }
+      });
+      
+      // Restore hidden elements
+      noprint.forEach(el => el.style.display = '');
+      
+      // Restore original cell styles
+      tableCells.forEach((cell, index) => {
+        cell.style.cssText = originalCellStyles[index] || '';
+      });
+      
+      // Restore content styles
+      cellContents.forEach((content, index) => {
+        content.style.cssText = originalContentStyles[index] || '';
+      });
+    }
+  };
         }
       });
       
