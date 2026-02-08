@@ -464,7 +464,7 @@ const DashboardPage = () => {
         color: #000;
         text-align: ${input.className.includes('taxa') ? 'right' : 'left'};
         width: 100%;
-        line-height: 36px;
+        line-height: 1.3;
       `;
       
       originalInputs.push({
