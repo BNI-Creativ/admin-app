@@ -485,10 +485,9 @@ const DashboardPage = () => {
     const originalCellStyles = [];
     tableCells.forEach((cell) => {
       originalCellStyles.push(cell.style.cssText);
-      cell.style.height = '40px';
-      cell.style.lineHeight = '36px';
       cell.style.verticalAlign = 'middle';
-      cell.style.padding = '2px 8px';
+      cell.style.lineHeight = '1.3';
+      cell.style.padding = '4px 8px';
     });
     
     // Also style spans and text inside cells
@@ -496,7 +495,7 @@ const DashboardPage = () => {
     const originalContentStyles = [];
     cellContents.forEach((content) => {
       originalContentStyles.push(content.style.cssText);
-      content.style.lineHeight = '36px';
+      content.style.lineHeight = '1.3';
       content.style.verticalAlign = 'middle';
     });
     
