@@ -464,6 +464,7 @@ const DashboardPage = () => {
         color: #000;
         text-align: ${input.style.textAlign || 'right'};
         width: 100%;
+        vertical-align: middle;
       `;
       
       originalInputs.push({
@@ -478,6 +479,15 @@ const DashboardPage = () => {
     // Hide elements not needed in PDF
     const noprint = element.querySelectorAll('.no-print, form, button:not(.attendance-checkbox)');
     noprint.forEach(el => el.style.display = 'none');
+    
+    // Apply vertical centering to all table cells
+    const tableCells = element.querySelectorAll('td, th');
+    const originalCellStyles = [];
+    tableCells.forEach((cell) => {
+      originalCellStyles.push(cell.style.cssText);
+      cell.style.verticalAlign = 'middle';
+      cell.style.lineHeight = '1.4';
+    });
     
     try {
       const opt = {
