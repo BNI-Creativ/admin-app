@@ -447,6 +447,53 @@ async def get_daily_attendance(data: str, current_user: dict = Depends(get_curre
         total_taxa_invitati=total_taxa_invitati
     )
 
+# Public endpoint for projector page (no auth required)
+@api_router.get("/proiector/{data}")
+async def get_projector_data(data: str):
+    """Get present members and guests for projector display - public endpoint"""
+    # Get members
+    members = await db.members.find({}, {"_id": 0}).sort([("prenume", 1), ("nume", 1)]).to_list(1000)
+    
+    # Get attendance for this date
+    attendance_records = await db.attendance.find({"data": data}, {"_id": 0}).to_list(1000)
+    attendance_map = {a["member_id"]: a for a in attendance_records}
+    
+    # Get guests for this date
+    guests = await db.guests.find({"data": data}, {"_id": 0}).to_list(1000)
+    
+    # Collect present people
+    prezenti = []
+    
+    # Add present members
+    for m in members:
+        att = attendance_map.get(m["id"], {})
+        if att.get("prezent", False):
+            prezenti.append({
+                "prenume": m["prenume"],
+                "nume": m["nume"],
+                "tip": "Membru"
+            })
+    
+    # Add present guests
+    for g in guests:
+        if g.get("prezent", False):
+            prezenti.append({
+                "prenume": g["prenume"],
+                "nume": g["nume"],
+                "tip": "Invitat",
+                "companie": g.get("companie", ""),
+                "invitat_de": g.get("invitat_de", "")
+            })
+    
+    # Sort alphabetically
+    prezenti.sort(key=lambda x: f"{x['prenume']} {x['nume']}".lower())
+    
+    return {
+        "data": data,
+        "prezenti": prezenti,
+        "total": len(prezenti)
+    }
+
 @api_router.post("/attendance/{data}")
 async def update_attendance(data: str, attendance: AttendanceUpdate, current_user: dict = Depends(get_current_user)):
     # Upsert attendance record
