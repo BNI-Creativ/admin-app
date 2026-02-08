@@ -25,7 +25,6 @@ import {
 } from '../components/ui/table';
 import {
   Users,
-  Key,
   CalendarDays,
   LogOut,
   Image,
@@ -35,6 +34,7 @@ import {
   Wifi,
   WifiOff,
   RefreshCw,
+  Monitor,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ro } from 'date-fns/locale';
