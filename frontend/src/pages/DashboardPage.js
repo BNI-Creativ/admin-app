@@ -466,6 +466,12 @@ const DashboardPage = () => {
     }
   };
 
+  // Open projector page
+  const handleOpenProjector = () => {
+    const projectorUrl = `${window.location.origin}/proiector?data=${dateString}`;
+    window.open(projectorUrl, '_blank');
+  };
+
   const formattedDate = format(selectedDate, "EEEE, d MMMM yyyy", { locale: ro });
   const capitalizedDate = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
 
