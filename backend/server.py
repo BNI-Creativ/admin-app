@@ -135,6 +135,13 @@ class DailyAttendanceResponse(BaseModel):
     total_taxa_membri: float
     total_taxa_invitati: float
 
+class EmailSettings(BaseModel):
+    emails: List[str] = []
+
+class SendPdfRequest(BaseModel):
+    data: str
+    pdf_base64: str
+
 # ============= AUTH HELPERS =============
 
 def hash_password(password: str) -> str:
