@@ -374,6 +374,89 @@ const SettingsPage = () => {
             </CardContent>
           </Card>
 
+          {/* Email Settings Card */}
+          <Card className="border-zinc-200 shadow-sm rounded-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2" style={{ fontFamily: 'Manrope, sans-serif' }}>
+                <Mail className="w-5 h-5" strokeWidth={1.5} />
+                Email-uri pentru PDF
+              </CardTitle>
+              <CardDescription>
+                Adaugă email-uri pentru a trimite raportul PDF direct din aplicație
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex gap-2">
+                <Input
+                  type="email"
+                  placeholder="exemplu@email.com"
+                  value={newEmail}
+                  onChange={(e) => setNewEmail(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddEmail())}
+                  className="flex-1 rounded-sm"
+                  data-testid="new-email-input"
+                />
+                <Button
+                  type="button"
+                  onClick={handleAddEmail}
+                  className="bg-zinc-900 hover:bg-zinc-800 rounded-sm"
+                  data-testid="add-email-button"
+                >
+                  <Plus className="w-4 h-4" strokeWidth={1.5} />
+                </Button>
+              </div>
+
+              {emails.length > 0 && (
+                <div className="space-y-2">
+                  {emails.map((email, index) => (
+                    <div key={index} className="flex items-center justify-between bg-zinc-50 px-3 py-2 rounded-sm">
+                      <span className="text-sm">{email}</span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemoveEmail(email)}
+                        className="text-red-500 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0"
+                        data-testid={`remove-email-${index}`}
+                      >
+                        <Trash2 className="w-4 h-4" strokeWidth={1.5} />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <Button
+                type="button"
+                onClick={handleSaveEmails}
+                className="w-full bg-blue-600 hover:bg-blue-700 rounded-sm"
+                disabled={isLoading}
+                data-testid="save-emails-button"
+              >
+                {isLoading ? 'Se salvează...' : 'Salvează Email-urile'}
+              </Button>
+
+              {emailMessage.text && (
+                <div
+                  className={`p-3 rounded-sm text-sm ${
+                    emailMessage.type === 'success'
+                      ? 'bg-green-50 text-green-700 border border-green-200'
+                      : 'bg-red-50 text-red-700 border border-red-200'
+                  }`}
+                  data-testid="email-message"
+                >
+                  {emailMessage.type === 'success' && (
+                    <Check className="w-4 h-4 inline mr-2" strokeWidth={1.5} />
+                  )}
+                  {emailMessage.type === 'error' && (
+                    <AlertTriangle className="w-4 h-4 inline mr-2" strokeWidth={1.5} />
+                  )}
+                  {emailMessage.text}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Change Password Card */}
           <Card className="border-zinc-200 shadow-sm rounded-sm">
             <CardHeader>
