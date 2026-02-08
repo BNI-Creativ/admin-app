@@ -36,15 +36,6 @@ const ProjectorPage = () => {
     fetchData();
   }, [dateParam]);
 
-  useEffect(() => {
-    fetchData();
-    
-    // Auto-refresh every 10 seconds
-    const interval = setInterval(fetchData, 10000);
-    
-    return () => clearInterval(interval);
-  }, [dateParam]);
-
   const formattedDate = format(new Date(dateParam + 'T00:00:00'), "EEEE, d MMMM yyyy", { locale: ro });
   const capitalizedDate = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
 
