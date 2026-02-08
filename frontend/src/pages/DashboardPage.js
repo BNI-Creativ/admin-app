@@ -458,13 +458,12 @@ const DashboardPage = () => {
       span.textContent = value;
       span.className = 'pdf-static-value';
       span.style.cssText = `
-        display: inline-block;
+        display: block;
         font-weight: 600;
         font-size: inherit;
         color: #000;
-        text-align: ${input.style.textAlign || 'right'};
+        text-align: ${input.className.includes('taxa') ? 'right' : 'left'};
         width: 100%;
-        vertical-align: middle;
       `;
       
       originalInputs.push({
@@ -480,13 +479,17 @@ const DashboardPage = () => {
     const noprint = element.querySelectorAll('.no-print, form, button:not(.attendance-checkbox)');
     noprint.forEach(el => el.style.display = 'none');
     
-    // Apply vertical centering to all table cells
+    // Apply vertical centering to all table cells using flexbox
     const tableCells = element.querySelectorAll('td, th');
     const originalCellStyles = [];
     tableCells.forEach((cell) => {
       originalCellStyles.push(cell.style.cssText);
-      cell.style.verticalAlign = 'middle';
-      cell.style.lineHeight = '1.4';
+      cell.style.cssText += `
+        display: flex !important;
+        align-items: center !important;
+        justify-content: ${cell.classList.contains('text-center') ? 'center' : cell.classList.contains('text-right') ? 'flex-end' : 'flex-start'} !important;
+        min-height: 40px !important;
+      `;
     });
     
     try {
