@@ -35,6 +35,7 @@ import {
   WifiOff,
   RefreshCw,
   Monitor,
+  Key,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ro } from 'date-fns/locale';
