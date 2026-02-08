@@ -523,6 +523,11 @@ const DashboardPage = () => {
       
       // Restore hidden elements
       noprint.forEach(el => el.style.display = '');
+      
+      // Restore original cell styles
+      tableCells.forEach((cell, index) => {
+        cell.style.cssText = originalCellStyles[index] || '';
+      });
     }
   };
 
