@@ -378,19 +378,15 @@ const DashboardPage = () => {
           )
         );
         
-        await db.saveAttendance(dateString, guest.member_id, membru.prezent || false, membru.taxa || 0, '');
-        
-        if (isOnline) {
-          try {
-            await axios.post(`${API_URL}/attendance/${dateString}`, {
-              member_id: guest.member_id,
-              prezent: membru.prezent || false,
-              taxa: membru.taxa || 0,
-              nume_inlocuitor: '',
-            });
-          } catch (error) {
-            console.error('Error clearing inlocuitor on server:', error);
-          }
+        try {
+          await axios.post(`${API_URL}/attendance/${dateString}`, {
+            member_id: guest.member_id,
+            prezent: membru.prezent || false,
+            taxa: membru.taxa || 0,
+            nume_inlocuitor: '',
+          });
+        } catch (error) {
+          console.error('Error clearing inlocuitor:', error);
         }
       }
     }
@@ -399,20 +395,11 @@ const DashboardPage = () => {
     setInvitati((prev) => prev.filter((g) => g.id !== guestId));
     setTotalTaxaInvitati((prev) => prev - (guest?.taxa || 0));
 
-    // Delete from local DB
+    // Delete from server
     try {
-      await db.deleteGuest(guestId);
+      await axios.delete(`${API_URL}/guests/${guestId}`);
     } catch (error) {
-      console.error('Error deleting guest from local DB:', error);
-    }
-
-    // Sync to server if online
-    if (isOnline) {
-      try {
-        await axios.delete(`${API_URL}/guests/${guestId}`);
-      } catch (error) {
-        console.error('Error deleting guest from server:', error);
-      }
+      console.error('Error deleting guest:', error);
     }
   };
 
