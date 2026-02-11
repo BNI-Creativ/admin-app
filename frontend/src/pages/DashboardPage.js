@@ -696,42 +696,6 @@ const DashboardPage = () => {
                 />
               </PopoverContent>
             </Popover>
-            
-            {/* Online/Offline indicator */}
-            <div 
-              className={`flex items-center gap-2 px-3 py-2 rounded-sm text-sm ${
-                isOnline ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'
-              }`}
-              title={isOnline ? 'Conectat la server' : 'Mod offline - datele se salvează local'}
-              data-testid="connection-status"
-            >
-              {isOnline ? (
-                <Wifi className="w-4 h-4" strokeWidth={1.5} />
-              ) : (
-                <WifiOff className="w-4 h-4" strokeWidth={1.5} />
-              )}
-              <span>{isOnline ? 'Online' : 'Offline'}</span>
-              {syncStatus.pendingChanges > 0 && (
-                <span className="bg-amber-200 text-amber-800 px-2 py-0.5 rounded-full text-xs">
-                  {syncStatus.pendingChanges} nesincronizate
-                </span>
-              )}
-            </div>
-            
-            {/* Manual sync button */}
-            {isOnline && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleManualSync}
-                disabled={isSyncing}
-                className="rounded-sm"
-                data-testid="sync-button"
-              >
-                <RefreshCw className={`w-4 h-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} strokeWidth={1.5} />
-                {isSyncing ? 'Sincronizare...' : 'Sincronizează'}
-              </Button>
-            )}
           </div>
           <div className="flex gap-2">
             <Button
