@@ -588,18 +588,6 @@ const DashboardPage = () => {
   // Calculate total present guests
   const totalInvitatiPrezenti = invitati.filter(g => g.prezent).length;
 
-  // Show loading state while initializing
-  if (!isInitialized) {
-    return (
-      <div className="flex min-h-screen bg-zinc-100 items-center justify-center">
-        <div className="text-center">
-          <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-zinc-400" />
-          <p className="text-zinc-500">Se inițializează baza de date...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="flex min-h-screen bg-zinc-100">
       {/* Sidebar */}
