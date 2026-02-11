@@ -50,7 +50,6 @@ const DashboardPage = () => {
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [datesWithData, setDatesWithData] = useState([]);
-  const [isSyncing, setIsSyncing] = useState(false);
   const [storedEmails, setStoredEmails] = useState([]);
   const [showEmailPrompt, setShowEmailPrompt] = useState(false);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
@@ -80,9 +79,7 @@ const DashboardPage = () => {
   // Fetch dates that have saved data
   const fetchDatesWithData = useCallback(async () => {
     try {
-      // Try local first
-      if (isInitialized) {
-        const localDates = await db.getDatesWithData();
+      const response = await axios.get(`${API_URL}/attendance/dates/list`);
         if (localDates.length > 0) {
           setDatesWithData(localDates);
         }
