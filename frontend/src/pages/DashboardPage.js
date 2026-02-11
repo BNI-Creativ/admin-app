@@ -142,21 +142,6 @@ const DashboardPage = () => {
     navigate('/');
   };
 
-  // Manual sync trigger
-  const handleManualSync = async () => {
-    if (isSyncing || !isOnline) return;
-    
-    setIsSyncing(true);
-    try {
-      await sync();
-      await fetchData(); // Refresh data after sync
-    } catch (error) {
-      console.error('Manual sync failed:', error);
-    } finally {
-      setIsSyncing(false);
-    }
-  };
-
   // Handle member attendance (checkbox and taxa)
   const handleAttendanceChange = async (memberId, prezent, taxa) => {
     const membru = membri.find(m => m.id === memberId);
