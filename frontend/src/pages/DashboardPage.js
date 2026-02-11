@@ -244,7 +244,7 @@ const DashboardPage = () => {
     }
   };
 
-  // Add new guest - OFFLINE FIRST
+  // Add new guest
   const handleAddGuest = async (e) => {
     e.preventDefault();
     
@@ -266,34 +266,16 @@ const DashboardPage = () => {
     };
 
     try {
-      // Save to local database first
-      const localGuest = await db.addGuest(guestData);
-      
-      // Update UI immediately
-      setInvitati([...invitati, localGuest]);
+      const response = await axios.post(`${API_URL}/guests?data=${dateString}`, guestData);
+      setInvitati([...invitati, response.data]);
       setTotalTaxaInvitati((prev) => prev + newGuest.taxa);
       setNewGuest({ prenume: '', nume: '', companie: '', invitat_de: '', taxa: 0 });
-
-      // Sync to server if online
-      if (isOnline) {
-        try {
-          const response = await axios.post(`${API_URL}/guests?data=${dateString}`, guestData);
-          // Update with server ID if different
-          if (response.data.id !== localGuest.id) {
-            setInvitati(prev => prev.map(g => 
-              g.id === localGuest.id ? { ...g, id: response.data.id } : g
-            ));
-          }
-        } catch (error) {
-          console.error('Error syncing guest to server:', error);
-        }
-      }
     } catch (error) {
       console.error('Error adding guest:', error);
     }
   };
 
-  // Update guest field - OFFLINE FIRST
+  // Update guest field
   const handleUpdateGuest = async (guestId, field, value) => {
     const guest = invitati.find(g => g.id === guestId);
     if (!guest) return;
@@ -318,6 +300,69 @@ const DashboardPage = () => {
           )
         );
         
+        // Save inlocuitor to server
+        if (membru) {
+          try {
+            await axios.post(`${API_URL}/attendance/${dateString}`, {
+              member_id: memberId,
+              prezent: membru.prezent || false,
+              taxa: membru.taxa || 0,
+              nume_inlocuitor: guestName,
+            });
+          } catch (error) {
+            console.error('Error saving inlocuitor:', error);
+          }
+        }
+      } else if (!value && memberId) {
+        setMembri((prev) =>
+          prev.map((m) =>
+            m.id === memberId ? { ...m, nume_inlocuitor: '' } : m
+          )
+        );
+        
+        if (membru) {
+          try {
+            await axios.post(`${API_URL}/attendance/${dateString}`, {
+              member_id: memberId,
+              prezent: membru.prezent || false,
+              taxa: membru.taxa || 0,
+              nume_inlocuitor: '',
+            });
+          } catch (error) {
+            console.error('Error clearing inlocuitor:', error);
+          }
+        }
+      }
+    }
+
+    // Update local state immediately
+    setInvitati((prev) =>
+      prev.map((g) => (g.id === guestId ? updatedGuest : g))
+    );
+
+    // Update taxa total if taxa changed
+    if (field === 'taxa') {
+      const oldTaxa = guest.taxa || 0;
+      const newTaxa = value || 0;
+      setTotalTaxaInvitati((prev) => prev - oldTaxa + newTaxa);
+    }
+
+    // Sync to server
+    try {
+      await axios.put(`${API_URL}/guests/${guestId}`, {
+        prenume: updatedGuest.prenume,
+        nume: updatedGuest.nume,
+        companie: updatedGuest.companie,
+        invitat_de: updatedGuest.invitat_de,
+        taxa: updatedGuest.taxa,
+        prezent: updatedGuest.prezent,
+        is_inlocuitor: updatedGuest.is_inlocuitor,
+        member_id: updatedGuest.member_id,
+      });
+    } catch (error) {
+      console.error('Error updating guest:', error);
+    }
+  };
         // Save to local DB
         if (membru) {
           await db.saveAttendance(dateString, memberId, membru.prezent || false, membru.taxa || 0, guestName);
