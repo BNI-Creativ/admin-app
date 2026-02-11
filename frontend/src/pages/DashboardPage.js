@@ -92,103 +92,58 @@ const DashboardPage = () => {
           setDatesWithData(localDates);
         }
       }
-      
-      // Then try server if online
-      if (isOnline) {
-        const response = await axios.get(`${API_URL}/attendance/dates/list`);
-        setDatesWithData(response.data.dates || []);
-      }
+  // Fetch dates that have saved data
+  const fetchDatesWithData = useCallback(async () => {
+    try {
+      const response = await axios.get(`${API_URL}/attendance/dates/list`);
+      setDatesWithData(response.data.dates || []);
     } catch (error) {
       console.error('Error fetching dates:', error);
     }
-  }, [isInitialized, isOnline, db]);
+  }, []);
 
-  // Main data fetch - offline-first approach
+  // Main data fetch from server
   const fetchData = useCallback(async () => {
-    if (!isInitialized) return;
-    
     try {
       setLoading(true);
+      const response = await axios.get(`${API_URL}/attendance/${dateString}`);
+      const serverData = response.data;
       
-      // Step 1: If online, always fetch from server first to get latest data
-      if (isOnline) {
-        try {
-          const response = await axios.get(`${API_URL}/attendance/${dateString}`);
-          const serverData = response.data;
-          
-          // Process server data with inlocuitori sync
-          let membriData = serverData.membri;
-          const invitatiData = serverData.invitati;
-          
-          invitatiData.forEach(invitat => {
-            if (invitat.is_inlocuitor && invitat.member_id) {
-              const memberIndex = membriData.findIndex(m => m.id === invitat.member_id);
-              if (memberIndex >= 0) {
-                membriData[memberIndex] = {
-                  ...membriData[memberIndex],
-                  nume_inlocuitor: `${invitat.prenume} ${invitat.nume}`
-                };
-              }
-            }
-          });
-          
-          setMembri(membriData);
-          setInvitati(invitatiData);
-          setTotalTaxaMembri(serverData.total_taxa_membri);
-          setTotalTaxaInvitati(serverData.total_taxa_invitati);
-          return; // Server data loaded successfully
-          
-        } catch (serverError) {
-          console.warn('Server fetch failed, falling back to local data:', serverError.message);
+      // Process server data with inlocuitori sync
+      let membriData = serverData.membri;
+      const invitatiData = serverData.invitati;
+      
+      invitatiData.forEach(invitat => {
+        if (invitat.is_inlocuitor && invitat.member_id) {
+          const memberIndex = membriData.findIndex(m => m.id === invitat.member_id);
+          if (memberIndex >= 0) {
+            membriData[memberIndex] = {
+              ...membriData[memberIndex],
+              nume_inlocuitor: `${invitat.prenume} ${invitat.nume}`
+            };
+          }
         }
-      }
+      });
       
-      // Step 2: Fallback to local database (when offline or server failed)
-      const localData = await db.getAttendanceByDate(dateString);
-      processAndSetData(localData);
+      setMembri(membriData);
+      setInvitati(invitatiData);
+      setTotalTaxaMembri(serverData.total_taxa_membri);
+      setTotalTaxaInvitati(serverData.total_taxa_invitati);
       
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
     }
-  }, [dateString, isInitialized, isOnline, db]);
-
-  // Helper to process and set data
-  const processAndSetData = (data) => {
-    let membriData = [...data.membri];
-    const invitatiData = data.invitati;
-    
-    // Sync inlocuitori from guests to members
-    invitatiData.forEach(invitat => {
-      if (invitat.is_inlocuitor && invitat.member_id) {
-        const memberIndex = membriData.findIndex(m => m.id === invitat.member_id);
-        if (memberIndex >= 0) {
-          membriData[memberIndex] = {
-            ...membriData[memberIndex],
-            nume_inlocuitor: `${invitat.prenume} ${invitat.nume}`
-          };
-        }
-      }
-    });
-    
-    setMembri(membriData);
-    setInvitati(invitatiData);
-    setTotalTaxaMembri(data.total_taxa_membri);
-    setTotalTaxaInvitati(data.total_taxa_invitati);
-  };
+  }, [dateString]);
 
   useEffect(() => {
-    if (isInitialized) {
-      fetchData();
-    }
-  }, [fetchData, isInitialized]);
+    fetchData();
+  }, [fetchData]);
 
   useEffect(() => {
-    if (isInitialized) {
-      fetchDatesWithData();
-    }
-  }, [fetchDatesWithData, isInitialized]);
+    fetchDatesWithData();
+  }, [fetchDatesWithData]);
 
   const handleLogout = () => {
     logout();
