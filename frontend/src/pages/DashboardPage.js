@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
-import { useOffline } from '../contexts/OfflineContext';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Checkbox } from '../components/ui/checkbox';
@@ -31,9 +30,6 @@ import {
   Plus,
   Trash2,
   Settings,
-  Wifi,
-  WifiOff,
-  RefreshCw,
   Monitor,
   Key,
 } from 'lucide-react';
@@ -45,7 +41,6 @@ const API_URL = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 const DashboardPage = () => {
   const { user, logout } = useAuth();
-  const { isInitialized, isOnline, syncStatus, sync, db } = useOffline();
   const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [membri, setMembri] = useState([]);
