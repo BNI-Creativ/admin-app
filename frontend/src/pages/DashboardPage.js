@@ -210,7 +210,7 @@ const DashboardPage = () => {
     }
   };
 
-  // Handle member attendance (checkbox and taxa) - OFFLINE FIRST
+  // Handle member attendance (checkbox and taxa)
   const handleAttendanceChange = async (memberId, prezent, taxa) => {
     const membru = membri.find(m => m.id === memberId);
     const oldTaxa = membru?.taxa || 0;
@@ -224,26 +224,23 @@ const DashboardPage = () => {
     );
     setTotalTaxaMembri((prev) => prev - oldTaxa + taxa);
 
-    // Save to local database first
+    // Save to server
     try {
-      await db.saveAttendance(dateString, memberId, prezent, taxa, membru?.nume_inlocuitor || '');
+      await axios.post(`${API_URL}/attendance/${dateString}`, {
+        member_id: memberId,
+        prezent,
+        taxa,
+        nume_inlocuitor: membru?.nume_inlocuitor || '',
+      });
     } catch (error) {
-      console.error('Error saving to local DB:', error);
-    }
-
-    // Then sync to server if online
-    if (isOnline) {
-      try {
-        await axios.post(`${API_URL}/attendance/${dateString}`, {
-          member_id: memberId,
-          prezent,
-          taxa,
-          nume_inlocuitor: membru?.nume_inlocuitor || '',
-        });
-      } catch (error) {
-        console.error('Error syncing attendance to server:', error);
-        // Data is already saved locally, will sync later
-      }
+      console.error('Error saving attendance:', error);
+      // Revert on error
+      setMembri((prev) =>
+        prev.map((m) =>
+          m.id === memberId ? { ...m, prezent: !prezent, taxa: oldTaxa, taxa_lunara: membru?.taxa_lunara || 0 } : m
+        )
+      );
+      setTotalTaxaMembri((prev) => prev + oldTaxa - taxa);
     }
   };
 
