@@ -80,14 +80,6 @@ const DashboardPage = () => {
   const fetchDatesWithData = useCallback(async () => {
     try {
       const response = await axios.get(`${API_URL}/attendance/dates/list`);
-        if (localDates.length > 0) {
-          setDatesWithData(localDates);
-        }
-      }
-  // Fetch dates that have saved data
-  const fetchDatesWithData = useCallback(async () => {
-    try {
-      const response = await axios.get(`${API_URL}/attendance/dates/list`);
       setDatesWithData(response.data.dates || []);
     } catch (error) {
       console.error('Error fetching dates:', error);
