@@ -341,7 +341,7 @@ const DashboardPage = () => {
       const opt = {
         margin: [0.2, 0.2, 0.2, 0.2],
         filename: `prezenta_${dateString}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
+        image: { type: 'jpeg', quality: 0.5 },
         html2canvas: {
           scale: 2,
           useCORS: true,
