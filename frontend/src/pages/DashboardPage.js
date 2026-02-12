@@ -53,6 +53,7 @@ const DashboardPage = () => {
   const [storedEmails, setStoredEmails] = useState([]);
   const [showEmailPrompt, setShowEmailPrompt] = useState(false);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [isPdfMode, setIsPdfMode] = useState(false);
   const [newGuest, setNewGuest] = useState({
     prenume: '',
     nume: '',
@@ -92,11 +93,11 @@ const DashboardPage = () => {
       setLoading(true);
       const response = await axios.get(`${API_URL}/attendance/${dateString}`);
       const serverData = response.data;
-      
+
       // Process server data with inlocuitori sync
       let membriData = serverData.membri;
       const invitatiData = serverData.invitati;
-      
+
       invitatiData.forEach(invitat => {
         if (invitat.is_inlocuitor && invitat.member_id) {
           const memberIndex = membriData.findIndex(m => m.id === invitat.member_id);
@@ -108,12 +109,12 @@ const DashboardPage = () => {
           }
         }
       });
-      
+
       setMembri(membriData);
       setInvitati(invitatiData);
       setTotalTaxaMembri(serverData.total_taxa_membri);
       setTotalTaxaInvitati(serverData.total_taxa_invitati);
-      
+
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -171,16 +172,16 @@ const DashboardPage = () => {
   // Add new guest
   const handleAddGuest = async (e) => {
     e.preventDefault();
-    
+
     // Find member_id if invitat_de is set
     let memberId = null;
     if (newGuest.invitat_de) {
-      const matchingMember = membri.find(m => 
+      const matchingMember = membri.find(m =>
         `${m.prenume} ${m.nume}` === newGuest.invitat_de
       );
       memberId = matchingMember?.id || null;
     }
-    
+
     const guestData = {
       ...newGuest,
       data: dateString,
@@ -212,10 +213,10 @@ const DashboardPage = () => {
         return;
       }
       updatedGuest.is_inlocuitor = value;
-      
+
       const memberId = guest.member_id;
       const membru = membri.find(m => m.id === memberId);
-      
+
       if (value && memberId) {
         const guestName = `${guest.prenume} ${guest.nume}`;
         setMembri((prev) =>
@@ -223,7 +224,7 @@ const DashboardPage = () => {
             m.id === memberId ? { ...m, nume_inlocuitor: guestName } : m
           )
         );
-        
+
         // Save inlocuitor to server
         if (membru) {
           try {
@@ -243,7 +244,7 @@ const DashboardPage = () => {
             m.id === memberId ? { ...m, nume_inlocuitor: '' } : m
           )
         );
-        
+
         if (membru) {
           try {
             await axios.post(`${API_URL}/attendance/${dateString}`, {
@@ -291,7 +292,7 @@ const DashboardPage = () => {
   // Delete guest
   const handleDeleteGuest = async (guestId) => {
     const guest = invitati.find((g) => g.id === guestId);
-    
+
     // If deleting an inlocuitor, clear the nume_inlocuitor from member
     if (guest?.is_inlocuitor && guest?.member_id) {
       const membru = membri.find(m => m.id === guest.member_id);
@@ -301,7 +302,7 @@ const DashboardPage = () => {
             m.id === guest.member_id ? { ...m, nume_inlocuitor: '' } : m
           )
         );
-        
+
         try {
           await axios.post(`${API_URL}/attendance/${dateString}`, {
             member_id: guest.member_id,
@@ -314,7 +315,7 @@ const DashboardPage = () => {
         }
       }
     }
-    
+
     // Update UI immediately
     setInvitati((prev) => prev.filter((g) => g.id !== guestId));
     setTotalTaxaInvitati((prev) => prev - (guest?.taxa || 0));
@@ -340,109 +341,49 @@ const DashboardPage = () => {
   const generatePdfBase64 = async () => {
     const element = document.querySelector('.paper-container');
     if (!element) return null;
-    
-    // Prepare element for PDF
-    const inputs = element.querySelectorAll('input:not([type="checkbox"])');
-    const originalInputs = [];
-    
-    inputs.forEach((input) => {
-      const value = input.value || '0';
-      const span = document.createElement('span');
-      span.textContent = value;
-      span.className = 'pdf-static-value';
-      span.style.cssText = `
-        display: block;
-        font-weight: 600;
-        font-size: inherit;
-        color: #000;
-        text-align: ${input.className.includes('taxa') ? 'right' : 'center'};
-        width: 100%;
-      `;
-      originalInputs.push({ input, parent: input.parentNode });
-      input.parentNode.replaceChild(span, input);
-    });
-    
-    const noprint = element.querySelectorAll('.no-print, form, button:not(.attendance-checkbox)');
-    noprint.forEach(el => el.style.display = 'none');
-    
-    // Apply flexbox centering to all table cells
-    const tableCells = element.querySelectorAll('td, th');
-    const originalCellStyles = [];
-    const originalCellHTML = [];
-    
-    tableCells.forEach((cell) => {
-      originalCellStyles.push(cell.style.cssText);
-      originalCellHTML.push(cell.innerHTML);
-      
-      const isCenter = cell.classList.contains('text-center');
-      const isRight = cell.classList.contains('text-right');
-      let justify = 'flex-start';
-      let textAlign = 'left';
-      if (isCenter) {
-        justify = 'center';
-        textAlign = 'center';
-      } else if (isRight) {
-        justify = 'flex-end';
-        textAlign = 'right';
-      }
-      
-      const content = cell.innerHTML;
-      cell.innerHTML = `<div style="display:flex;align-items:center;justify-content:${justify};min-height:28px;width:100%;text-align:${textAlign};">${content}</div>`;
-      cell.style.padding = '2px 6px';
-      cell.style.verticalAlign = 'middle';
-    });
-    
-    try {
-      const opt = {
-        margin: [5, 5, 5, 5],
-        image: { type: 'jpeg', quality: 0.7 },
-        html2canvas: { scale: 1.2, useCORS: true, logging: false, backgroundColor: '#ffffff' },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true }
-      };
-      
-      const pdfBlob = await html2pdf().from(element).set(opt).outputPdf('blob');
-      
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const base64 = reader.result.split(',')[1];
-          resolve(base64);
-        };
-        reader.readAsDataURL(pdfBlob);
-      });
-    } finally {
-      // Restore everything
-      const spans = element.querySelectorAll('.pdf-static-value');
-      spans.forEach((span, index) => {
-        if (originalInputs[index]) {
-          span.parentNode.replaceChild(originalInputs[index].input, span);
+
+    // Activează modul PDF pentru a converti input-urile în text static
+    setIsPdfMode(true);
+
+    return new Promise((resolve) => {
+      setTimeout(async () => {
+        try {
+          const opt = {
+            margin: [5, 5, 5, 5],
+            filename: `prezenta_${dateString}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+          };
+
+          const pdfBlob = await html2pdf().from(element).set(opt).outputPdf('blob');
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result.split(',')[1]);
+          reader.readAsDataURL(pdfBlob);
+        } finally {
+          setIsPdfMode(false);
         }
-      });
-      noprint.forEach(el => el.style.display = '');
-      tableCells.forEach((cell, index) => {
-        cell.innerHTML = originalCellHTML[index] || '';
-        cell.style.cssText = originalCellStyles[index] || '';
-      });
-    }
+      }, 300);
+    });
   };
 
   // Send PDF via email
   const handleSendPdfEmail = async () => {
     setIsSendingEmail(true);
     setShowEmailPrompt(false);
-    
+
     try {
       const pdfBase64 = await generatePdfBase64();
       if (!pdfBase64) {
         alert('Eroare la generarea PDF-ului');
         return;
       }
-      
+
       await axios.post(`${API_URL}/send-pdf-email`, {
         data: dateString,
         pdf_base64: pdfBase64
       });
-      
+
       alert(`PDF-ul a fost trimis pe: ${storedEmails.join(', ')}`);
     } catch (error) {
       alert('Eroare la trimiterea email-ului: ' + (error.response?.data?.detail || error.message));
@@ -458,11 +399,11 @@ const DashboardPage = () => {
       console.error('Paper container not found');
       return;
     }
-    
+
     // Store original inputs to restore later
     const inputs = element.querySelectorAll('input:not([type="checkbox"])');
     const originalInputs = [];
-    
+
     // Replace inputs with static text spans
     inputs.forEach((input) => {
       const value = input.value || '0';
@@ -477,29 +418,29 @@ const DashboardPage = () => {
         text-align: ${input.className.includes('taxa') ? 'right' : 'center'};
         width: 100%;
       `;
-      
+
       originalInputs.push({
         input: input,
         parent: input.parentNode,
         nextSibling: input.nextSibling
       });
-      
+
       input.parentNode.replaceChild(span, input);
     });
-    
+
     // Hide elements not needed in PDF
     const noprint = element.querySelectorAll('.no-print, form, button:not(.attendance-checkbox)');
     noprint.forEach(el => el.style.display = 'none');
-    
+
     // Apply flexbox centering to all table cells
     const tableCells = element.querySelectorAll('td, th');
     const originalCellStyles = [];
     const originalCellHTML = [];
-    
+
     tableCells.forEach((cell) => {
       originalCellStyles.push(cell.style.cssText);
       originalCellHTML.push(cell.innerHTML);
-      
+
       // Check alignment class
       const isCenter = cell.classList.contains('text-center');
       const isRight = cell.classList.contains('text-right');
@@ -512,35 +453,35 @@ const DashboardPage = () => {
         justify = 'flex-end';
         textAlign = 'right';
       }
-      
+
       // Wrap content in a flex container
       const content = cell.innerHTML;
       cell.innerHTML = `<div style="display:flex;align-items:center;justify-content:${justify};min-height:28px;width:100%;text-align:${textAlign};">${content}</div>`;
       cell.style.padding = '2px 6px';
       cell.style.verticalAlign = 'middle';
     });
-    
+
     try {
       const opt = {
         margin: [5, 5, 5, 5],
         filename: `prezenta_${dateString}.pdf`,
         image: { type: 'jpeg', quality: 0.7 },
-        html2canvas: { 
+        html2canvas: {
           scale: 1.2,
           useCORS: true,
           logging: false,
           backgroundColor: '#ffffff'
         },
-        jsPDF: { 
-          unit: 'mm', 
-          format: 'a4', 
+        jsPDF: {
+          unit: 'mm',
+          format: 'a4',
           orientation: 'portrait',
           compress: true
         }
       };
-      
+
       await html2pdf().from(element).set(opt).save();
-      
+
     } catch (error) {
       console.error('Error exporting PDF:', error);
     } finally {
@@ -551,10 +492,10 @@ const DashboardPage = () => {
           span.parentNode.replaceChild(originalInputs[index].input, span);
         }
       });
-      
+
       // Restore hidden elements
       noprint.forEach(el => el.style.display = '');
-      
+
       // Restore original cell content and styles
       tableCells.forEach((cell, index) => {
         cell.innerHTML = originalCellHTML[index] || '';
@@ -572,204 +513,78 @@ const DashboardPage = () => {
   const formattedDate = format(selectedDate, "EEEE, d MMMM yyyy", { locale: ro });
   const capitalizedDate = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
 
-  // Get sorted members for dropdown
-  const sortedMembersForDropdown = [...membri].sort((a, b) => 
+  const sortedMembersForDropdown = [...membri].sort((a, b) =>
     `${a.prenume} ${a.nume}`.localeCompare(`${b.prenume} ${b.nume}`)
   );
 
-  // Calculate total present guests
   const totalInvitatiPrezenti = invitati.filter(g => g.prezent).length;
 
   return (
     <div className="flex min-h-screen bg-zinc-100">
-      {/* Sidebar */}
-      <aside 
-        className={`${sidebarOpen ? 'w-[280px]' : 'w-[60px]'} fixed top-0 left-0 h-screen bg-white border-r border-zinc-200 flex flex-col no-print transition-all duration-300 ease-in-out flex-shrink-0 z-40`}
-      >
+      <aside className={`${sidebarOpen ? 'w-[280px]' : 'w-[60px]'} fixed top-0 left-0 h-screen bg-white border-r border-zinc-200 flex flex-col no-print transition-all duration-300 ease-in-out flex-shrink-0 z-40`}>
         <div className="p-4 border-b border-zinc-200">
           <div className="flex items-center gap-3">
-            <div 
-              className="w-10 h-10 bg-zinc-900 rounded-sm flex items-center justify-center flex-shrink-0 cursor-pointer hover:bg-zinc-700 transition-colors"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              title={sidebarOpen ? 'Restrânge meniu' : 'Extinde meniu'}
-              data-testid="toggle-sidebar"
-            >
+            <div className="w-10 h-10 bg-zinc-900 rounded-sm flex items-center justify-center flex-shrink-0 cursor-pointer hover:bg-zinc-700 transition-colors" onClick={() => setSidebarOpen(!sidebarOpen)}>
               <Users className="w-5 h-5 text-white" strokeWidth={1.5} />
             </div>
             {sidebarOpen && (
               <div className="overflow-hidden">
-                <h1 className="font-bold text-zinc-900 text-sm" style={{ fontFamily: 'Manrope, sans-serif' }}>
-                  Membri & Invitați
-                </h1>
+                <h1 className="font-bold text-zinc-900 text-sm" style={{ fontFamily: 'Manrope, sans-serif' }}>Membri & Invitați</h1>
                 <p className="text-xs text-zinc-500 truncate">{user?.name}</p>
               </div>
             )}
           </div>
         </div>
-
         <nav className="flex-1 p-2 overflow-y-auto">
           <div className="space-y-1">
-            <Link
-              to="/dashboard"
-              className="sidebar-link active flex items-center gap-3 px-3 py-3 rounded-sm text-sm font-medium"
-              data-testid="nav-dashboard"
-              title="Prezență"
-            >
-              <CalendarDays className="w-4 h-4 flex-shrink-0" strokeWidth={1.5} />
-              {sidebarOpen && <span>Prezență</span>}
-            </Link>
-            <Link
-              to="/members"
-              className="sidebar-link flex items-center gap-3 px-3 py-3 rounded-sm text-sm font-medium text-zinc-600"
-              data-testid="nav-members"
-              title="Administrare Membri"
-            >
-              <Settings className="w-4 h-4 flex-shrink-0" strokeWidth={1.5} />
-              {sidebarOpen && <span>Administrare Membri</span>}
-            </Link>
-            <Link
-              to="/settings"
-              className="sidebar-link flex items-center gap-3 px-3 py-3 rounded-sm text-sm font-medium text-zinc-600"
-              data-testid="nav-settings"
-              title="Setări"
-            >
-              <Key className="w-4 h-4 flex-shrink-0" strokeWidth={1.5} />
-              {sidebarOpen && <span>Setări</span>}
-            </Link>
+            <Link to="/dashboard" className="sidebar-link active flex items-center gap-3 px-3 py-3 rounded-sm text-sm font-medium"><CalendarDays className="w-4 h-4 flex-shrink-0" strokeWidth={1.5} />{sidebarOpen && <span>Prezență</span>}</Link>
+            <Link to="/members" className="sidebar-link flex items-center gap-3 px-3 py-3 rounded-sm text-sm font-medium text-zinc-600"><Settings className="w-4 h-4 flex-shrink-0" strokeWidth={1.5} />{sidebarOpen && <span>Administrare Membri</span>}</Link>
+            <Link to="/settings" className="sidebar-link flex items-center gap-3 px-3 py-3 rounded-sm text-sm font-medium text-zinc-600"><Key className="w-4 h-4 flex-shrink-0" strokeWidth={1.5} />{sidebarOpen && <span>Setări</span>}</Link>
           </div>
         </nav>
-
         <div className="p-2 border-t border-zinc-200 flex-shrink-0">
-          <Button
-            variant="ghost"
-            className={`w-full ${sidebarOpen ? 'justify-start' : 'justify-center'} text-zinc-600 hover:bg-zinc-100`}
-            onClick={handleLogout}
-            data-testid="logout-button"
-            title="Deconectare"
-          >
-            <LogOut className="w-4 h-4 flex-shrink-0" strokeWidth={1.5} />
-            {sidebarOpen && <span className="ml-2">Deconectare</span>}
-          </Button>
+          <Button variant="ghost" className={`w-full ${sidebarOpen ? 'justify-start' : 'justify-center'} text-zinc-600 hover:bg-zinc-100`} onClick={handleLogout}><LogOut className="w-4 h-4 flex-shrink-0" strokeWidth={1.5} />{sidebarOpen && <span className="ml-2">Deconectare</span>}</Button>
         </div>
       </aside>
 
-      {/* Sidebar spacer for fixed sidebar */}
       <div className={`${sidebarOpen ? 'w-[280px]' : 'w-[60px]'} flex-shrink-0 transition-all duration-300 ease-in-out no-print`}></div>
 
-      {/* Main Content */}
       <main className="flex-1 p-8 pb-16">
-        {/* Header */}
         <div className="flex items-center justify-between mb-8 no-print">
-          <div className="flex items-center gap-4">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="rounded-sm border-zinc-200"
-                  data-testid="date-picker-trigger"
-                >
-                  <CalendarDays className="w-4 h-4 mr-2" strokeWidth={1.5} />
-                  Selectează data
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={(date) => date && setSelectedDate(date)}
-                  locale={ro}
-                  modifiers={{
-                    hasData: datesWithData.map(d => new Date(d + 'T00:00:00'))
-                  }}
-                  modifiersClassNames={{
-                    hasData: 'calendar-has-data'
-                  }}
-                  data-testid="date-calendar"
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
+          <Popover>
+            <PopoverTrigger asChild><Button variant="outline" className="rounded-sm border-zinc-200"><CalendarDays className="w-4 h-4 mr-2" strokeWidth={1.5} />Selectează data</Button></PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar mode="single" selected={selectedDate} onSelect={(date) => date && setSelectedDate(date)} locale={ro} modifiers={{ hasData: datesWithData.map(d => new Date(d + 'T00:00:00')) }} modifiersClassNames={{ hasData: 'calendar-has-data' }} />
+            </PopoverContent>
+          </Popover>
           <div className="flex gap-2">
-            <Button
-              onClick={handleOpenProjector}
-              variant="outline"
-              className="rounded-sm border-zinc-300"
-              data-testid="projector-button"
-            >
-              <Monitor className="w-4 h-4 mr-2" strokeWidth={1.5} />
-              Proiector
-            </Button>
-            <Button
-              onClick={handleExportPdfClick}
-              className="bg-zinc-900 hover:bg-zinc-800 rounded-sm"
-              disabled={isSendingEmail}
-              data-testid="export-pdf-button"
-            >
-              <FileText className="w-4 h-4 mr-2" strokeWidth={1.5} />
-              {isSendingEmail ? 'Se trimite...' : 'Exportă PDF'}
-            </Button>
+            <Button onClick={handleOpenProjector} variant="outline" className="rounded-sm border-zinc-300"><Monitor className="w-4 h-4 mr-2" strokeWidth={1.5} />Proiector</Button>
+            <Button onClick={handleExportPdfClick} className="bg-zinc-900 hover:bg-zinc-800 rounded-sm" disabled={isSendingEmail}><FileText className="w-4 h-4 mr-2" strokeWidth={1.5} />{isSendingEmail ? 'Se trimite...' : 'Exportă PDF'}</Button>
           </div>
         </div>
 
-        {/* Email Prompt Dialog */}
         {showEmailPrompt && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 max-w-md mx-4 shadow-xl">
               <h3 className="text-lg font-semibold mb-4">Trimite PDF pe email?</h3>
-              <p className="text-zinc-600 mb-6">
-                Doriți ca PDF-ul să fie trimis pe email-urile stocate în setări?
-                <br />
-                <span className="text-sm text-zinc-500">
-                  PDF-ul nu va fi exportat local dacă se trimite pe email.
-                </span>
-              </p>
-              <div className="text-sm text-zinc-500 mb-4">
-                Email-uri: {storedEmails.join(', ')}
-              </div>
+              <p className="text-zinc-600 mb-6">Doriți ca PDF-ul să fie trimis pe email-urile stocate în setări?</p>
               <div className="flex gap-3 justify-end">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setShowEmailPrompt(false);
-                    handleExportPdf();
-                  }}
-                  className="rounded-sm"
-                >
-                  Nu, exportă local
-                </Button>
-                <Button
-                  onClick={handleSendPdfEmail}
-                  className="bg-blue-600 hover:bg-blue-700 rounded-sm"
-                >
-                  Da, trimite pe email
-                </Button>
+                <Button variant="outline" onClick={() => { setShowEmailPrompt(false); handleExportPdf(); }}>Nu, exportă local</Button>
+                <Button onClick={handleSendPdfEmail} className="bg-blue-600 hover:bg-blue-700 rounded-sm">Da, trimite pe email</Button>
               </div>
             </div>
           </div>
         )}
 
-        {/* Paper Container */}
         <div className="paper-container print-container">
-          {/* Date Display */}
-          <div className="text-right mb-8">
-            <p className="date-display text-xl text-zinc-900" data-testid="current-date">
-              {capitalizedDate}
-            </p>
-          </div>
-
+          <div className="text-right mb-8"><p className="date-display text-xl text-zinc-900">{capitalizedDate}</p></div>
           {loading ? (
             <div className="text-center py-12 text-zinc-500">Se încarcă...</div>
           ) : (
             <div className="space-y-12">
-              {/* Membri Table */}
               <section className="animate-fade-in">
-                <h2
-                  className="text-2xl font-semibold tracking-tight mb-6 text-zinc-900"
-                  style={{ fontFamily: 'Manrope, sans-serif' }}
-                >
-                  Membri
-                </h2>
-                <Table className="swiss-table" data-testid="membri-table">
+                <h2 className="text-2xl font-semibold tracking-tight mb-6 text-zinc-900" style={{ fontFamily: 'Manrope, sans-serif' }}>Membri</h2>
+                <Table className="swiss-table membri-table">
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-10">Nr.</TableHead>
@@ -782,263 +597,118 @@ const DashboardPage = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {membri.map((membru, index) => {
+                    {(isPdfMode ? membri.slice(0, 24) : membri).map((membru, index) => {
                       const hasInlocuitor = membru.nume_inlocuitor && membru.nume_inlocuitor.length > 0;
-                      let rowClass = '';
-                      if (hasInlocuitor) {
-                        rowClass = 'bg-yellow-100';
-                      } else if (membru.prezent) {
-                        rowClass = 'bg-green-100';
-                      }
-                      
                       return (
-                        <TableRow 
-                          key={membru.id} 
-                          data-testid={`membru-row-${membru.id}`}
-                          className={rowClass}
-                        >
-                          <TableCell className="font-medium tabular-nums">
-                            {index + 1}
-                          </TableCell>
+                        <TableRow key={membru.id} className={hasInlocuitor ? 'bg-yellow-100' : membru.prezent ? 'bg-green-100' : ''}>
+                          <TableCell className="font-medium tabular-nums">{index + 1}</TableCell>
                           <TableCell>{membru.prenume}</TableCell>
                           <TableCell>{membru.nume}</TableCell>
-                          <TableCell className="text-zinc-500 text-sm">
-                            {membru.nume_inlocuitor || ''}
-                          </TableCell>
+                          <TableCell>{isPdfMode ? (membru.nume_inlocuitor || '-') : (membru.nume_inlocuitor || '')}</TableCell>
                           <TableCell className="text-center">
-                            <Checkbox
-                              checked={hasInlocuitor ? false : membru.prezent}
-                              onCheckedChange={(checked) =>
-                                handleAttendanceChange(membru.id, checked, membru.taxa)
-                              }
-                              disabled={hasInlocuitor}
-                              className={`attendance-checkbox ${hasInlocuitor ? 'opacity-30 cursor-not-allowed' : ''}`}
-                              data-testid={`checkbox-${membru.id}`}
-                            />
+                            <Checkbox checked={hasInlocuitor ? false : membru.prezent} onCheckedChange={(checked) => handleAttendanceChange(membru.id, checked, membru.taxa)} disabled={hasInlocuitor} className="attendance-checkbox" />
                           </TableCell>
                           <TableCell className="text-right">
-                            <Input
-                              type="number"
-                              value={membru.taxa}
-                              onChange={(e) =>
-                                handleAttendanceChange(
-                                  membru.id,
-                                  membru.prezent,
-                                  parseFloat(e.target.value) || 0
-                                )
-                              }
-                              className="taxa-input table-input rounded-sm"
-                              data-testid={`taxa-input-${membru.id}`}
-                            />
+                            {isPdfMode ? (<span className="tabular-nums">{membru.taxa}</span>) : (
+                              <Input type="number" value={membru.taxa} onChange={(e) => handleAttendanceChange(membru.id, membru.prezent, parseFloat(e.target.value) || 0)} className="taxa-input table-input" />
+                            )}
                           </TableCell>
-                          <TableCell className="text-right tabular-nums text-zinc-500" data-testid={`taxa-lunara-${membru.id}`}>
-                            {(membru.taxa_lunara || 0).toFixed(2)}
-                          </TableCell>
+                          <TableCell className="text-right tabular-nums text-zinc-500">{(membru.taxa_lunara || 0).toFixed(2)}</TableCell>
                         </TableRow>
                       );
                     })}
-                    <TableRow className="total-row">
-                      <TableCell colSpan={4} className="text-right font-bold">
-                        TOTAL
-                      </TableCell>
-                      <TableCell className="text-center font-bold tabular-nums" data-testid="total-prezenti">
-                        {membri.filter(m => m.prezent).length}
-                      </TableCell>
-                      <TableCell className="text-right font-bold tabular-nums" data-testid="total-taxa-membri">
-                        {totalTaxaMembri.toFixed(2)}
-                      </TableCell>
-                      <TableCell className="text-right font-bold tabular-nums" data-testid="total-taxa-lunara">
-                        {membri.reduce((sum, m) => sum + (m.taxa_lunara || 0), 0).toFixed(2)}
-                      </TableCell>
-                    </TableRow>
+                    {(!isPdfMode || membri.length <= 24) && (
+                      <TableRow className="total-row">
+                        <TableCell colSpan={4} className="text-right font-bold">TOTAL</TableCell>
+                        <TableCell className="text-center font-bold">{membri.filter(m => m.prezent).length}</TableCell>
+                        <TableCell className="text-right font-bold">{totalTaxaMembri.toFixed(2)}</TableCell>
+                        <TableCell className="text-right font-bold">{membri.reduce((sum, m) => sum + (m.taxa_lunara || 0), 0).toFixed(2)}</TableCell>
+                      </TableRow>
+                    )}
                   </TableBody>
                 </Table>
-                {membri.length === 0 && (
-                  <p className="text-center py-8 text-zinc-500">
-                    Nu există membri. Adaugă membri din meniul{' '}
-                    <Link to="/members" className="text-blue-600 hover:underline">
-                      Administrare Membri
-                    </Link>
-                    .
-                  </p>
+
+                {isPdfMode && membri.length > 24 && (
+                  <div className="page-break-before" style={{ marginTop: '40px' }}>
+                    <h2 className="text-2xl font-semibold mb-6 invisible-h2">Membri (continuare)</h2>
+                    <Table className="swiss-table">
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-10">Nr.</TableHead>
+                          <TableHead>Prenume</TableHead><TableHead>Nume</TableHead><TableHead>Înlocuitor</TableHead>
+                          <TableHead className="w-16 text-center">Prez</TableHead><TableHead className="w-20 text-right">Taxa</TableHead>
+                          <TableHead className="w-24 text-right">Total Lună</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {membri.slice(24).map((membru, index) => (
+                          <TableRow key={membru.id} className={membru.nume_inlocuitor ? 'bg-yellow-100' : membru.prezent ? 'bg-green-100' : ''}>
+                            <TableCell>{index + 25}</TableCell>
+                            <TableCell>{membru.prenume}</TableCell><TableCell>{membru.nume}</TableCell>
+                            <TableCell>{membru.nume_inlocuitor || '-'}</TableCell>
+                            <TableCell className="text-center"><Checkbox checked={membru.prezent} className="attendance-checkbox" /></TableCell>
+                            <TableCell className="text-right"><span className="tabular-nums">{membru.taxa}</span></TableCell>
+                            <TableCell className="text-right">{(membru.taxa_lunara || 0).toFixed(2)}</TableCell>
+                          </TableRow>
+                        ))}
+                        <TableRow className="total-row">
+                          <TableCell colSpan={4} className="text-right font-bold">TOTAL</TableCell>
+                          <TableCell className="text-center font-bold">{membri.filter(m => m.prezent).length}</TableCell>
+                          <TableCell className="text-right font-bold">{totalTaxaMembri.toFixed(2)}</TableCell>
+                          <TableCell className="text-right font-bold">{membri.reduce((sum, m) => sum + (m.taxa_lunara || 0), 0).toFixed(2)}</TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  </div>
                 )}
               </section>
 
-              {/* Invitați Table */}
-              <section className="animate-fade-in">
-                <h2
-                  className="text-2xl font-semibold tracking-tight mb-6 text-zinc-900"
-                  style={{ fontFamily: 'Manrope, sans-serif' }}
-                >
-                  Invitați
-                </h2>
-
-                {/* Add Guest Form */}
-                <form
-                  onSubmit={handleAddGuest}
-                  className="flex gap-3 mb-6 p-4 bg-zinc-50 rounded-sm no-print"
-                  data-testid="add-guest-form"
-                >
-                  <Input
-                    placeholder="Prenume"
-                    value={newGuest.prenume}
-                    onChange={(e) => setNewGuest({ ...newGuest, prenume: e.target.value })}
-                    className="rounded-sm"
-                    required
-                    data-testid="guest-prenume-input"
-                  />
-                  <Input
-                    placeholder="Nume"
-                    value={newGuest.nume}
-                    onChange={(e) => setNewGuest({ ...newGuest, nume: e.target.value })}
-                    className="rounded-sm"
-                    required
-                    data-testid="guest-nume-input"
-                  />
-                  <Input
-                    placeholder="Companie"
-                    value={newGuest.companie}
-                    onChange={(e) => setNewGuest({ ...newGuest, companie: e.target.value })}
-                    className="rounded-sm"
-                    data-testid="guest-companie-input"
-                  />
-                  <Select
-                    value={newGuest.invitat_de || 'none'}
-                    onValueChange={(value) => setNewGuest({ ...newGuest, invitat_de: value === 'none' ? '' : value })}
-                  >
-                    <SelectTrigger className="rounded-sm w-40" data-testid="guest-invitat-de-select">
-                      <SelectValue placeholder="Invitat de">
-                        {newGuest.invitat_de || '-------'}
-                      </SelectValue>
-                    </SelectTrigger>
+              <section className="animate-fade-in invitati-section page-break-before">
+                <h2 className="text-2xl font-semibold tracking-tight mb-6 text-zinc-900">Invitați</h2>
+                <form onSubmit={handleAddGuest} className="flex gap-3 mb-6 p-4 bg-zinc-50 rounded-sm no-print">
+                  <Input placeholder="Prenume" value={newGuest.prenume} onChange={(e) => setNewGuest({ ...newGuest, prenume: e.target.value })} required />
+                  <Input placeholder="Nume" value={newGuest.nume} onChange={(e) => setNewGuest({ ...newGuest, nume: e.target.value })} required />
+                  <Input placeholder="Companie" value={newGuest.companie} onChange={(e) => setNewGuest({ ...newGuest, companie: e.target.value })} />
+                  <Select value={newGuest.invitat_de || 'none'} onValueChange={(value) => setNewGuest({ ...newGuest, invitat_de: value === 'none' ? '' : value })}>
+                    <SelectTrigger className="w-40"><SelectValue placeholder="Invitat de">{newGuest.invitat_de || '-------'}</SelectValue></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">-------</SelectItem>
-                      {sortedMembersForDropdown.map((membru) => (
-                        <SelectItem 
-                          key={membru.id} 
-                          value={`${membru.prenume} ${membru.nume}`}
-                        >
-                          {membru.prenume} {membru.nume}
-                        </SelectItem>
-                      ))}
+                      {sortedMembersForDropdown.map((membru) => (<SelectItem key={membru.id} value={`${membru.prenume} ${membru.nume}`}>{membru.prenume} {membru.nume}</SelectItem>))}
                     </SelectContent>
                   </Select>
-                  <Input
-                    type="number"
-                    placeholder="Taxa"
-                    value={newGuest.taxa}
-                    onChange={(e) =>
-                      setNewGuest({ ...newGuest, taxa: parseFloat(e.target.value) || 0 })
-                    }
-                    className="rounded-sm w-24"
-                    data-testid="guest-taxa-input"
-                  />
-                  <Button type="submit" className="bg-zinc-900 hover:bg-zinc-800 rounded-sm" data-testid="add-guest-button">
-                    <Plus className="w-4 h-4" strokeWidth={1.5} />
-                  </Button>
+                  <Input type="number" placeholder="Taxa" value={newGuest.taxa} onChange={(e) => setNewGuest({ ...newGuest, taxa: parseFloat(e.target.value) || 0 })} className="w-24" />
+                  <Button type="submit" className="bg-zinc-900 hover:bg-zinc-800 rounded-sm"><Plus className="w-4 h-4" /></Button>
                 </form>
 
-                <Table className="swiss-table" data-testid="invitati-table">
+                <Table className="swiss-table">
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-10">Nr.</TableHead>
-                      <TableHead>Prenume</TableHead>
-                      <TableHead>Nume</TableHead>
-                      <TableHead>Companie</TableHead>
-                      <TableHead className="w-40">Invitat de</TableHead>
-                      <TableHead className="w-16 text-center">Prez</TableHead>
-                      <TableHead className="w-16 text-center">Înloc</TableHead>
-                      <TableHead className="w-20 text-right">Taxa</TableHead>
-                      <TableHead className="w-12 no-print"></TableHead>
+                      <TableHead className="w-10">Nr.</TableHead><TableHead>Prenume</TableHead><TableHead>Nume</TableHead><TableHead>Companie</TableHead><TableHead className="w-40">Invitat de</TableHead>
+                      <TableHead className="w-16 text-center">Prez</TableHead><TableHead className="w-16 text-center">Înloc</TableHead><TableHead className="w-20 text-right">Taxa</TableHead><TableHead className="w-12 no-print"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {[...invitati]
-                      .sort((a, b) => {
-                        const nameA = `${a.prenume} ${a.nume}`.toLowerCase();
-                        const nameB = `${b.prenume} ${b.nume}`.toLowerCase();
-                        return nameA.localeCompare(nameB);
-                      })
-                      .map((invitat, index) => (
-                      <TableRow 
-                        key={invitat.id} 
-                        data-testid={`invitat-row-${invitat.id}`}
-                        className={invitat.prezent ? 'bg-green-100' : (invitat.is_inlocuitor ? 'bg-blue-50' : '')}
-                      >
-                        <TableCell className="font-medium tabular-nums">
-                          {index + 1}
-                        </TableCell>
-                        <TableCell data-testid={`invitat-prenume-${invitat.id}`}>
-                          {invitat.prenume}
-                        </TableCell>
-                        <TableCell data-testid={`invitat-nume-${invitat.id}`}>
-                          {invitat.nume}
-                        </TableCell>
-                        <TableCell data-testid={`invitat-companie-${invitat.id}`}>
-                          {invitat.companie}
-                        </TableCell>
-                        <TableCell data-testid={`invitat-invitat-de-${invitat.id}`}>
-                          {invitat.invitat_de || '-------'}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <Checkbox
-                            checked={invitat.prezent || false}
-                            onCheckedChange={(checked) => handleUpdateGuest(invitat.id, 'prezent', checked)}
-                            className="attendance-checkbox"
-                            data-testid={`prezent-checkbox-${invitat.id}`}
-                          />
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <Checkbox
-                            checked={invitat.is_inlocuitor || false}
-                            onCheckedChange={(checked) => handleUpdateGuest(invitat.id, 'is_inlocuitor', checked)}
-                            disabled={!invitat.invitat_de || invitat.invitat_de === '-------'}
-                            className={`attendance-checkbox ${(!invitat.invitat_de || invitat.invitat_de === '-------') ? 'opacity-30 cursor-not-allowed' : ''}`}
-                            data-testid={`inlocuitor-checkbox-${invitat.id}`}
-                          />
-                        </TableCell>
+                    {[...invitati].sort((a, b) => `${a.prenume} ${a.nume}`.localeCompare(`${b.prenume} ${b.nume}`)).map((invitat, index) => (
+                      <TableRow key={invitat.id} className={invitat.prezent ? 'bg-green-100' : (invitat.is_inlocuitor ? 'bg-blue-50' : '')}>
+                        <TableCell>{index + 1}</TableCell>
+                        <TableCell>{invitat.prenume}</TableCell><TableCell>{invitat.nume}</TableCell><TableCell>{invitat.companie}</TableCell><TableCell>{invitat.invitat_de || '-------'}</TableCell>
+                        <TableCell className="text-center"><Checkbox checked={invitat.prezent || false} onCheckedChange={(checked) => handleUpdateGuest(invitat.id, 'prezent', checked)} className="attendance-checkbox" /></TableCell>
+                        <TableCell className="text-center"><Checkbox checked={invitat.is_inlocuitor || false} onCheckedChange={(checked) => handleUpdateGuest(invitat.id, 'is_inlocuitor', checked)} disabled={!invitat.invitat_de || invitat.invitat_de === '-------'} className="attendance-checkbox" /></TableCell>
                         <TableCell className="text-right">
-                          <Input
-                            type="number"
-                            value={invitat.taxa}
-                            onChange={(e) => handleUpdateGuest(invitat.id, 'taxa', parseFloat(e.target.value) || 0)}
-                            className="taxa-input table-input rounded-sm w-16"
-                            data-testid={`invitat-taxa-input-${invitat.id}`}
-                          />
+                          {isPdfMode ? (<span className="tabular-nums">{invitat.taxa}</span>) : (
+                            <Input type="number" value={invitat.taxa} onChange={(e) => handleUpdateGuest(invitat.id, 'taxa', parseFloat(e.target.value) || 0)} className="taxa-input table-input rounded-sm w-16" />
+                          )}
                         </TableCell>
-                        <TableCell className="no-print">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteGuest(invitat.id)}
-                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                            data-testid={`delete-invitat-${invitat.id}`}
-                          >
-                            <Trash2 className="w-4 h-4" strokeWidth={1.5} />
-                          </Button>
-                        </TableCell>
+                        <TableCell className="no-print"><Button variant="ghost" size="sm" onClick={() => handleDeleteGuest(invitat.id)} className="text-red-500 hover:text-red-700"><Trash2 className="w-4 h-4" /></Button></TableCell>
                       </TableRow>
                     ))}
                     <TableRow className="total-row">
-                      <TableCell colSpan={5} className="text-right font-bold">
-                        TOTAL
-                      </TableCell>
-                      <TableCell className="text-center font-bold tabular-nums" data-testid="total-invitati-prezenti">
-                        {totalInvitatiPrezenti}
-                      </TableCell>
-                      <TableCell></TableCell>
-                      <TableCell className="text-right font-bold tabular-nums" data-testid="total-taxa-invitati">
-                        {totalTaxaInvitati.toFixed(2)}
-                      </TableCell>
-                      <TableCell className="no-print"></TableCell>
+                      <TableCell colSpan={5} className="text-right font-bold">TOTAL</TableCell>
+                      <TableCell className="text-center font-bold">{totalInvitatiPrezenti}</TableCell><TableCell></TableCell>
+                      <TableCell className="text-right font-bold">{totalTaxaInvitati.toFixed(2)}</TableCell><TableCell className="no-print"></TableCell>
                     </TableRow>
                   </TableBody>
                 </Table>
-                {invitati.length === 0 && (
-                  <p className="text-center py-8 text-zinc-500">
-                    Nu există invitați pentru această dată.
-                  </p>
-                )}
               </section>
             </div>
           )}
