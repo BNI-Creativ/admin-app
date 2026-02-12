@@ -330,11 +330,37 @@ const DashboardPage = () => {
 
   // Handle PDF export button click
   const handleExportPdfClick = () => {
-    if (storedEmails.length > 0) {
-      setShowEmailPrompt(true);
-    } else {
-      handleExportPdf();
-    }
+    const element = document.querySelector('.paper-container');
+    if (!element) return;
+
+    setIsPdfMode(true);
+
+    setTimeout(() => {
+      element.classList.add('pdf-export-mode');
+
+      const opt = {
+        margin: [0.2, 0.2, 0.2, 0.2],
+        filename: `prezenta_${dateString}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          letterRendering: true,
+        },
+        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'], before: '.page-break-before' }
+      };
+
+      html2pdf().from(element).set(opt).save().then(() => {
+        element.classList.remove('pdf-export-mode');
+        setIsPdfMode(false);
+      }).catch((error) => {
+        console.error('PDF generation error:', error);
+        element.classList.remove('pdf-export-mode');
+        setIsPdfMode(false);
+      });
+    }, 300);
   };
 
   // Generate PDF as base64
@@ -389,118 +415,6 @@ const DashboardPage = () => {
       alert('Eroare la trimiterea email-ului: ' + (error.response?.data?.detail || error.message));
     } finally {
       setIsSendingEmail(false);
-    }
-  };
-
-  // PDF Export - convertește input-urile în text static pentru randare corectă
-  const handleExportPdf = async () => {
-    const element = document.querySelector('.paper-container');
-    if (!element) {
-      console.error('Paper container not found');
-      return;
-    }
-
-    // Store original inputs to restore later
-    const inputs = element.querySelectorAll('input:not([type="checkbox"])');
-    const originalInputs = [];
-
-    // Replace inputs with static text spans
-    inputs.forEach((input) => {
-      const value = input.value || '0';
-      const span = document.createElement('span');
-      span.textContent = value;
-      span.className = 'pdf-static-value';
-      span.style.cssText = `
-        display: block;
-        font-weight: 600;
-        font-size: inherit;
-        color: #000;
-        text-align: ${input.className.includes('taxa') ? 'right' : 'center'};
-        width: 100%;
-      `;
-
-      originalInputs.push({
-        input: input,
-        parent: input.parentNode,
-        nextSibling: input.nextSibling
-      });
-
-      input.parentNode.replaceChild(span, input);
-    });
-
-    // Hide elements not needed in PDF
-    const noprint = element.querySelectorAll('.no-print, form, button:not(.attendance-checkbox)');
-    noprint.forEach(el => el.style.display = 'none');
-
-    // Apply flexbox centering to all table cells
-    const tableCells = element.querySelectorAll('td, th');
-    const originalCellStyles = [];
-    const originalCellHTML = [];
-
-    tableCells.forEach((cell) => {
-      originalCellStyles.push(cell.style.cssText);
-      originalCellHTML.push(cell.innerHTML);
-
-      // Check alignment class
-      const isCenter = cell.classList.contains('text-center');
-      const isRight = cell.classList.contains('text-right');
-      let justify = 'flex-start';
-      let textAlign = 'left';
-      if (isCenter) {
-        justify = 'center';
-        textAlign = 'center';
-      } else if (isRight) {
-        justify = 'flex-end';
-        textAlign = 'right';
-      }
-
-      // Wrap content in a flex container
-      const content = cell.innerHTML;
-      cell.innerHTML = `<div style="display:flex;align-items:center;justify-content:${justify};min-height:28px;width:100%;text-align:${textAlign};">${content}</div>`;
-      cell.style.padding = '2px 6px';
-      cell.style.verticalAlign = 'middle';
-    });
-
-    try {
-      const opt = {
-        margin: [5, 5, 5, 5],
-        filename: `prezenta_${dateString}.pdf`,
-        image: { type: 'jpeg', quality: 0.7 },
-        html2canvas: {
-          scale: 1.2,
-          useCORS: true,
-          logging: false,
-          backgroundColor: '#ffffff'
-        },
-        jsPDF: {
-          unit: 'mm',
-          format: 'a4',
-          orientation: 'portrait',
-          compress: true
-        }
-      };
-
-      await html2pdf().from(element).set(opt).save();
-
-    } catch (error) {
-      console.error('Error exporting PDF:', error);
-    } finally {
-      // Restore original inputs
-      const spans = element.querySelectorAll('.pdf-static-value');
-      spans.forEach((span, index) => {
-        if (originalInputs[index]) {
-          span.parentNode.replaceChild(originalInputs[index].input, span);
-        }
-      });
-
-      // Restore hidden elements
-      noprint.forEach(el => el.style.display = '');
-
-      // Restore original cell content and styles
-      tableCells.forEach((cell, index) => {
-        cell.innerHTML = originalCellHTML[index] || '';
-        cell.style.cssText = originalCellStyles[index] || '';
-      });
     }
   };
 
@@ -569,7 +483,7 @@ const DashboardPage = () => {
               <h3 className="text-lg font-semibold mb-4">Trimite PDF pe email?</h3>
               <p className="text-zinc-600 mb-6">Doriți ca PDF-ul să fie trimis pe email-urile stocate în setări?</p>
               <div className="flex gap-3 justify-end">
-                <Button variant="outline" onClick={() => { setShowEmailPrompt(false); handleExportPdf(); }}>Nu, exportă local</Button>
+                <Button variant="outline" onClick={() => { setShowEmailPrompt(false); handleExportPdfClick(); }}>Nu, exportă local</Button>
                 <Button onClick={handleSendPdfEmail} className="bg-blue-600 hover:bg-blue-700 rounded-sm">Da, trimite pe email</Button>
               </div>
             </div>
