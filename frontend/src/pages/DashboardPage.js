@@ -579,19 +579,30 @@ const DashboardPage = () => {
 
               <section className="animate-fade-in invitati-section page-break-before">
                 <h2 className="text-2xl font-semibold tracking-tight mb-6 text-zinc-900">Invitați</h2>
-                <form onSubmit={handleAddGuest} className="flex gap-3 mb-6 p-4 bg-zinc-50 rounded-sm no-print">
-                  <Input placeholder="Prenume" value={newGuest.prenume} onChange={(e) => setNewGuest({ ...newGuest, prenume: e.target.value })} required />
-                  <Input placeholder="Nume" value={newGuest.nume} onChange={(e) => setNewGuest({ ...newGuest, nume: e.target.value })} required />
-                  <Input placeholder="Companie" value={newGuest.companie} onChange={(e) => setNewGuest({ ...newGuest, companie: e.target.value })} />
+                <form onSubmit={handleAddGuest} className="flex gap-3 mb-6 p-4 bg-zinc-50 rounded-sm no-print" data-testid="add-guest-form">
+                  <Input placeholder="Prenume" value={newGuest.prenume} onChange={(e) => setNewGuest({ ...newGuest, prenume: e.target.value })} className="rounded-sm" required data-testid="guest-prenume-input" />
+                  <Input placeholder="Nume" value={newGuest.nume} onChange={(e) => setNewGuest({ ...newGuest, nume: e.target.value })} className="rounded-sm" required data-testid="guest-nume-input" />
+                  <Input placeholder="Companie" value={newGuest.companie} onChange={(e) => setNewGuest({ ...newGuest, companie: e.target.value })} className="rounded-sm" data-testid="guest-companie-input" />
+                  <Input placeholder="Telefon" value={newGuest.telefon} onChange={(e) => setNewGuest({ ...newGuest, telefon: e.target.value })} className="rounded-sm w-32" data-testid="guest-telefon-input" />
                   <Select value={newGuest.invitat_de || 'none'} onValueChange={(value) => setNewGuest({ ...newGuest, invitat_de: value === 'none' ? '' : value })}>
-                    <SelectTrigger className="w-40"><SelectValue placeholder="Invitat de">{newGuest.invitat_de || '-------'}</SelectValue></SelectTrigger>
+                    <SelectTrigger className="rounded-sm w-40" data-testid="guest-invitat-de-select">
+                      <SelectValue placeholder="Invitat de">
+                        {newGuest.invitat_de || '-------'}
+                      </SelectValue>
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">-------</SelectItem>
-                      {sortedMembersForDropdown.map((membru) => (<SelectItem key={membru.id} value={`${membru.prenume} ${membru.nume}`}>{membru.prenume} {membru.nume}</SelectItem>))}
+                      {sortedMembersForDropdown.map((membru) => (
+                        <SelectItem key={membru.id} value={`${membru.prenume} ${membru.nume}`}>
+                          {membru.prenume} {membru.nume}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
-                  <Input type="number" placeholder="Taxa" value={newGuest.taxa} onChange={(e) => setNewGuest({ ...newGuest, taxa: parseFloat(e.target.value) || 0 })} className="w-24" />
-                  <Button type="submit" className="bg-zinc-900 hover:bg-zinc-800 rounded-sm"><Plus className="w-4 h-4" /></Button>
+                  <Input type="number" placeholder="Taxa" value={newGuest.taxa} onChange={(e) => setNewGuest({ ...newGuest, taxa: parseFloat(e.target.value) || 0 })} className="rounded-sm w-24" data-testid="guest-taxa-input" />
+                  <Button type="submit" className="bg-zinc-900 hover:bg-zinc-800 rounded-sm" data-testid="add-guest-button">
+                    <Plus className="w-4 h-4" strokeWidth={1.5} />
+                  </Button>
                 </form>
 
                 <Table className="swiss-table">
