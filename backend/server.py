@@ -451,6 +451,8 @@ async def get_daily_attendance(data: str, current_user: dict = Depends(get_curre
             g["member_id"] = None
         if "prezent" not in g:
             g["prezent"] = False
+        if "telefon" not in g:
+            g["telefon"] = ""
     total_taxa_invitati = sum(g.get("taxa", 0) for g in guests)
     
     return DailyAttendanceResponse(
