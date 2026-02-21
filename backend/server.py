@@ -84,6 +84,7 @@ class GuestCreate(BaseModel):
     prenume: str
     nume: str
     companie: str = ""
+    telefon: str = ""
     invitat_de: str = ""
     taxa: float = 0
     prezent: bool = False
@@ -94,6 +95,7 @@ class GuestUpdate(BaseModel):
     prenume: Optional[str] = None
     nume: Optional[str] = None
     companie: Optional[str] = None
+    telefon: Optional[str] = None
     invitat_de: Optional[str] = None
     taxa: Optional[float] = None
     prezent: Optional[bool] = None
@@ -107,6 +109,7 @@ class GuestResponse(BaseModel):
     prenume: str
     nume: str
     companie: str
+    telefon: str = ""
     invitat_de: str
     taxa: float
     data: str
