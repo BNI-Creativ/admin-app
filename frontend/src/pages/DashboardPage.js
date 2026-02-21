@@ -616,7 +616,7 @@ const DashboardPage = () => {
                     {[...invitati].sort((a, b) => `${a.prenume} ${a.nume}`.localeCompare(`${b.prenume} ${b.nume}`)).map((invitat, index) => (
                       <TableRow key={invitat.id} className={invitat.prezent ? 'bg-green-100' : (invitat.is_inlocuitor ? 'bg-blue-50' : '')}>
                         <TableCell>{index + 1}</TableCell>
-                        <TableCell>{invitat.prenume}</TableCell><TableCell>{invitat.nume}</TableCell><TableCell>{invitat.companie}</TableCell><TableCell>{invitat.invitat_de || '-------'}</TableCell>
+                        <TableCell>{invitat.prenume}</TableCell><TableCell>{invitat.nume}</TableCell><TableCell>{invitat.companie}</TableCell><TableCell>{invitat.telefon || '-'}</TableCell><TableCell>{invitat.invitat_de || '-------'}</TableCell>
                         <TableCell className="text-center"><Checkbox checked={invitat.prezent || false} onCheckedChange={(checked) => handleUpdateGuest(invitat.id, 'prezent', checked)} className="attendance-checkbox" /></TableCell>
                         <TableCell className="text-center"><Checkbox checked={invitat.is_inlocuitor || false} onCheckedChange={(checked) => handleUpdateGuest(invitat.id, 'is_inlocuitor', checked)} disabled={!invitat.invitat_de || invitat.invitat_de === '-------'} className="attendance-checkbox" /></TableCell>
                         <TableCell className="text-right">
