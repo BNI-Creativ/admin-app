@@ -279,6 +279,7 @@ const DashboardPage = () => {
         prenume: updatedGuest.prenume,
         nume: updatedGuest.nume,
         companie: updatedGuest.companie,
+        telefon: updatedGuest.telefon,
         invitat_de: updatedGuest.invitat_de,
         taxa: updatedGuest.taxa,
         prezent: updatedGuest.prezent,
