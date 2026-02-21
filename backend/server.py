@@ -308,7 +308,7 @@ async def delete_member(member_id: str, current_user: dict = Depends(get_current
 @api_router.get("/guests/{data}", response_model=List[GuestResponse])
 async def get_guests(data: str, current_user: dict = Depends(get_current_user)):
     guests = await db.guests.find({"data": data}, {"_id": 0}).sort("nr", 1).to_list(1000)
-    # Ensure default values for is_inlocuitor, member_id, and prezent
+    # Ensure default values for is_inlocuitor, member_id, prezent, and telefon
     for g in guests:
         if "is_inlocuitor" not in g:
             g["is_inlocuitor"] = False
@@ -316,6 +316,8 @@ async def get_guests(data: str, current_user: dict = Depends(get_current_user)):
             g["member_id"] = None
         if "prezent" not in g:
             g["prezent"] = False
+        if "telefon" not in g:
+            g["telefon"] = ""
     return [GuestResponse(**g) for g in guests]
 
 @api_router.post("/guests", response_model=GuestResponse)
