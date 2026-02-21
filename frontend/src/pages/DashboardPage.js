@@ -608,7 +608,7 @@ const DashboardPage = () => {
                 <Table className="swiss-table">
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-10">Nr.</TableHead><TableHead>Prenume</TableHead><TableHead>Nume</TableHead><TableHead>Companie</TableHead><TableHead className="w-40">Invitat de</TableHead>
+                      <TableHead className="w-10">Nr.</TableHead><TableHead>Prenume</TableHead><TableHead>Nume</TableHead><TableHead>Companie</TableHead><TableHead className="w-32">Telefon</TableHead><TableHead className="w-40">Invitat de</TableHead>
                       <TableHead className="w-16 text-center">Prez</TableHead><TableHead className="w-16 text-center">Înloc</TableHead><TableHead className="w-20 text-right">Taxa</TableHead><TableHead className="w-12 no-print"></TableHead>
                     </TableRow>
                   </TableHeader>
