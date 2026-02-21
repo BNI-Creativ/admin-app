@@ -58,6 +58,7 @@ const DashboardPage = () => {
     prenume: '',
     nume: '',
     companie: '',
+    telefon: '',
     invitat_de: '',
     taxa: 0,
   });
@@ -194,7 +195,7 @@ const DashboardPage = () => {
       const response = await axios.post(`${API_URL}/guests?data=${dateString}`, guestData);
       setInvitati([...invitati, response.data]);
       setTotalTaxaInvitati((prev) => prev + newGuest.taxa);
-      setNewGuest({ prenume: '', nume: '', companie: '', invitat_de: '', taxa: 0 });
+      setNewGuest({ prenume: '', nume: '', companie: '', telefon: '', invitat_de: '', taxa: 0 });
     } catch (error) {
       console.error('Error adding guest:', error);
     }
