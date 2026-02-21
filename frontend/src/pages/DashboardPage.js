@@ -600,7 +600,6 @@ const DashboardPage = () => {
                       ))}
                     </SelectContent>
                   </Select>
-                  <Input type="number" placeholder="Taxa" value={newGuest.taxa} onChange={(e) => setNewGuest({ ...newGuest, taxa: parseFloat(e.target.value) || 0 })} className="rounded-sm w-24" data-testid="guest-taxa-input" />
                   <Button type="submit" className="bg-zinc-900 hover:bg-zinc-800 rounded-sm" data-testid="add-guest-button">
                     <Plus className="w-4 h-4" strokeWidth={1.5} />
                   </Button>
@@ -609,7 +608,7 @@ const DashboardPage = () => {
                 <Table className="swiss-table">
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-10">Nr.</TableHead><TableHead>Prenume</TableHead><TableHead>Nume</TableHead><TableHead>Companie</TableHead><TableHead className="w-32">Telefon</TableHead><TableHead className="w-40">Invitat de</TableHead>
+                      <TableHead className="w-10">Nr.</TableHead><TableHead>Nume</TableHead><TableHead>Companie</TableHead><TableHead className="w-32">Telefon</TableHead><TableHead className="w-40">Invitat de</TableHead>
                       <TableHead className="w-16 text-center">Prez</TableHead><TableHead className="w-16 text-center">Înloc</TableHead><TableHead className="w-20 text-right">Taxa</TableHead><TableHead className="w-12 no-print"></TableHead>
                     </TableRow>
                   </TableHeader>
@@ -617,7 +616,7 @@ const DashboardPage = () => {
                     {[...invitati].sort((a, b) => `${a.prenume} ${a.nume}`.localeCompare(`${b.prenume} ${b.nume}`)).map((invitat, index) => (
                       <TableRow key={invitat.id} className={invitat.prezent ? 'bg-green-100' : (invitat.is_inlocuitor ? 'bg-blue-50' : '')}>
                         <TableCell>{index + 1}</TableCell>
-                        <TableCell>{invitat.prenume}</TableCell><TableCell>{invitat.nume}</TableCell><TableCell>{invitat.companie}</TableCell><TableCell>{invitat.telefon || '-'}</TableCell><TableCell>{invitat.invitat_de || '-------'}</TableCell>
+                        <TableCell>{invitat.prenume} {invitat.nume}</TableCell><TableCell>{invitat.companie}</TableCell><TableCell>{invitat.telefon || '-'}</TableCell><TableCell>{invitat.invitat_de || '-------'}</TableCell>
                         <TableCell className="text-center"><Checkbox checked={invitat.prezent || false} onCheckedChange={(checked) => handleUpdateGuest(invitat.id, 'prezent', checked)} className="attendance-checkbox" /></TableCell>
                         <TableCell className="text-center"><Checkbox checked={invitat.is_inlocuitor || false} onCheckedChange={(checked) => handleUpdateGuest(invitat.id, 'is_inlocuitor', checked)} disabled={!invitat.invitat_de || invitat.invitat_de === '-------'} className="attendance-checkbox" /></TableCell>
                         <TableCell className="text-right">
@@ -629,7 +628,7 @@ const DashboardPage = () => {
                       </TableRow>
                     ))}
                     <TableRow className="total-row">
-                      <TableCell colSpan={6} className="text-right font-bold">TOTAL</TableCell>
+                      <TableCell colSpan={5} className="text-right font-bold">TOTAL</TableCell>
                       <TableCell className="text-center font-bold">{totalInvitatiPrezenti}</TableCell><TableCell></TableCell>
                       <TableCell className="text-right font-bold">{totalTaxaInvitati.toFixed(2)}</TableCell><TableCell className="no-print"></TableCell>
                     </TableRow>
