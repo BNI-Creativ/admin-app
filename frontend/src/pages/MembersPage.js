@@ -404,7 +404,7 @@ const MembersPage = () => {
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="rounded-sm">
+        <DialogContent className="rounded-sm max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle style={{ fontFamily: 'Manrope, sans-serif' }}>
               Editează Membru
@@ -413,32 +413,216 @@ const MembersPage = () => {
           </DialogHeader>
           {editingMember && (
             <form onSubmit={handleEditMember}>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-prenume">Prenume</Label>
-                  <Input
-                    id="edit-prenume"
-                    value={editingMember.prenume}
-                    onChange={(e) =>
-                      setEditingMember({ ...editingMember, prenume: e.target.value })
-                    }
-                    className="rounded-sm"
-                    required
-                    data-testid="edit-member-prenume"
-                  />
+              <div className="space-y-6 py-4">
+                {/* Date personale */}
+                <div>
+                  <h3 className="text-sm font-semibold text-zinc-700 mb-3">Date personale</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-prenume">Prenume</Label>
+                      <Input
+                        id="edit-prenume"
+                        value={editingMember.prenume}
+                        onChange={(e) =>
+                          setEditingMember({ ...editingMember, prenume: e.target.value })
+                        }
+                        className="rounded-sm"
+                        required
+                        data-testid="edit-member-prenume"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-nume">Nume</Label>
+                      <Input
+                        id="edit-nume"
+                        value={editingMember.nume}
+                        onChange={(e) =>
+                          setEditingMember({ ...editingMember, nume: e.target.value })
+                        }
+                        className="rounded-sm"
+                        required
+                        data-testid="edit-member-nume"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-telefon">Telefon</Label>
+                      <Input
+                        id="edit-telefon"
+                        value={editingMember.telefon || ''}
+                        onChange={(e) =>
+                          setEditingMember({ ...editingMember, telefon: e.target.value })
+                        }
+                        className="rounded-sm"
+                        placeholder="0722 123 456"
+                        data-testid="edit-member-telefon"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-email">Email</Label>
+                      <Input
+                        id="edit-email"
+                        type="email"
+                        value={editingMember.email || ''}
+                        onChange={(e) =>
+                          setEditingMember({ ...editingMember, email: e.target.value })
+                        }
+                        className="rounded-sm"
+                        placeholder="email@exemplu.ro"
+                        data-testid="edit-member-email"
+                      />
+                    </div>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-nume">Nume</Label>
-                  <Input
-                    id="edit-nume"
-                    value={editingMember.nume}
-                    onChange={(e) =>
-                      setEditingMember({ ...editingMember, nume: e.target.value })
-                    }
-                    className="rounded-sm"
-                    required
-                    data-testid="edit-member-nume"
-                  />
+
+                {/* Date profesionale */}
+                <div>
+                  <h3 className="text-sm font-semibold text-zinc-700 mb-3">Date profesionale</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-companie">Companie</Label>
+                      <Input
+                        id="edit-companie"
+                        value={editingMember.companie || ''}
+                        onChange={(e) =>
+                          setEditingMember({ ...editingMember, companie: e.target.value })
+                        }
+                        className="rounded-sm"
+                        placeholder="Numele companiei"
+                        data-testid="edit-member-companie"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-domeniu">Domeniu</Label>
+                      <Input
+                        id="edit-domeniu"
+                        value={editingMember.domeniu || ''}
+                        onChange={(e) =>
+                          setEditingMember({ ...editingMember, domeniu: e.target.value })
+                        }
+                        className="rounded-sm"
+                        placeholder="Ex: IT, Construcții, Marketing"
+                        data-testid="edit-member-domeniu"
+                      />
+                    </div>
+                    <div className="space-y-2 col-span-2">
+                      <Label htmlFor="edit-website">Website</Label>
+                      <Input
+                        id="edit-website"
+                        value={editingMember.website || ''}
+                        onChange={(e) =>
+                          setEditingMember({ ...editingMember, website: e.target.value })
+                        }
+                        className="rounded-sm"
+                        placeholder="https://www.exemplu.ro"
+                        data-testid="edit-member-website"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Social Media */}
+                <div>
+                  <h3 className="text-sm font-semibold text-zinc-700 mb-3">Social Media</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-instagram">Instagram (URL)</Label>
+                      <Input
+                        id="edit-instagram"
+                        value={editingMember.instagram || ''}
+                        onChange={(e) =>
+                          setEditingMember({ ...editingMember, instagram: e.target.value })
+                        }
+                        className="rounded-sm"
+                        placeholder="https://instagram.com/username"
+                        data-testid="edit-member-instagram"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-tiktok">TikTok (URL)</Label>
+                      <Input
+                        id="edit-tiktok"
+                        value={editingMember.tiktok || ''}
+                        onChange={(e) =>
+                          setEditingMember({ ...editingMember, tiktok: e.target.value })
+                        }
+                        className="rounded-sm"
+                        placeholder="https://tiktok.com/@username"
+                        data-testid="edit-member-tiktok"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Adresă */}
+                <div>
+                  <h3 className="text-sm font-semibold text-zinc-700 mb-3">Adresă</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2 col-span-2">
+                      <Label htmlFor="edit-strada">Strada</Label>
+                      <Input
+                        id="edit-strada"
+                        value={editingMember.strada || ''}
+                        onChange={(e) =>
+                          setEditingMember({ ...editingMember, strada: e.target.value })
+                        }
+                        className="rounded-sm"
+                        placeholder="Str. Exemplu, Nr. 10"
+                        data-testid="edit-member-strada"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-oras">Oraș</Label>
+                      <Input
+                        id="edit-oras"
+                        value={editingMember.oras || ''}
+                        onChange={(e) =>
+                          setEditingMember({ ...editingMember, oras: e.target.value })
+                        }
+                        className="rounded-sm"
+                        placeholder="București"
+                        data-testid="edit-member-oras"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-judet">Județ</Label>
+                      <Input
+                        id="edit-judet"
+                        value={editingMember.judet || ''}
+                        onChange={(e) =>
+                          setEditingMember({ ...editingMember, judet: e.target.value })
+                        }
+                        className="rounded-sm"
+                        placeholder="Ilfov"
+                        data-testid="edit-member-judet"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-cod-postal">Cod Poștal</Label>
+                      <Input
+                        id="edit-cod-postal"
+                        value={editingMember.cod_postal || ''}
+                        onChange={(e) =>
+                          setEditingMember({ ...editingMember, cod_postal: e.target.value })
+                        }
+                        className="rounded-sm"
+                        placeholder="012345"
+                        data-testid="edit-member-cod-postal"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-tara">Țara</Label>
+                      <Input
+                        id="edit-tara"
+                        value={editingMember.tara || ''}
+                        onChange={(e) =>
+                          setEditingMember({ ...editingMember, tara: e.target.value })
+                        }
+                        className="rounded-sm"
+                        placeholder="România"
+                        data-testid="edit-member-tara"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
               <DialogFooter>
