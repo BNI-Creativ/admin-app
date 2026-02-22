@@ -66,11 +66,35 @@ class MemberCreate(BaseModel):
     prenume: str
     nume: str
     nume_inlocuitor: Optional[str] = ""
+    telefon: Optional[str] = ""
+    email: Optional[str] = ""
+    companie: Optional[str] = ""
+    domeniu: Optional[str] = ""
+    website: Optional[str] = ""
+    instagram: Optional[str] = ""
+    tiktok: Optional[str] = ""
+    strada: Optional[str] = ""
+    oras: Optional[str] = ""
+    judet: Optional[str] = ""
+    cod_postal: Optional[str] = ""
+    tara: Optional[str] = ""
 
 class MemberUpdate(BaseModel):
     prenume: Optional[str] = None
     nume: Optional[str] = None
     nume_inlocuitor: Optional[str] = None
+    telefon: Optional[str] = None
+    email: Optional[str] = None
+    companie: Optional[str] = None
+    domeniu: Optional[str] = None
+    website: Optional[str] = None
+    instagram: Optional[str] = None
+    tiktok: Optional[str] = None
+    strada: Optional[str] = None
+    oras: Optional[str] = None
+    judet: Optional[str] = None
+    cod_postal: Optional[str] = None
+    tara: Optional[str] = None
 
 class MemberResponse(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -79,6 +103,18 @@ class MemberResponse(BaseModel):
     prenume: str
     nume: str
     nume_inlocuitor: str = ""
+    telefon: str = ""
+    email: str = ""
+    companie: str = ""
+    domeniu: str = ""
+    website: str = ""
+    instagram: str = ""
+    tiktok: str = ""
+    strada: str = ""
+    oras: str = ""
+    judet: str = ""
+    cod_postal: str = ""
+    tara: str = ""
 
 class GuestCreate(BaseModel):
     prenume: str
