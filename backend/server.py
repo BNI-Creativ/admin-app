@@ -305,7 +305,19 @@ async def create_member(member: MemberCreate, current_user: dict = Depends(get_c
         "nr": next_nr,
         "prenume": member.prenume,
         "nume": member.nume,
-        "nume_inlocuitor": member.nume_inlocuitor or ""
+        "nume_inlocuitor": member.nume_inlocuitor or "",
+        "telefon": member.telefon or "",
+        "email": member.email or "",
+        "companie": member.companie or "",
+        "domeniu": member.domeniu or "",
+        "website": member.website or "",
+        "instagram": member.instagram or "",
+        "tiktok": member.tiktok or "",
+        "strada": member.strada or "",
+        "oras": member.oras or "",
+        "judet": member.judet or "",
+        "cod_postal": member.cod_postal or "",
+        "tara": member.tara or ""
     }
     await db.members.insert_one(member_doc)
     return MemberResponse(**member_doc)
