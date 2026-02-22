@@ -110,6 +110,18 @@ const MembersPage = () => {
       const response = await axios.put(`${API_URL}/members/${editingMember.id}`, {
         prenume: editingMember.prenume,
         nume: editingMember.nume,
+        telefon: editingMember.telefon || '',
+        email: editingMember.email || '',
+        companie: editingMember.companie || '',
+        domeniu: editingMember.domeniu || '',
+        website: editingMember.website || '',
+        instagram: editingMember.instagram || '',
+        tiktok: editingMember.tiktok || '',
+        strada: editingMember.strada || '',
+        oras: editingMember.oras || '',
+        judet: editingMember.judet || '',
+        cod_postal: editingMember.cod_postal || '',
+        tara: editingMember.tara || '',
       });
       const updatedMembers = members.map((m) => (m.id === editingMember.id ? response.data : m));
       setMembers(sortMembers(updatedMembers));
