@@ -341,7 +341,19 @@ async def update_member(member_id: str, member: MemberUpdate, current_user: dict
         nr=result["nr"],
         prenume=result["prenume"],
         nume=result["nume"],
-        nume_inlocuitor=result.get("nume_inlocuitor", "")
+        nume_inlocuitor=result.get("nume_inlocuitor", ""),
+        telefon=result.get("telefon", ""),
+        email=result.get("email", ""),
+        companie=result.get("companie", ""),
+        domeniu=result.get("domeniu", ""),
+        website=result.get("website", ""),
+        instagram=result.get("instagram", ""),
+        tiktok=result.get("tiktok", ""),
+        strada=result.get("strada", ""),
+        oras=result.get("oras", ""),
+        judet=result.get("judet", ""),
+        cod_postal=result.get("cod_postal", ""),
+        tara=result.get("tara", "")
     )
 
 @api_router.delete("/members/{member_id}")
