@@ -4,28 +4,23 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Safe Area pentru Capacitor - NU afectează versiunea web */
-@media (display-mode: standalone) {
-  :root {
-    --sat: env(safe-area-inset-top);
-    --sar: env(safe-area-inset-right);
-    --sab: env(safe-area-inset-bottom);
-    --sal: env(safe-area-inset-left);
-  }
-
-  body {
-    padding-top: var(--sat) !important;
-    padding-bottom: var(--sab) !important;
-    padding-left: var(--sal) !important;
-    padding-right: var(--sar) !important;
-  }
+/* Safe Area pentru Capacitor */
+:root {
+  --sat: env(safe-area-inset-top, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
 }
 
 body {
-    margin: 0;
-    font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+  margin: 0;
+  font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  padding-top: var(--sat);
+  padding-bottom: var(--sab);
+  padding-left: var(--sal);
+  padding-right: var(--sar);
 }
 
 h1, h2, h3, h4, h5, h6 {
