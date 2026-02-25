@@ -12,15 +12,25 @@
   --sal: env(safe-area-inset-left, 0px);
 }
 
+/* Sidebar - fix pentru safe area */
+aside {
+  height: calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)) !important;
+  top: env(safe-area-inset-top, 0px) !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+/* Containerul principal */
+main {
+  padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
   font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  padding-top: var(--sat);
-  padding-bottom: var(--sab);
-  padding-left: var(--sal);
-  padding-right: var(--sar);
 }
 
 h1, h2, h3, h4, h5, h6 {
