@@ -26,6 +26,16 @@ main {
   box-sizing: border-box;
 }
 
+[role="listbox"],
+div[class*="absolute"][class*="z-"],
+.popover-content,
+[data-radix-popper-content-wrapper] {
+  max-height: calc(100vh - var(--sat) - var(--sab) - 100px) !important;
+  overflow-y: auto !important;
+  box-sizing: border-box !important;
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 10px) !important;
+}
+
 body {
   margin: 0;
   font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
