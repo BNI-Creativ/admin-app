@@ -500,6 +500,53 @@ async def get_daily_attendance(data: str, current_user: dict = Depends(get_curre
             monthly_totals[member_id] = 0
         monthly_totals[member_id] += taxa
     
+    # Calculate cumulative balance from previous months (starting April 2026)
+    # sold_pivotat = sum of (taxa_lunara_membru - taxa_lunara_globala) for all months from April 2026 to previous month
+    sold_pivotat = {}
+    current_date = datetime.strptime(data, "%Y-%m-%d")
+    start_pivot_date = datetime(2026, 4, 1)
+    
+    if current_date >= start_pivot_date:
+        # Get all monthly deductions from April 2026 to previous month
+        pivot_month = datetime(2026, 4, 1)
+        while pivot_month < datetime(current_date.year, current_date.month, 1):
+            month_key = pivot_month.strftime("%Y-%m")
+            month_start = f"{month_key}-01"
+            month_end = f"{month_key}-31"
+            
+            # Get monthly deduction for this month
+            deduction_doc = await db.monthly_deductions.find_one({"key": month_key}, {"_id": 0})
+            monthly_deduction = deduction_doc.get("suma", 0) if deduction_doc else 0
+            
+            # Get all attendance records for this month
+            month_attendance = await db.attendance.find({
+                "data": {"$gte": month_start, "$lte": month_end}
+            }, {"_id": 0}).to_list(10000)
+            
+            # Calculate each member's monthly total
+            month_member_totals = {}
+            for record in month_attendance:
+                member_id = record.get("member_id")
+                taxa = record.get("taxa", 0)
+                if member_id not in month_member_totals:
+                    month_member_totals[member_id] = 0
+                month_member_totals[member_id] += taxa
+            
+            # Add to cumulative balance for each member
+            for m in members:
+                member_id = m["id"]
+                member_taxa = month_member_totals.get(member_id, 0)
+                balance = member_taxa - monthly_deduction
+                if member_id not in sold_pivotat:
+                    sold_pivotat[member_id] = 0
+                sold_pivotat[member_id] += balance
+            
+            # Move to next month
+            if pivot_month.month == 12:
+                pivot_month = datetime(pivot_month.year + 1, 1, 1)
+            else:
+                pivot_month = datetime(pivot_month.year, pivot_month.month + 1, 1)
+    
     # Combine members with their attendance
     membri_with_attendance = []
     total_taxa_membri = 0
@@ -515,7 +562,8 @@ async def get_daily_attendance(data: str, current_user: dict = Depends(get_curre
             "nume_inlocuitor": nume_inlocuitor,
             "prezent": att.get("prezent", False),
             "taxa": att.get("taxa", 0),
-            "taxa_lunara": monthly_totals.get(m["id"], 0)
+            "taxa_lunara": monthly_totals.get(m["id"], 0),
+            "sold_pivotat": sold_pivotat.get(m["id"], 0)
         })
         total_taxa_membri += att.get("taxa", 0)
     
