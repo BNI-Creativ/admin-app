@@ -79,6 +79,11 @@ const DashboardPage = () => {
   const selectedDateClean = new Date(selectedDate);
   selectedDateClean.setHours(0, 0, 0, 0);
   const isPastDate = selectedDateClean < today;
+  
+  // Check if selected month is in the past (for monthly deduction)
+  const currentYear = today.getFullYear();
+  const currentMonth = today.getMonth() + 1;
+  const isPastMonth = selectedYear < currentYear || (selectedYear === currentYear && selectedMonth < currentMonth);
 
   // Fetch stored emails
   useEffect(() => {
