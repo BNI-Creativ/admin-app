@@ -123,6 +123,13 @@ const TreasuryPage = () => {
     }
   };
 
+  const isPastDate = (dateStr) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const entryDate = new Date(dateStr + 'T00:00:00');
+    return entryDate < today;
+  };
+
   return (
     <div className="flex h-screen bg-zinc-100 overflow-hidden">
       {/* Sidebar */}
