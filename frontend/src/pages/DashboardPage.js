@@ -502,6 +502,11 @@ const DashboardPage = () => {
 
         <div className="paper-container print-container">
           <div className="text-right mb-8"><p className="date-display text-xl text-zinc-900">{capitalizedDate}</p></div>
+          {isPastDate && (
+            <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-sm text-amber-700 text-sm no-print">
+              Lista de prezență pentru această dată nu mai poate fi modificată.
+            </div>
+          )}
           {loading ? (
             <div className="text-center py-12 text-zinc-500">Se încarcă...</div>
           ) : (
