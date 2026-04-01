@@ -459,6 +459,17 @@ const DashboardPage = () => {
     window.open(projectorUrl, '_blank');
   };
 
+  // Handle monthly deduction change
+  const handleMonthlyDeductionChange = async (value) => {
+    const newValue = parseFloat(value) || 0;
+    setMonthlyDeduction(newValue);
+    try {
+      await axios.post(`${API_URL}/monthly-deduction/${selectedYear}/${selectedMonth}`, { suma: newValue });
+    } catch (error) {
+      console.error('Error saving monthly deduction:', error);
+    }
+  };
+
   const formattedDate = format(selectedDate, "EEEE, d MMMM yyyy", { locale: ro });
   const capitalizedDate = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
 
