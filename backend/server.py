@@ -981,6 +981,42 @@ async def send_pdf_email(request: SendPdfRequest, current_user: dict = Depends(g
         logger.error(f"Error sending email: {e}")
         raise HTTPException(status_code=500, detail=f"Eroare la trimiterea email-ului: {str(e)}")
 
+# ============= TREASURY ROUTES =============
+
+@api_router.get("/treasury", response_model=List[TreasuryEntryResponse])
+async def get_treasury_entries(current_user: dict = Depends(get_current_user)):
+    """Get all treasury entries sorted by date descending (most recent first)"""
+    entries = await db.treasury.find({}, {"_id": 0}).sort("data", -1).to_list(10000)
+    return [TreasuryEntryResponse(**e) for e in entries]
+
+@api_router.get("/treasury/total")
+async def get_treasury_total(current_user: dict = Depends(get_current_user)):
+    """Get total sum of all treasury entries"""
+    entries = await db.treasury.find({}, {"_id": 0, "suma": 1}).to_list(10000)
+    total = sum(e.get("suma", 0) for e in entries)
+    return {"total": total}
+
+@api_router.post("/treasury", response_model=TreasuryEntryResponse)
+async def create_treasury_entry(entry: TreasuryEntryCreate, current_user: dict = Depends(get_current_user)):
+    """Create a new treasury entry"""
+    entry_doc = {
+        "id": str(uuid.uuid4()),
+        "suma": entry.suma,
+        "data": entry.data,
+        "explicatii": entry.explicatii,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.treasury.insert_one(entry_doc)
+    return TreasuryEntryResponse(**entry_doc)
+
+@api_router.delete("/treasury/{entry_id}")
+async def delete_treasury_entry(entry_id: str, current_user: dict = Depends(get_current_user)):
+    """Delete a treasury entry"""
+    result = await db.treasury.delete_one({"id": entry_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Intrare negăsită")
+    return {"message": "Intrare ștearsă cu succes"}
+
 # Include the router in the main app
 app.include_router(api_router)
 
