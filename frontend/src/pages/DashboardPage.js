@@ -583,7 +583,9 @@ const DashboardPage = () => {
                       const hasInlocuitor = membru.nume_inlocuitor && membru.nume_inlocuitor.length > 0;
                       const isDisabled = isPastDate || hasInlocuitor;
                       const taxaLunara = membru.taxa_lunara || 0;
-                      const taxaLunaraAjustata = isDeductionEnabled ? taxaLunara - monthlyDeduction : taxaLunara;
+                      const soldPivotat = membru.sold_pivotat || 0;
+                      const taxaLunaraCurenta = isDeductionEnabled ? taxaLunara - monthlyDeduction : taxaLunara;
+                      const totalCuSold = isDeductionEnabled ? soldPivotat + taxaLunaraCurenta : taxaLunara;
                       return (
                         <TableRow key={membru.id} className={hasInlocuitor ? 'bg-yellow-100' : membru.prezent ? 'bg-green-100' : ''}>
                           <TableCell className="font-medium tabular-nums">{index + 1}</TableCell>
@@ -598,7 +600,7 @@ const DashboardPage = () => {
                               <Input type="number" value={membru.taxa} onChange={(e) => handleAttendanceChange(membru.id, membru.prezent, parseFloat(e.target.value) || 0)} className="taxa-input table-input" disabled={isPastDate} />
                             )}
                           </TableCell>
-                          <TableCell className="text-right tabular-nums text-zinc-500">{taxaLunaraAjustata.toFixed(2)}</TableCell>
+                          <TableCell className={`text-right tabular-nums ${totalCuSold < 0 ? 'text-red-600 font-medium' : 'text-zinc-500'}`}>{totalCuSold.toFixed(2)}</TableCell>
                         </TableRow>
                       );
                     })}
@@ -609,8 +611,10 @@ const DashboardPage = () => {
                         <TableCell className="text-right font-bold">{totalTaxaMembri.toFixed(2)}</TableCell>
                         <TableCell className="text-right font-bold">
                           {membri.reduce((sum, m) => {
-                            const taxa = m.taxa_lunara || 0;
-                            return sum + (isDeductionEnabled ? taxa - monthlyDeduction : taxa);
+                            const taxaLunara = m.taxa_lunara || 0;
+                            const soldPivotat = m.sold_pivotat || 0;
+                            const taxaLunaraCurenta = isDeductionEnabled ? taxaLunara - monthlyDeduction : taxaLunara;
+                            return sum + (isDeductionEnabled ? soldPivotat + taxaLunaraCurenta : taxaLunara);
                           }, 0).toFixed(2)}
                         </TableCell>
                       </TableRow>
