@@ -551,9 +551,9 @@ const DashboardPage = () => {
                   type="number"
                   value={monthlyDeduction}
                   onChange={(e) => handleMonthlyDeductionChange(e.target.value)}
-                  className="w-28 h-8 text-right rounded-sm"
+                  className={`w-28 h-8 text-right rounded-sm ${isPastMonth ? 'bg-zinc-100 cursor-not-allowed' : ''}`}
                   placeholder="0"
-                  disabled={isPastDate}
+                  disabled={isPastMonth}
                   data-testid="monthly-deduction-input"
                 />
                 <span className="text-sm text-zinc-500">RON</span>
