@@ -633,7 +633,7 @@ const DashboardPage = () => {
                       <TableBody>
                         {membri.slice(24).map((membru, index) => {
                           const taxaLunara = membru.taxa_lunara || 0;
-                          const taxaLunaraAjustata = isDeductionEnabled ? Math.max(0, taxaLunara - monthlyDeduction) : taxaLunara;
+                          const taxaLunaraAjustata = isDeductionEnabled ? taxaLunara - monthlyDeduction : taxaLunara;
                           return (
                             <TableRow key={membru.id} className={membru.nume_inlocuitor ? 'bg-yellow-100' : membru.prezent ? 'bg-green-100' : ''}>
                               <TableCell>{index + 25}</TableCell>
