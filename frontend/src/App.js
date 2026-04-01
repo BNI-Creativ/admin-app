@@ -5,6 +5,7 @@ import { OfflineProvider } from './contexts/OfflineContext';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import MembersPage from './pages/MembersPage';
+import TreasuryPage from './pages/TreasuryPage';
 import SettingsPage from './pages/SettingsPage';
 import ProjectorPage from './pages/ProjectorPage';
 import './App.css';
