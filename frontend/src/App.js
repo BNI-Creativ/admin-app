@@ -109,7 +109,7 @@ function AppRoutes() {
 
 function App() {
   return (
-    <BrowserRouter basename="/bni-creativ-prezenta">
+    <BrowserRouter basename="/bni-creativ">
       <AuthProvider>
         <OfflineProvider>
           <AppRoutes />

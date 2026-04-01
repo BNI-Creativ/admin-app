@@ -3,7 +3,7 @@ version: '3.8'
 services:
   mongodb:
     image: mongo:7
-    container_name: bni-creativ-prezenta-mongodb
+    container_name: bni-creativ-mongodb
     restart: unless-stopped
     environment:
       MONGO_INITDB_ROOT_USERNAME: bnicreativ
@@ -12,20 +12,20 @@ services:
       - ./production/mongodb-data:/data/db
       - ./production/mongodb-init:/docker-entrypoint-initdb.d
     networks:
-      - bni-creativ-prezenta
+      - bni-creativ
 
   backend:
     build:
       context: .
       dockerfile: Dockerfile.backend
-    container_name: bni-creativ-prezenta
+    container_name: bni-creativ
     restart: unless-stopped
     user: appuser
     environment:
       - MONGO_URL=mongodb://bnicreativ:bnicreativ@mongodb:27017/bnicreativ?authSource=admin
       - DB_NAME=bnicreativ
       - JWT_SECRET=NBLd9yQarZV9y6nsBPbqK3CBtZykFX29
-      - CORS_ORIGINS=https://webworks24.ro/bni-creativ-prezenta
+      - CORS_ORIGINS=https://webworks24.ro/bni-creativ
     depends_on:
       - mongodb
     volumes:
@@ -33,8 +33,8 @@ services:
     ports:
       - "127.0.0.1:9002:9002"
     networks:
-      - bni-creativ-prezenta
+      - bni-creativ
 
 networks:
-  bni-creativ-prezenta:
+  bni-creativ:
     driver: bridge
