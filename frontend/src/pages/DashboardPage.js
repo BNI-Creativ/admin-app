@@ -583,7 +583,7 @@ const DashboardPage = () => {
                       const hasInlocuitor = membru.nume_inlocuitor && membru.nume_inlocuitor.length > 0;
                       const isDisabled = isPastDate || hasInlocuitor;
                       const taxaLunara = membru.taxa_lunara || 0;
-                      const taxaLunaraAjustata = isDeductionEnabled ? Math.max(0, taxaLunara - monthlyDeduction) : taxaLunara;
+                      const taxaLunaraAjustata = isDeductionEnabled ? taxaLunara - monthlyDeduction : taxaLunara;
                       return (
                         <TableRow key={membru.id} className={hasInlocuitor ? 'bg-yellow-100' : membru.prezent ? 'bg-green-100' : ''}>
                           <TableCell className="font-medium tabular-nums">{index + 1}</TableCell>
