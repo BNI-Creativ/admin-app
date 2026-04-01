@@ -460,7 +460,7 @@ const DashboardPage = () => {
 
   // Open projector page
   const handleOpenProjector = () => {
-    const projectorUrl = `${window.location.origin}/bni-creativ-prezenta/proiector?data=${dateString}`;
+    const projectorUrl = `${window.location.origin}/bni-creativ/proiector?data=${dateString}`;
     window.open(projectorUrl, '_blank');
   };
 
