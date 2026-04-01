@@ -93,6 +93,24 @@ const DashboardPage = () => {
     fetchEmails();
   }, []);
 
+  // Fetch monthly deduction when month changes
+  useEffect(() => {
+    const fetchMonthlyDeduction = async () => {
+      if (!isDeductionEnabled) {
+        setMonthlyDeduction(0);
+        return;
+      }
+      try {
+        const response = await axios.get(`${API_URL}/monthly-deduction/${selectedYear}/${selectedMonth}`);
+        setMonthlyDeduction(response.data.suma || 0);
+      } catch (error) {
+        console.error('Error fetching monthly deduction:', error);
+        setMonthlyDeduction(0);
+      }
+    };
+    fetchMonthlyDeduction();
+  }, [selectedYear, selectedMonth, isDeductionEnabled]);
+
   // Fetch dates that have saved data
   const fetchDatesWithData = useCallback(async () => {
     try {
