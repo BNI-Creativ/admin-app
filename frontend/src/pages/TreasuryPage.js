@@ -300,54 +300,61 @@ const TreasuryPage = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {entries.map((entry) => (
-                    <TableRow key={entry.id} data-testid={`treasury-row-${entry.id}`}>
-                      <TableCell className="text-zinc-600">
-                        {formatDate(entry.data)}
-                      </TableCell>
-                      <TableCell className={`text-right font-semibold tabular-nums ${entry.suma >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        {entry.suma >= 0 ? '+' : ''}{entry.suma.toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </TableCell>
-                      <TableCell className="text-zinc-600">
-                        {entry.explicatii || '-'}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                              data-testid={`delete-treasury-${entry.id}`}
-                            >
-                              <Trash2 className="w-4 h-4" strokeWidth={1.5} />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent className="rounded-sm">
-                            <AlertDialogHeader>
-                              <AlertDialogTitle style={{ fontFamily: 'Manrope, sans-serif' }}>
-                                Șterge intrare
-                              </AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Ești sigur că vrei să ștergi această intrare de{' '}
-                                <strong>{entry.suma.toLocaleString('ro-RO', { minimumFractionDigits: 2 })} RON</strong>?
-                                Această acțiune nu poate fi anulată.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel className="rounded-sm">Anulează</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => handleDeleteEntry(entry.id, entry.suma)}
-                                className="bg-red-500 hover:bg-red-600 rounded-sm"
-                              >
-                                Șterge
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {entries.map((entry) => {
+                    const canDelete = !isPastDate(entry.data);
+                    return (
+                      <TableRow key={entry.id} data-testid={`treasury-row-${entry.id}`}>
+                        <TableCell className="text-zinc-600">
+                          {formatDate(entry.data)}
+                        </TableCell>
+                        <TableCell className={`text-right font-semibold tabular-nums ${entry.suma >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {entry.suma >= 0 ? '+' : ''}{entry.suma.toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </TableCell>
+                        <TableCell className="text-zinc-600">
+                          {entry.explicatii || '-'}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {canDelete ? (
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                  data-testid={`delete-treasury-${entry.id}`}
+                                >
+                                  <Trash2 className="w-4 h-4" strokeWidth={1.5} />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent className="rounded-sm">
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle style={{ fontFamily: 'Manrope, sans-serif' }}>
+                                    Șterge intrare
+                                  </AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Ești sigur că vrei să ștergi această intrare de{' '}
+                                    <strong>{entry.suma.toLocaleString('ro-RO', { minimumFractionDigits: 2 })} RON</strong>?
+                                    Această acțiune nu poate fi anulată.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel className="rounded-sm">Anulează</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => handleDeleteEntry(entry.id, entry.suma)}
+                                    className="bg-red-500 hover:bg-red-600 rounded-sm"
+                                  >
+                                    Șterge
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          ) : (
+                            <span className="text-zinc-300 text-xs">—</span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             )}
