@@ -541,7 +541,7 @@ const DashboardPage = () => {
             <p className="date-display text-xl text-zinc-900">{capitalizedDate}</p>
             {isDeductionEnabled && (
               <div className="flex items-center justify-end gap-2 mt-2 no-print">
-                <label className="text-sm text-zinc-500">Deducere lunară (X):</label>
+                <label className="text-sm text-zinc-500">Taxa lunară:</label>
                 <Input
                   type="number"
                   value={monthlyDeduction}
