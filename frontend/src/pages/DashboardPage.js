@@ -588,57 +588,66 @@ const DashboardPage = () => {
 
               <section className="animate-fade-in invitati-section page-break-before">
                 <h2 className="text-2xl font-semibold tracking-tight mb-6 text-zinc-900">Invitați</h2>
-                <form onSubmit={handleAddGuest} className="flex gap-3 mb-6 p-4 bg-zinc-50 rounded-sm no-print" data-testid="add-guest-form">
-                  <Input placeholder="Prenume" value={newGuest.prenume} onChange={(e) => setNewGuest({ ...newGuest, prenume: e.target.value })} className="rounded-sm" required data-testid="guest-prenume-input" />
-                  <Input placeholder="Nume" value={newGuest.nume} onChange={(e) => setNewGuest({ ...newGuest, nume: e.target.value })} className="rounded-sm" required data-testid="guest-nume-input" />
-                  <Input placeholder="Companie" value={newGuest.companie} onChange={(e) => setNewGuest({ ...newGuest, companie: e.target.value })} className="rounded-sm" data-testid="guest-companie-input" />
-                  <Input placeholder="Telefon" value={newGuest.telefon} onChange={(e) => setNewGuest({ ...newGuest, telefon: e.target.value })} className="rounded-sm w-32" data-testid="guest-telefon-input" />
-                  <Select value={newGuest.invitat_de || 'none'} onValueChange={(value) => setNewGuest({ ...newGuest, invitat_de: value === 'none' ? '' : value })}>
-                    <SelectTrigger className="rounded-sm w-40" data-testid="guest-invitat-de-select">
-                      <SelectValue placeholder="Invitat de">
-                        {newGuest.invitat_de || '-------'}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">-------</SelectItem>
-                      {sortedMembersForDropdown.map((membru) => (
-                        <SelectItem key={membru.id} value={`${membru.prenume} ${membru.nume}`}>
-                          {membru.prenume} {membru.nume}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Button type="submit" className="bg-zinc-900 hover:bg-zinc-800 rounded-sm" data-testid="add-guest-button">
-                    <Plus className="w-4 h-4" strokeWidth={1.5} />
-                  </Button>
-                </form>
+                {isPastDate ? (
+                  <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-sm text-amber-700 text-sm no-print">
+                    Lista de prezență pentru această dată nu mai poate fi modificată.
+                  </div>
+                ) : (
+                  <form onSubmit={handleAddGuest} className="flex gap-3 mb-6 p-4 bg-zinc-50 rounded-sm no-print" data-testid="add-guest-form">
+                    <Input placeholder="Prenume" value={newGuest.prenume} onChange={(e) => setNewGuest({ ...newGuest, prenume: e.target.value })} className="rounded-sm" required data-testid="guest-prenume-input" />
+                    <Input placeholder="Nume" value={newGuest.nume} onChange={(e) => setNewGuest({ ...newGuest, nume: e.target.value })} className="rounded-sm" required data-testid="guest-nume-input" />
+                    <Input placeholder="Companie" value={newGuest.companie} onChange={(e) => setNewGuest({ ...newGuest, companie: e.target.value })} className="rounded-sm" data-testid="guest-companie-input" />
+                    <Input placeholder="Telefon" value={newGuest.telefon} onChange={(e) => setNewGuest({ ...newGuest, telefon: e.target.value })} className="rounded-sm w-32" data-testid="guest-telefon-input" />
+                    <Select value={newGuest.invitat_de || 'none'} onValueChange={(value) => setNewGuest({ ...newGuest, invitat_de: value === 'none' ? '' : value })}>
+                      <SelectTrigger className="rounded-sm w-40" data-testid="guest-invitat-de-select">
+                        <SelectValue placeholder="Invitat de">
+                          {newGuest.invitat_de || '-------'}
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">-------</SelectItem>
+                        {sortedMembersForDropdown.map((membru) => (
+                          <SelectItem key={membru.id} value={`${membru.prenume} ${membru.nume}`}>
+                            {membru.prenume} {membru.nume}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button type="submit" className="bg-zinc-900 hover:bg-zinc-800 rounded-sm" data-testid="add-guest-button">
+                      <Plus className="w-4 h-4" strokeWidth={1.5} />
+                    </Button>
+                  </form>
+                )}
 
                 <Table className="swiss-table">
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-10">Nr.</TableHead><TableHead>Nume</TableHead><TableHead>Companie</TableHead><TableHead className="w-32">Telefon</TableHead><TableHead className="w-40">Invitat de</TableHead>
-                      <TableHead className="w-16 text-center">Prez</TableHead><TableHead className="w-16 text-center">Înloc</TableHead><TableHead className="w-20 text-right">Taxa</TableHead><TableHead className="w-12 no-print"></TableHead>
+                      <TableHead className="w-16 text-center">Prez</TableHead><TableHead className="w-16 text-center">Înloc</TableHead><TableHead className="w-20 text-right">Taxa</TableHead>{!isPastDate && <TableHead className="w-12 no-print"></TableHead>}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {[...invitati].sort((a, b) => `${a.prenume} ${a.nume}`.localeCompare(`${b.prenume} ${b.nume}`)).map((invitat, index) => (
-                      <TableRow key={invitat.id} className={invitat.prezent ? 'bg-green-100' : (invitat.is_inlocuitor ? 'bg-blue-50' : '')}>
-                        <TableCell>{index + 1}</TableCell>
-                        <TableCell>{invitat.prenume} {invitat.nume}</TableCell><TableCell>{invitat.companie}</TableCell><TableCell>{invitat.telefon || '-'}</TableCell><TableCell>{invitat.invitat_de || '-------'}</TableCell>
-                        <TableCell className="text-center"><Checkbox checked={invitat.prezent || false} onCheckedChange={(checked) => handleUpdateGuest(invitat.id, 'prezent', checked)} className="attendance-checkbox" /></TableCell>
-                        <TableCell className="text-center"><Checkbox checked={invitat.is_inlocuitor || false} onCheckedChange={(checked) => handleUpdateGuest(invitat.id, 'is_inlocuitor', checked)} disabled={!invitat.invitat_de || invitat.invitat_de === '-------'} className="attendance-checkbox" /></TableCell>
-                        <TableCell className="text-right">
-                          {isPdfMode ? (<span className="tabular-nums">{invitat.taxa}</span>) : (
-                            <Input type="number" value={invitat.taxa} onChange={(e) => handleUpdateGuest(invitat.id, 'taxa', parseFloat(e.target.value) || 0)} className="taxa-input table-input rounded-sm w-16" />
-                          )}
-                        </TableCell>
-                        <TableCell className="no-print"><Button variant="ghost" size="sm" onClick={() => handleDeleteGuest(invitat.id)} className="text-red-500 hover:text-red-700"><Trash2 className="w-4 h-4" /></Button></TableCell>
-                      </TableRow>
-                    ))}
+                    {[...invitati].sort((a, b) => `${a.prenume} ${a.nume}`.localeCompare(`${b.prenume} ${b.nume}`)).map((invitat, index) => {
+                      const canEditInlocuitor = !isPastDate && invitat.invitat_de && invitat.invitat_de !== '-------';
+                      return (
+                        <TableRow key={invitat.id} className={invitat.prezent ? 'bg-green-100' : (invitat.is_inlocuitor ? 'bg-blue-50' : '')}>
+                          <TableCell>{index + 1}</TableCell>
+                          <TableCell>{invitat.prenume} {invitat.nume}</TableCell><TableCell>{invitat.companie}</TableCell><TableCell>{invitat.telefon || '-'}</TableCell><TableCell>{invitat.invitat_de || '-------'}</TableCell>
+                          <TableCell className="text-center"><Checkbox checked={invitat.prezent || false} onCheckedChange={(checked) => handleUpdateGuest(invitat.id, 'prezent', checked)} disabled={isPastDate} className={`attendance-checkbox ${isPastDate ? 'opacity-50 cursor-not-allowed' : ''}`} /></TableCell>
+                          <TableCell className="text-center"><Checkbox checked={invitat.is_inlocuitor || false} onCheckedChange={(checked) => handleUpdateGuest(invitat.id, 'is_inlocuitor', checked)} disabled={!canEditInlocuitor} className={`attendance-checkbox ${!canEditInlocuitor ? 'opacity-50 cursor-not-allowed' : ''}`} /></TableCell>
+                          <TableCell className="text-right">
+                            {isPdfMode || isPastDate ? (<span className="tabular-nums">{invitat.taxa}</span>) : (
+                              <Input type="number" value={invitat.taxa} onChange={(e) => handleUpdateGuest(invitat.id, 'taxa', parseFloat(e.target.value) || 0)} className="taxa-input table-input rounded-sm w-16" />
+                            )}
+                          </TableCell>
+                          {!isPastDate && <TableCell className="no-print"><Button variant="ghost" size="sm" onClick={() => handleDeleteGuest(invitat.id)} className="text-red-500 hover:text-red-700"><Trash2 className="w-4 h-4" /></Button></TableCell>}
+                        </TableRow>
+                      );
+                    })}
                     <TableRow className="total-row">
                       <TableCell colSpan={5} className="text-right font-bold">TOTAL</TableCell>
                       <TableCell className="text-center font-bold">{totalInvitatiPrezenti}</TableCell><TableCell></TableCell>
-                      <TableCell className="text-right font-bold">{totalTaxaInvitati.toFixed(2)}</TableCell><TableCell className="no-print"></TableCell>
+                      <TableCell className="text-right font-bold">{totalTaxaInvitati.toFixed(2)}</TableCell>{!isPastDate && <TableCell className="no-print"></TableCell>}
                     </TableRow>
                   </TableBody>
                 </Table>
