@@ -631,21 +631,30 @@ const DashboardPage = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {membri.slice(24).map((membru, index) => (
-                          <TableRow key={membru.id} className={membru.nume_inlocuitor ? 'bg-yellow-100' : membru.prezent ? 'bg-green-100' : ''}>
-                            <TableCell>{index + 25}</TableCell>
-                            <TableCell>{membru.prenume}</TableCell><TableCell>{membru.nume}</TableCell>
-                            <TableCell>{membru.nume_inlocuitor || '-'}</TableCell>
-                            <TableCell className="text-center"><Checkbox checked={membru.prezent} className="attendance-checkbox" /></TableCell>
-                            <TableCell className="text-right"><span className="tabular-nums">{membru.taxa}</span></TableCell>
-                            <TableCell className="text-right">{(membru.taxa_lunara || 0).toFixed(2)}</TableCell>
-                          </TableRow>
-                        ))}
+                        {membri.slice(24).map((membru, index) => {
+                          const taxaLunara = membru.taxa_lunara || 0;
+                          const taxaLunaraAjustata = isDeductionEnabled ? Math.max(0, taxaLunara - monthlyDeduction) : taxaLunara;
+                          return (
+                            <TableRow key={membru.id} className={membru.nume_inlocuitor ? 'bg-yellow-100' : membru.prezent ? 'bg-green-100' : ''}>
+                              <TableCell>{index + 25}</TableCell>
+                              <TableCell>{membru.prenume}</TableCell><TableCell>{membru.nume}</TableCell>
+                              <TableCell>{membru.nume_inlocuitor || '-'}</TableCell>
+                              <TableCell className="text-center"><Checkbox checked={membru.prezent} className="attendance-checkbox" /></TableCell>
+                              <TableCell className="text-right"><span className="tabular-nums">{membru.taxa}</span></TableCell>
+                              <TableCell className="text-right">{taxaLunaraAjustata.toFixed(2)}</TableCell>
+                            </TableRow>
+                          );
+                        })}
                         <TableRow className="total-row">
                           <TableCell colSpan={4} className="text-right font-bold">TOTAL</TableCell>
                           <TableCell className="text-center font-bold">{membri.filter(m => m.prezent).length}</TableCell>
                           <TableCell className="text-right font-bold">{totalTaxaMembri.toFixed(2)}</TableCell>
-                          <TableCell className="text-right font-bold">{membri.reduce((sum, m) => sum + (m.taxa_lunara || 0), 0).toFixed(2)}</TableCell>
+                          <TableCell className="text-right font-bold">
+                            {membri.reduce((sum, m) => {
+                              const taxa = m.taxa_lunara || 0;
+                              return sum + (isDeductionEnabled ? Math.max(0, taxa - monthlyDeduction) : taxa);
+                            }, 0).toFixed(2)}
+                          </TableCell>
                         </TableRow>
                       </TableBody>
                     </Table>
