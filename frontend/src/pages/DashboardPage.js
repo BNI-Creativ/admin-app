@@ -55,6 +55,7 @@ const DashboardPage = () => {
   const [showEmailPrompt, setShowEmailPrompt] = useState(false);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [isPdfMode, setIsPdfMode] = useState(false);
+  const [monthlyDeduction, setMonthlyDeduction] = useState(0);
   const [newGuest, setNewGuest] = useState({
     prenume: '',
     nume: '',
@@ -65,6 +66,12 @@ const DashboardPage = () => {
   });
 
   const dateString = format(selectedDate, 'yyyy-MM-dd');
+  const selectedYear = selectedDate.getFullYear();
+  const selectedMonth = selectedDate.getMonth() + 1;
+  
+  // Check if monthly deduction feature is enabled (from April 2026 onwards)
+  const deductionStartDate = new Date(2026, 3, 1); // April 1, 2026
+  const isDeductionEnabled = selectedDate >= deductionStartDate;
   
   // Check if selected date is in the past (not editable)
   const today = new Date();
