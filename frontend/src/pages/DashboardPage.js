@@ -64,6 +64,13 @@ const DashboardPage = () => {
   });
 
   const dateString = format(selectedDate, 'yyyy-MM-dd');
+  
+  // Check if selected date is in the past (not editable)
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const selectedDateClean = new Date(selectedDate);
+  selectedDateClean.setHours(0, 0, 0, 0);
+  const isPastDate = selectedDateClean < today;
 
   // Fetch stored emails
   useEffect(() => {
