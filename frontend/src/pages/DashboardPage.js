@@ -537,7 +537,24 @@ const DashboardPage = () => {
         )}
 
         <div className="paper-container print-container">
-          <div className="text-right mb-8"><p className="date-display text-xl text-zinc-900">{capitalizedDate}</p></div>
+          <div className="text-right mb-4">
+            <p className="date-display text-xl text-zinc-900">{capitalizedDate}</p>
+            {isDeductionEnabled && (
+              <div className="flex items-center justify-end gap-2 mt-2 no-print">
+                <label className="text-sm text-zinc-500">Deducere lunară (X):</label>
+                <Input
+                  type="number"
+                  value={monthlyDeduction}
+                  onChange={(e) => handleMonthlyDeductionChange(e.target.value)}
+                  className="w-28 h-8 text-right rounded-sm"
+                  placeholder="0"
+                  disabled={isPastDate}
+                  data-testid="monthly-deduction-input"
+                />
+                <span className="text-sm text-zinc-500">RON</span>
+              </div>
+            )}
+          </div>
           {isPastDate && (
             <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-sm text-amber-700 text-sm no-print">
               Lista de prezență pentru această dată nu mai poate fi modificată.
