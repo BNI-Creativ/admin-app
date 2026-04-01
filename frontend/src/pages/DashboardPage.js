@@ -521,6 +521,7 @@ const DashboardPage = () => {
                   <TableBody>
                     {(isPdfMode ? membri.slice(0, 24) : membri).map((membru, index) => {
                       const hasInlocuitor = membru.nume_inlocuitor && membru.nume_inlocuitor.length > 0;
+                      const isDisabled = isPastDate || hasInlocuitor;
                       return (
                         <TableRow key={membru.id} className={hasInlocuitor ? 'bg-yellow-100' : membru.prezent ? 'bg-green-100' : ''}>
                           <TableCell className="font-medium tabular-nums">{index + 1}</TableCell>
@@ -528,11 +529,11 @@ const DashboardPage = () => {
                           <TableCell>{membru.nume}</TableCell>
                           <TableCell>{isPdfMode ? (membru.nume_inlocuitor || '-') : (membru.nume_inlocuitor || '')}</TableCell>
                           <TableCell className="text-center">
-                            <Checkbox checked={hasInlocuitor ? false : membru.prezent} onCheckedChange={(checked) => handleAttendanceChange(membru.id, checked, membru.taxa)} disabled={hasInlocuitor} className="attendance-checkbox" />
+                            <Checkbox checked={hasInlocuitor ? false : membru.prezent} onCheckedChange={(checked) => handleAttendanceChange(membru.id, checked, membru.taxa)} disabled={isDisabled} className={`attendance-checkbox ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`} />
                           </TableCell>
                           <TableCell className="text-right">
                             {isPdfMode ? (<span className="tabular-nums">{membru.taxa}</span>) : (
-                              <Input type="number" value={membru.taxa} onChange={(e) => handleAttendanceChange(membru.id, membru.prezent, parseFloat(e.target.value) || 0)} className="taxa-input table-input" />
+                              <Input type="number" value={membru.taxa} onChange={(e) => handleAttendanceChange(membru.id, membru.prezent, parseFloat(e.target.value) || 0)} className="taxa-input table-input" disabled={isPastDate} />
                             )}
                           </TableCell>
                           <TableCell className="text-right tabular-nums text-zinc-500">{(membru.taxa_lunara || 0).toFixed(2)}</TableCell>
