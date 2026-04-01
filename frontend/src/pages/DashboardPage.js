@@ -595,11 +595,7 @@ const DashboardPage = () => {
 
               <section className="animate-fade-in invitati-section page-break-before">
                 <h2 className="text-2xl font-semibold tracking-tight mb-6 text-zinc-900">Invitați</h2>
-                {isPastDate ? (
-                  <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-sm text-amber-700 text-sm no-print">
-                    Lista de prezență pentru această dată nu mai poate fi modificată.
-                  </div>
-                ) : (
+                {!isPastDate && (
                   <form onSubmit={handleAddGuest} className="flex gap-3 mb-6 p-4 bg-zinc-50 rounded-sm no-print" data-testid="add-guest-form">
                     <Input placeholder="Prenume" value={newGuest.prenume} onChange={(e) => setNewGuest({ ...newGuest, prenume: e.target.value })} className="rounded-sm" required data-testid="guest-prenume-input" />
                     <Input placeholder="Nume" value={newGuest.nume} onChange={(e) => setNewGuest({ ...newGuest, nume: e.target.value })} className="rounded-sm" required data-testid="guest-nume-input" />
