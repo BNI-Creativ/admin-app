@@ -1021,6 +1021,28 @@ async def delete_treasury_entry(entry_id: str, current_user: dict = Depends(get_
         raise HTTPException(status_code=404, detail="Intrare negăsită")
     return {"message": "Intrare ștearsă cu succes"}
 
+# ============= MONTHLY DEDUCTION ROUTES =============
+
+@api_router.get("/monthly-deduction/{year}/{month}")
+async def get_monthly_deduction(year: int, month: int, current_user: dict = Depends(get_current_user)):
+    """Get the monthly deduction (X) for a specific month"""
+    key = f"{year}-{month:02d}"
+    doc = await db.monthly_deductions.find_one({"key": key}, {"_id": 0})
+    if doc:
+        return {"suma": doc.get("suma", 0)}
+    return {"suma": 0}
+
+@api_router.post("/monthly-deduction/{year}/{month}")
+async def set_monthly_deduction(year: int, month: int, data: MonthlyDeductionUpdate, current_user: dict = Depends(get_current_user)):
+    """Set the monthly deduction (X) for a specific month"""
+    key = f"{year}-{month:02d}"
+    await db.monthly_deductions.update_one(
+        {"key": key},
+        {"$set": {"key": key, "suma": data.suma}},
+        upsert=True
+    )
+    return {"message": "Sumă actualizată", "suma": data.suma}
+
 # Include the router in the main app
 app.include_router(api_router)
 
