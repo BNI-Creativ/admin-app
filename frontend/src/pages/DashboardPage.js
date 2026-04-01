@@ -610,7 +610,7 @@ const DashboardPage = () => {
                         <TableCell className="text-right font-bold">
                           {membri.reduce((sum, m) => {
                             const taxa = m.taxa_lunara || 0;
-                            return sum + (isDeductionEnabled ? Math.max(0, taxa - monthlyDeduction) : taxa);
+                            return sum + (isDeductionEnabled ? taxa - monthlyDeduction : taxa);
                           }, 0).toFixed(2)}
                         </TableCell>
                       </TableRow>
