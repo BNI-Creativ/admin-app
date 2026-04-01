@@ -195,6 +195,10 @@ class TreasuryEntryResponse(BaseModel):
     explicatii: str
     created_at: str
 
+# Monthly deduction model
+class MonthlyDeductionUpdate(BaseModel):
+    suma: float
+
 # ============= AUTH HELPERS =============
 
 def hash_password(password: str) -> str:
