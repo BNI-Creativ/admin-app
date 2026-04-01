@@ -181,6 +181,20 @@ class SendPdfRequest(BaseModel):
     data: str
     pdf_base64: str
 
+# Treasury models
+class TreasuryEntryCreate(BaseModel):
+    suma: float
+    data: str
+    explicatii: str = ""
+
+class TreasuryEntryResponse(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    suma: float
+    data: str
+    explicatii: str
+    created_at: str
+
 # ============= AUTH HELPERS =============
 
 def hash_password(password: str) -> str:
