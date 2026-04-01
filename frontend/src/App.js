@@ -83,6 +83,14 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/treasury"
+        element={
+          <ProtectedRoute>
+            <TreasuryPage />
+          </ProtectedRoute>
+        }
+      />
       {/* Projector page - public, no auth required */}
       <Route path="/proiector" element={<ProjectorPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
