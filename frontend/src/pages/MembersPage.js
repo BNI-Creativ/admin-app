@@ -169,6 +169,17 @@ const MembersPage = () => {
     }
   };
 
+  const handleToggleDorestePresentation = async (member) => {
+    const newVal = !member.doreste_prezentare;
+    setMembers(members.map((m) => m.id === member.id ? { ...m, doreste_prezentare: newVal } : m));
+    try {
+      await axios.put(`${API_URL}/members/${member.id}`, { doreste_prezentare: newVal });
+    } catch (error) {
+      console.error('Error updating doreste_prezentare:', error);
+      setMembers(members.map((m) => m.id === member.id ? { ...m, doreste_prezentare: member.doreste_prezentare } : m));
+    }
+  };
+
   const handleToggleStatus = async (member) => {
     const newActiv = !member.activ;
     // Optimistic update
@@ -394,6 +405,7 @@ const MembersPage = () => {
                     <TableHead>Prenume</TableHead>
                     <TableHead>Nume</TableHead>
                     <TableHead className="w-32">Data MSP</TableHead>
+                    <TableHead className="w-36 text-center">Dorește Prezentare</TableHead>
                     <TableHead className="w-28 text-center">Status</TableHead>
                     <TableHead className="w-24 text-right">Acțiuni</TableHead>
                   </TableRow>
@@ -417,6 +429,15 @@ const MembersPage = () => {
                         >
                           {member.data_msp || 'Nedefinit'}
                         </span>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <input
+                          type="checkbox"
+                          checked={!!member.doreste_prezentare}
+                          onChange={() => handleToggleDorestePresentation(member)}
+                          className="w-4 h-4 accent-zinc-900 cursor-pointer"
+                          data-testid={`doreste-prezentare-${member.id}`}
+                        />
                       </TableCell>
                       <TableCell className="text-center">
                         <button
