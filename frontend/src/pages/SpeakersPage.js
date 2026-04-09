@@ -4,7 +4,6 @@ import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
 import {
   Table,
   TableBody,
@@ -14,23 +13,10 @@ import {
   TableRow,
 } from '../components/ui/table';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '../components/ui/alert-dialog';
-import {
   Users,
   Key,
   CalendarDays,
   LogOut,
-  Plus,
-  Trash2,
   Settings,
   Wallet,
   Mic2,
@@ -52,7 +38,6 @@ const SpeakersPage = () => {
   const [eligibleCount, setEligibleCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [newSpeaker, setNewSpeaker] = useState({ prenume: '', nume: '', data: format(new Date(), 'yyyy-MM-dd') });
   const [importing, setImporting] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -77,34 +62,20 @@ const SpeakersPage = () => {
     }
   };
 
+  const handleNextDateChange = async (memberId, newDate) => {
+    setNextSpeakers((prev) =>
+      prev.map((s) => s.member_id === memberId ? { ...s, next_date: newDate } : s)
+    );
+    try {
+      await axios.post(`${API_URL}/speakers/schedule/${memberId}`, { next_date: newDate });
+    } catch (error) {
+      console.error('Error saving next date:', error);
+    }
+  };
+
   const handleLogout = () => {
     logout();
     navigate('/');
-  };
-
-  const handleAddSpeaker = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await axios.post(`${API_URL}/speakers`, newSpeaker);
-      setSpeakers([response.data, ...speakers]);
-      setNewSpeaker({ prenume: '', nume: '', data: format(new Date(), 'yyyy-MM-dd') });
-      // Refresh next speakers
-      const nextRes = await axios.get(`${API_URL}/speakers/next`);
-      setNextSpeakers(nextRes.data.next_speakers || []);
-    } catch (error) {
-      console.error('Error adding speaker:', error);
-    }
-  };
-
-  const handleDeleteSpeaker = async (speakerId) => {
-    try {
-      await axios.delete(`${API_URL}/speakers/${speakerId}`);
-      setSpeakers(speakers.filter((s) => s.id !== speakerId));
-      const nextRes = await axios.get(`${API_URL}/speakers/next`);
-      setNextSpeakers(nextRes.data.next_speakers || []);
-    } catch (error) {
-      console.error('Error deleting speaker:', error);
-    }
   };
 
   const handleExportCSV = async () => {
@@ -244,28 +215,7 @@ const SpeakersPage = () => {
             </div>
           </div>
 
-          {/* Add Speaker Form */}
-          <div className="bg-white border border-zinc-200 rounded-sm shadow-sm p-6">
-            <h2 className="text-sm font-semibold text-zinc-700 mb-4">Adaugă Vorbitor în Istoric</h2>
-            <form onSubmit={handleAddSpeaker} className="flex items-end gap-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="sp-prenume" className="text-xs">Prenume</Label>
-                <Input id="sp-prenume" value={newSpeaker.prenume} onChange={(e) => setNewSpeaker({ ...newSpeaker, prenume: e.target.value })} className="rounded-sm w-36" required data-testid="new-speaker-prenume" />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="sp-nume" className="text-xs">Nume</Label>
-                <Input id="sp-nume" value={newSpeaker.nume} onChange={(e) => setNewSpeaker({ ...newSpeaker, nume: e.target.value })} className="rounded-sm w-36" required data-testid="new-speaker-nume" />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="sp-data" className="text-xs">Data</Label>
-                <Input id="sp-data" type="date" value={newSpeaker.data} onChange={(e) => setNewSpeaker({ ...newSpeaker, data: e.target.value })} className="rounded-sm w-40" required data-testid="new-speaker-data" />
-              </div>
-              <Button type="submit" className="bg-zinc-900 hover:bg-zinc-800 rounded-sm" data-testid="add-speaker-btn">
-                <Plus className="w-4 h-4 mr-2" strokeWidth={1.5} />
-                Adaugă
-              </Button>
-            </form>
-          </div>
+          {/* Add Speaker Form - REMOVED */}
 
           {/* Next 12 Speakers - Round Robin */}
           <div className="bg-white border border-zinc-200 rounded-sm shadow-sm">
@@ -296,6 +246,7 @@ const SpeakersPage = () => {
                     <TableHead>Prenume</TableHead>
                     <TableHead>Nume</TableHead>
                     <TableHead>Ultima Prezentare</TableHead>
+                    <TableHead className="w-44">Următoarea Prezentare</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -306,6 +257,15 @@ const SpeakersPage = () => {
                       <TableCell>{s.nume}</TableCell>
                       <TableCell className="text-zinc-500 text-sm">
                         {s.last_date ? formatDate(s.last_date) : <span className="text-zinc-400 italic">Niciodată</span>}
+                      </TableCell>
+                      <TableCell>
+                        <input
+                          type="date"
+                          value={s.next_date || ''}
+                          onChange={(e) => handleNextDateChange(s.member_id, e.target.value)}
+                          className="w-full rounded-sm border border-zinc-200 px-2 py-1 text-sm text-zinc-700 focus:outline-none focus:ring-1 focus:ring-zinc-400"
+                          data-testid={`next-date-${s.member_id}`}
+                        />
                       </TableCell>
                     </TableRow>
                   ))}
@@ -326,7 +286,7 @@ const SpeakersPage = () => {
               <div className="text-center py-8 text-zinc-500 text-sm">Se încarcă...</div>
             ) : speakers.length === 0 ? (
               <div className="text-center py-8 text-zinc-400 text-sm">
-                Nu există vorbitori în istoric. Adaugă manual sau importă din CSV.
+                Nu există vorbitori în istoric. Importați din CSV.
               </div>
             ) : (
               <Table className="swiss-table" data-testid="speakers-history-table">
@@ -336,7 +296,6 @@ const SpeakersPage = () => {
                     <TableHead>Prenume</TableHead>
                     <TableHead>Nume</TableHead>
                     <TableHead>Data</TableHead>
-                    <TableHead className="w-20 text-right">Acțiuni</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -346,29 +305,6 @@ const SpeakersPage = () => {
                       <TableCell>{s.prenume}</TableCell>
                       <TableCell>{s.nume}</TableCell>
                       <TableCell className="text-zinc-600">{formatDate(s.data)}</TableCell>
-                      <TableCell className="text-right">
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-700 hover:bg-red-50" data-testid={`delete-speaker-${s.id}`}>
-                              <Trash2 className="w-4 h-4" strokeWidth={1.5} />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent className="rounded-sm">
-                            <AlertDialogHeader>
-                              <AlertDialogTitle style={{ fontFamily: 'Manrope, sans-serif' }}>Șterge înregistrare</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Ești sigur că vrei să ștergi vorbitor <strong>{s.prenume} {s.nume}</strong> din {formatDate(s.data)}?
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel className="rounded-sm">Anulează</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDeleteSpeaker(s.id)} className="bg-red-500 hover:bg-red-600 rounded-sm" data-testid={`confirm-delete-speaker-${s.id}`}>
-                                Șterge
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

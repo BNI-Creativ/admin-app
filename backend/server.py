@@ -1173,6 +1173,17 @@ async def delete_speaker(speaker_id: str, current_user: dict = Depends(get_curre
         raise HTTPException(status_code=404, detail="Înregistrare negăsită")
     return {"message": "Înregistrare ștearsă"}
 
+@api_router.post("/speakers/schedule/{member_id}")
+async def set_speaker_next_date(member_id: str, request: dict, current_user: dict = Depends(get_current_user)):
+    """Set the scheduled next presentation date for a speaker"""
+    next_date = request.get("next_date", "")
+    await db.speaker_schedules.update_one(
+        {"member_id": member_id},
+        {"$set": {"member_id": member_id, "next_date": next_date}},
+        upsert=True
+    )
+    return {"success": True, "member_id": member_id, "next_date": next_date}
+
 @api_router.get("/speakers/next")
 async def get_next_speakers(current_user: dict = Depends(get_current_user)):
     """Get next 12 eligible speakers using Round-Robin algorithm"""
@@ -1222,7 +1233,10 @@ async def get_next_speakers(current_user: dict = Depends(get_current_user)):
 
     sorted_eligible = sorted(eligible, key=sort_key)
 
-    # Fill 12 slots cycling through sorted list
+    # Fill 12 slots cycling through sorted list, enriched with scheduled dates
+    schedules = await db.speaker_schedules.find({}, {"_id": 0}).to_list(1000)
+    schedule_map = {s["member_id"]: s.get("next_date", "") for s in schedules}
+
     next_speakers = []
     count = 12
     for i in range(count):
@@ -1232,11 +1246,11 @@ async def get_next_speakers(current_user: dict = Depends(get_current_user)):
             "member_id": member["id"],
             "prenume": member["prenume"],
             "nume": member["nume"],
-            "last_date": member_last_date.get(member["id"])
+            "last_date": member_last_date.get(member["id"]),
+            "next_date": schedule_map.get(member["id"], "")
         })
 
     return {"next_speakers": next_speakers, "eligible_count": len(eligible)}
-
 @api_router.get("/speakers/export-csv")
 async def export_speakers_csv(current_user: dict = Depends(get_current_user)):
     """Export all speakers as CSV"""
