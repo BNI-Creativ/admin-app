@@ -33,6 +33,7 @@ import {
   Monitor,
   Key,
   Wallet,
+  Mic2,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ro } from 'date-fns/locale';
@@ -504,6 +505,7 @@ const DashboardPage = () => {
           <div className="space-y-1">
             <Link to="/dashboard" className="sidebar-link active flex items-center gap-3 px-3 py-3 rounded-sm text-sm font-medium"><CalendarDays className="w-4 h-4 flex-shrink-0" strokeWidth={1.5} />{sidebarOpen && <span>Prezență</span>}</Link>
             <Link to="/members" className="sidebar-link flex items-center gap-3 px-3 py-3 rounded-sm text-sm font-medium text-zinc-600"><Settings className="w-4 h-4 flex-shrink-0" strokeWidth={1.5} />{sidebarOpen && <span>Administrare Membri</span>}</Link>
+            <Link to="/speakers" className="sidebar-link flex items-center gap-3 px-3 py-3 rounded-sm text-sm font-medium text-zinc-600"><Mic2 className="w-4 h-4 flex-shrink-0" strokeWidth={1.5} />{sidebarOpen && <span>Administrare Vorbitori</span>}</Link>
             <Link to="/treasury" className="sidebar-link flex items-center gap-3 px-3 py-3 rounded-sm text-sm font-medium text-zinc-600"><Wallet className="w-4 h-4 flex-shrink-0" strokeWidth={1.5} />{sidebarOpen && <span>Trezorerie</span>}</Link>
             <Link to="/settings" className="sidebar-link flex items-center gap-3 px-3 py-3 rounded-sm text-sm font-medium text-zinc-600"><Key className="w-4 h-4 flex-shrink-0" strokeWidth={1.5} />{sidebarOpen && <span>Setări</span>}</Link>
           </div>

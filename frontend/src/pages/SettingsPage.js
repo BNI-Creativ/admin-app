@@ -20,6 +20,7 @@ import {
   Plus,
   Trash2,
   Wallet,
+  Mic2,
 } from 'lucide-react';
 
 const API_URL = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -275,6 +276,15 @@ const SettingsPage = () => {
             >
               <Settings className="w-4 h-4 flex-shrink-0" strokeWidth={1.5} />
               {sidebarOpen && <span>Administrare Membri</span>}
+            </Link>
+            <Link
+              to="/speakers"
+              className="sidebar-link flex items-center gap-3 px-3 py-3 rounded-sm text-sm font-medium text-zinc-600"
+              data-testid="nav-speakers"
+              title="Administrare Vorbitori"
+            >
+              <Mic2 className="w-4 h-4 flex-shrink-0" strokeWidth={1.5} />
+              {sidebarOpen && <span>Administrare Vorbitori</span>}
             </Link>
             <Link
               to="/treasury"
