@@ -58,6 +58,7 @@ const MembersPage = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingMember, setEditingMember] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [zileValabilitateMsp, setZileValabilitateMsp] = useState(365);
   const [newMember, setNewMember] = useState({
     prenume: '',
     nume: '',
@@ -65,7 +66,32 @@ const MembersPage = () => {
 
   useEffect(() => {
     fetchMembers();
+    fetchMspValidity();
   }, []);
+
+  const fetchMspValidity = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/settings/msp-validity`);
+      setZileValabilitateMsp(response.data.zile);
+    } catch (error) {
+      console.error('Error fetching MSP validity:', error);
+    }
+  };
+
+  const saveMspValidity = async (zile) => {
+    try {
+      await axios.post(`${API_URL}/settings/msp-validity`, { zile: parseInt(zile) || 365 });
+    } catch (error) {
+      console.error('Error saving MSP validity:', error);
+    }
+  };
+
+  const isMspExpired = (dataMsp) => {
+    if (!dataMsp) return true;
+    const expiration = new Date(dataMsp);
+    expiration.setDate(expiration.getDate() + (zileValabilitateMsp || 0));
+    return expiration < new Date();
+  };
 
   const fetchMembers = async () => {
     try {
@@ -111,6 +137,7 @@ const MembersPage = () => {
       const response = await axios.put(`${API_URL}/members/${editingMember.id}`, {
         prenume: editingMember.prenume,
         nume: editingMember.nume,
+        data_msp: editingMember.data_msp || null,
         telefon: editingMember.telefon || '',
         email: editingMember.email || '',
         companie: editingMember.companie || '',
@@ -257,7 +284,7 @@ const MembersPage = () => {
       <main className="flex-1 overflow-y-auto p-8">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-start justify-between mb-8">
             <div>
               <h1
                 className="text-3xl font-bold tracking-tight text-zinc-900"
@@ -268,16 +295,17 @@ const MembersPage = () => {
               <p className="text-zinc-500 mt-1">Adaugă, editează sau șterge membri</p>
             </div>
 
-            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-              <DialogTrigger asChild>
-                <Button
-                  className="bg-zinc-900 hover:bg-zinc-800 rounded-sm"
-                  data-testid="add-member-button"
-                >
-                  <Plus className="w-4 h-4 mr-2" strokeWidth={1.5} />
-                  Adaugă Membru
-                </Button>
-              </DialogTrigger>
+            <div className="flex flex-col items-end gap-3">
+              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button
+                    className="bg-zinc-900 hover:bg-zinc-800 rounded-sm"
+                    data-testid="add-member-button"
+                  >
+                    <Plus className="w-4 h-4 mr-2" strokeWidth={1.5} />
+                    Adaugă Membru
+                  </Button>
+                </DialogTrigger>
               <DialogContent className="rounded-sm">
                 <DialogHeader>
                   <DialogTitle style={{ fontFamily: 'Manrope, sans-serif' }}>
@@ -336,6 +364,22 @@ const MembersPage = () => {
                 </form>
               </DialogContent>
             </Dialog>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="zile-msp" className="text-sm text-zinc-600 whitespace-nowrap">
+                  Zile Valabilitate MSP
+                </Label>
+                <Input
+                  id="zile-msp"
+                  type="number"
+                  min="1"
+                  value={zileValabilitateMsp}
+                  onChange={(e) => setZileValabilitateMsp(e.target.value)}
+                  onBlur={(e) => saveMspValidity(e.target.value)}
+                  className="rounded-sm w-24 text-center"
+                  data-testid="zile-valabilitate-msp"
+                />
+              </div>
+            </div>
           </div>
 
           {/* Members Table */}
@@ -349,6 +393,7 @@ const MembersPage = () => {
                     <TableHead className="w-16">Nr.</TableHead>
                     <TableHead>Prenume</TableHead>
                     <TableHead>Nume</TableHead>
+                    <TableHead className="w-32">Data MSP</TableHead>
                     <TableHead className="w-28 text-center">Status</TableHead>
                     <TableHead className="w-24 text-right">Acțiuni</TableHead>
                   </TableRow>
@@ -361,6 +406,18 @@ const MembersPage = () => {
                       </TableCell>
                       <TableCell>{member.prenume}</TableCell>
                       <TableCell>{member.nume}</TableCell>
+                      <TableCell>
+                        <span
+                          className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
+                            isMspExpired(member.data_msp)
+                              ? 'bg-red-100 text-red-700'
+                              : 'bg-emerald-100 text-emerald-700'
+                          }`}
+                          data-testid={`msp-date-${member.id}`}
+                        >
+                          {member.data_msp || 'Nedefinit'}
+                        </span>
+                      </TableCell>
                       <TableCell className="text-center">
                         <button
                           onClick={() => handleToggleStatus(member)}
@@ -481,6 +538,19 @@ const MembersPage = () => {
                         className="rounded-sm"
                         required
                         data-testid="edit-member-nume"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-data-msp">Data MSP</Label>
+                      <Input
+                        id="edit-data-msp"
+                        type="date"
+                        value={editingMember.data_msp || ''}
+                        onChange={(e) =>
+                          setEditingMember({ ...editingMember, data_msp: e.target.value || null })
+                        }
+                        className="rounded-sm"
+                        data-testid="edit-member-data-msp"
                       />
                     </div>
                     <div className="space-y-2">

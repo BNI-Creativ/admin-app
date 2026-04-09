@@ -66,6 +66,7 @@ class MemberCreate(BaseModel):
     prenume: str
     nume: str
     activ: bool = True
+    data_msp: Optional[str] = None
     nume_inlocuitor: Optional[str] = ""
     telefon: Optional[str] = ""
     email: Optional[str] = ""
@@ -84,6 +85,7 @@ class MemberUpdate(BaseModel):
     prenume: Optional[str] = None
     nume: Optional[str] = None
     activ: Optional[bool] = None
+    data_msp: Optional[str] = None
     nume_inlocuitor: Optional[str] = None
     telefon: Optional[str] = None
     email: Optional[str] = None
@@ -105,6 +107,7 @@ class MemberResponse(BaseModel):
     prenume: str
     nume: str
     activ: bool = True
+    data_msp: Optional[str] = None
     nume_inlocuitor: str = ""
     telefon: str = ""
     email: str = ""
@@ -327,6 +330,7 @@ async def create_member(member: MemberCreate, current_user: dict = Depends(get_c
         "prenume": member.prenume,
         "nume": member.nume,
         "activ": member.activ,
+        "data_msp": member.data_msp,
         "nume_inlocuitor": member.nume_inlocuitor or "",
         "telefon": member.telefon or "",
         "email": member.email or "",
@@ -365,6 +369,7 @@ async def update_member(member_id: str, member: MemberUpdate, current_user: dict
         prenume=result["prenume"],
         nume=result["nume"],
         activ=result.get("activ", True),
+        data_msp=result.get("data_msp"),
         nume_inlocuitor=result.get("nume_inlocuitor", ""),
         telefon=result.get("telefon", ""),
         email=result.get("email", ""),
@@ -979,6 +984,25 @@ async def save_email_settings(data: EmailSettings, current_user: dict = Depends(
         upsert=True
     )
     return {"success": True, "emails": data.emails}
+
+class MspValidityUpdate(BaseModel):
+    zile: int
+
+@api_router.get("/settings/msp-validity")
+async def get_msp_validity(current_user: dict = Depends(get_current_user)):
+    """Get MSP validity days setting"""
+    doc = await db.settings.find_one({"type": "msp_validity"}, {"_id": 0})
+    return {"zile": doc.get("zile", 365) if doc else 365}
+
+@api_router.post("/settings/msp-validity")
+async def set_msp_validity(data: MspValidityUpdate, current_user: dict = Depends(get_current_user)):
+    """Set MSP validity days setting"""
+    await db.settings.update_one(
+        {"type": "msp_validity"},
+        {"$set": {"type": "msp_validity", "zile": data.zile}},
+        upsert=True
+    )
+    return {"success": True, "zile": data.zile}
 
 @api_router.post("/send-pdf-email")
 async def send_pdf_email(request: SendPdfRequest, current_user: dict = Depends(get_current_user)):

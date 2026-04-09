@@ -145,7 +145,13 @@ Aplicație web în limba română pentru gestionarea prezenței membrilor și in
 - Arhitectura offline-first a fost **ELIMINATĂ** pentru simplificare
 - Aplicația folosește acum apeluri directe la API (axios) pentru toate operațiunile
 
-### 12. Status Activ/Inactiv Membri (✅ COMPLET)
+### 13. Data MSP cu Valabilitate (✅ COMPLET)
+- Coloana "Data MSP" în Administrare Membri cu culoare: **roșu** = expirat/nedefinit, **verde** = valid
+- Input global "Zile Valabilitate MSP" (saved in DB) afișat sub butonul "Adaugă Membru"
+- Logic: `data_msp + zile_valabilitate < azi` → expirat (roșu); fără dată → roșu implicit
+- Câmp dată editat din dialogul de editare al membrului
+
+
 - Coloana "Status" în Administrare Membri cu badge interactiv (Activ/Inactiv)
 - Click pe badge toggle instant starea membrului (optimistic update)
 - Membrii inactivi NU apar în tabelul de prezență (Dashboard)
