@@ -9,7 +9,9 @@ from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict, EmailStr
 from typing import List, Optional
 import uuid
-from datetime import datetime, timezone, date
+from datetime import datetime, timezone, date, timedelta
+import io
+import csv
 import jwt
 import bcrypt
 
@@ -1126,9 +1128,176 @@ async def set_monthly_deduction(year: int, month: int, data: MonthlyDeductionUpd
     )
     return {"message": "Sumă actualizată", "suma": data.suma}
 
+# ============= SPEAKERS ROUTES =============
+
+class SpeakerCreate(BaseModel):
+    prenume: str
+    nume: str
+    data: str  # YYYY-MM-DD
+    member_id: Optional[str] = None
+
+class SpeakerResponse(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    prenume: str
+    nume: str
+    data: str
+    member_id: Optional[str] = None
+    created_at: str
+
+@api_router.get("/speakers", response_model=List[SpeakerResponse])
+async def get_speakers(current_user: dict = Depends(get_current_user)):
+    """Get all past speakers sorted by date descending"""
+    speakers = await db.speakers_history.find({}, {"_id": 0}).sort("data", -1).to_list(10000)
+    return [SpeakerResponse(**s) for s in speakers]
+
+@api_router.post("/speakers", response_model=SpeakerResponse)
+async def add_speaker(speaker: SpeakerCreate, current_user: dict = Depends(get_current_user)):
+    """Add a past speaker entry"""
+    doc = {
+        "id": str(uuid.uuid4()),
+        "prenume": speaker.prenume,
+        "nume": speaker.nume,
+        "data": speaker.data,
+        "member_id": speaker.member_id,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.speakers_history.insert_one(doc)
+    return SpeakerResponse(**doc)
+
+@api_router.delete("/speakers/{speaker_id}")
+async def delete_speaker(speaker_id: str, current_user: dict = Depends(get_current_user)):
+    """Delete a speaker entry"""
+    result = await db.speakers_history.delete_one({"id": speaker_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Înregistrare negăsită")
+    return {"message": "Înregistrare ștearsă"}
+
+@api_router.get("/speakers/next")
+async def get_next_speakers(current_user: dict = Depends(get_current_user)):
+    """Get next 12 eligible speakers using Round-Robin algorithm"""
+    today = date.today()
+
+    # Get MSP validity days
+    msp_doc = await db.settings.find_one({"type": "msp_validity"}, {"_id": 0})
+    zile_msp = msp_doc.get("zile", 365) if msp_doc else 365
+
+    # Get eligible members: activ, doreste_prezentare=True, MSP valid
+    all_members = await db.members.find(
+        {"activ": {"$ne": False}, "doreste_prezentare": True},
+        {"_id": 0}
+    ).sort([("prenume", 1), ("nume", 1)]).to_list(1000)
+
+    eligible = []
+    for m in all_members:
+        data_msp = m.get("data_msp")
+        if not data_msp:
+            continue
+        try:
+            msp_date = datetime.strptime(data_msp, "%Y-%m-%d").date()
+            if msp_date + timedelta(days=zile_msp) >= today:
+                eligible.append(m)
+        except Exception:
+            continue
+
+    if not eligible:
+        return {"next_speakers": [], "eligible_count": 0}
+
+    # Find last speaking date for each eligible member
+    member_last_date = {}
+    for m in eligible:
+        last = await db.speakers_history.find_one(
+            {"member_id": m["id"]},
+            {"_id": 0, "data": 1},
+            sort=[("data", -1)]
+        )
+        member_last_date[m["id"]] = last["data"] if last else None
+
+    # Sort: never spoken first (alphabetically), then by last date ascending
+    def sort_key(m):
+        last = member_last_date.get(m["id"])
+        if last is None:
+            return ("0", m.get("prenume", ""), m.get("nume", ""))
+        return ("1", last, "")
+
+    sorted_eligible = sorted(eligible, key=sort_key)
+
+    # Fill 12 slots cycling through sorted list
+    next_speakers = []
+    count = 12
+    for i in range(count):
+        member = sorted_eligible[i % len(sorted_eligible)]
+        next_speakers.append({
+            "slot": i + 1,
+            "member_id": member["id"],
+            "prenume": member["prenume"],
+            "nume": member["nume"],
+            "last_date": member_last_date.get(member["id"])
+        })
+
+    return {"next_speakers": next_speakers, "eligible_count": len(eligible)}
+
+@api_router.get("/speakers/export-csv")
+async def export_speakers_csv(current_user: dict = Depends(get_current_user)):
+    """Export all speakers as CSV"""
+    from fastapi.responses import StreamingResponse
+    speakers = await db.speakers_history.find({}, {"_id": 0}).sort("data", 1).to_list(10000)
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["data", "prenume", "nume", "member_id"])
+    for s in speakers:
+        writer.writerow([
+            s.get("data", ""),
+            s.get("prenume", ""),
+            s.get("nume", ""),
+            s.get("member_id", "")
+        ])
+
+    output.seek(0)
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=vorbitori.csv"}
+    )
+
+@api_router.post("/speakers/import-csv")
+async def import_speakers_csv(request: dict, current_user: dict = Depends(get_current_user)):
+    """Import speakers from CSV content (base64 or plain text)"""
+    csv_content = request.get("csv_content", "")
+    replace = request.get("replace", False)
+
+    if replace:
+        await db.speakers_history.delete_many({})
+
+    reader = csv.DictReader(io.StringIO(csv_content))
+    imported = 0
+    errors = 0
+    for row in reader:
+        try:
+            data_val = row.get("data", "").strip()
+            prenume = row.get("prenume", "").strip()
+            nume = row.get("nume", "").strip()
+            if not data_val or not prenume or not nume:
+                continue
+            member_id = row.get("member_id", "").strip() or None
+            doc = {
+                "id": str(uuid.uuid4()),
+                "prenume": prenume,
+                "nume": nume,
+                "data": data_val,
+                "member_id": member_id,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+            await db.speakers_history.insert_one(doc)
+            imported += 1
+        except Exception:
+            errors += 1
+
+    return {"success": True, "imported": imported, "errors": errors}
+
 # Include the router in the main app
 app.include_router(api_router)
-
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,

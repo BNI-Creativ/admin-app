@@ -145,7 +145,17 @@ Aplicație web în limba română pentru gestionarea prezenței membrilor și in
 - Arhitectura offline-first a fost **ELIMINATĂ** pentru simplificare
 - Aplicația folosește acum apeluri directe la API (axios) pentru toate operațiunile
 
-### 13. Data MSP cu Valabilitate (✅ COMPLET)
+### 14. Administrare Vorbitori (✅ COMPLET)
+- Pagină nouă `/speakers` în meniu sub "Administrare Membri"
+- Istoric vorbitori: adaugă manual (Prenume, Nume, Dată) sau importă din CSV
+- Export/Import CSV (format: `data,prenume,nume,member_id`)
+- Round-Robin automat: calculează următori 12 vorbitori eligibili
+  - Eligibili: activ=True, MSP valid, doreste_prezentare=True
+  - Ordenare: cei care n-au vorbit niciodată primii (alfabetic), apoi cei care au vorbit cel mai demult
+  - Ciclu repetat până la 12 sloturi
+- Endpoint-uri: GET/POST/DELETE /api/speakers, GET /api/speakers/next, GET /api/speakers/export-csv, POST /api/speakers/import-csv
+
+
 - Coloana "Data MSP" în Administrare Membri cu culoare: **roșu** = expirat/nedefinit, **verde** = valid
 - Input global "Zile Valabilitate MSP" (saved in DB) afișat sub butonul "Adaugă Membru"
 - Logic: `data_msp + zile_valabilitate < azi` → expirat (roșu); fără dată → roșu implicit

@@ -8,6 +8,7 @@ import MembersPage from './pages/MembersPage';
 import TreasuryPage from './pages/TreasuryPage';
 import SettingsPage from './pages/SettingsPage';
 import ProjectorPage from './pages/ProjectorPage';
+import SpeakersPage from './pages/SpeakersPage';
 import './App.css';
 
 // Protected Route Component
@@ -88,6 +89,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <TreasuryPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/speakers"
+        element={
+          <ProtectedRoute>
+            <SpeakersPage />
           </ProtectedRoute>
         }
       />
