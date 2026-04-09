@@ -89,7 +89,7 @@ const MembersPage = () => {
   const isMspExpired = (dataMsp) => {
     if (!dataMsp) return true;
     const expiration = new Date(dataMsp);
-    expiration.setDate(expiration.getDate() + (zileValabilitateMsp || 0));
+    expiration.setDate(expiration.getDate() + (parseInt(zileValabilitateMsp, 10) || 0));
     return expiration < new Date();
   };
 
