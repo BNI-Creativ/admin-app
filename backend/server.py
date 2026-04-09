@@ -65,6 +65,7 @@ class TokenResponse(BaseModel):
 class MemberCreate(BaseModel):
     prenume: str
     nume: str
+    activ: bool = True
     nume_inlocuitor: Optional[str] = ""
     telefon: Optional[str] = ""
     email: Optional[str] = ""
@@ -82,6 +83,7 @@ class MemberCreate(BaseModel):
 class MemberUpdate(BaseModel):
     prenume: Optional[str] = None
     nume: Optional[str] = None
+    activ: Optional[bool] = None
     nume_inlocuitor: Optional[str] = None
     telefon: Optional[str] = None
     email: Optional[str] = None
@@ -102,6 +104,7 @@ class MemberResponse(BaseModel):
     nr: int
     prenume: str
     nume: str
+    activ: bool = True
     nume_inlocuitor: str = ""
     telefon: str = ""
     email: str = ""
@@ -323,6 +326,7 @@ async def create_member(member: MemberCreate, current_user: dict = Depends(get_c
         "nr": next_nr,
         "prenume": member.prenume,
         "nume": member.nume,
+        "activ": member.activ,
         "nume_inlocuitor": member.nume_inlocuitor or "",
         "telefon": member.telefon or "",
         "email": member.email or "",
@@ -342,7 +346,8 @@ async def create_member(member: MemberCreate, current_user: dict = Depends(get_c
 
 @api_router.put("/members/{member_id}", response_model=MemberResponse)
 async def update_member(member_id: str, member: MemberUpdate, current_user: dict = Depends(get_current_user)):
-    update_data = {k: v for k, v in member.model_dump().items() if v is not None}
+    # Use exclude_unset to properly handle False values (like activ=False)
+    update_data = member.model_dump(exclude_unset=True)
     if not update_data:
         raise HTTPException(status_code=400, detail="Nu există date de actualizat")
     
@@ -359,6 +364,7 @@ async def update_member(member_id: str, member: MemberUpdate, current_user: dict
         nr=result["nr"],
         prenume=result["prenume"],
         nume=result["nume"],
+        activ=result.get("activ", True),
         nume_inlocuitor=result.get("nume_inlocuitor", ""),
         telefon=result.get("telefon", ""),
         email=result.get("email", ""),
@@ -473,8 +479,8 @@ async def delete_guest(guest_id: str, current_user: dict = Depends(get_current_u
 
 @api_router.get("/attendance/{data}", response_model=DailyAttendanceResponse)
 async def get_daily_attendance(data: str, current_user: dict = Depends(get_current_user)):
-    # Get all members sorted by prenume, then nume
-    members = await db.members.find({}, {"_id": 0}).sort([("prenume", 1), ("nume", 1)]).to_list(1000)
+    # Get all ACTIVE members sorted by prenume, then nume
+    members = await db.members.find({"activ": {"$ne": False}}, {"_id": 0}).sort([("prenume", 1), ("nume", 1)]).to_list(1000)
     
     # Get attendance records for this date
     attendance_records = await db.attendance.find({"data": data}, {"_id": 0}).to_list(1000)
@@ -593,8 +599,8 @@ async def get_daily_attendance(data: str, current_user: dict = Depends(get_curre
 @api_router.get("/proiector/{data}")
 async def get_projector_data(data: str):
     """Get present members and guests for projector display - public endpoint"""
-    # Get members
-    members = await db.members.find({}, {"_id": 0}).sort([("prenume", 1), ("nume", 1)]).to_list(1000)
+    # Get active members
+    members = await db.members.find({"activ": {"$ne": False}}, {"_id": 0}).sort([("prenume", 1), ("nume", 1)]).to_list(1000)
     
     # Get attendance for this date
     attendance_records = await db.attendance.find({"data": data}, {"_id": 0}).to_list(1000)

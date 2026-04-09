@@ -139,10 +139,15 @@ Aplicație web în limba română pentru gestionarea prezenței membrilor și in
 - Necesită Android Studio sau build CLI
 - Opțional - aplicația funcționează bine în browser
 
-## Data: 11 Februarie 2026
-
-### Actualizări Recente
+## Actualizări Recente (Aprilie 2026)
+- **Status Membri**: Câmp `activ` adăugat — membrii inactivi sunt excluși din tabelul de prezență și proiector
 - **Bug Fix Critic REZOLVAT**: Salvarea prezenței funcționează corect fără page reload
 - Arhitectura offline-first a fost **ELIMINATĂ** pentru simplificare
 - Aplicația folosește acum apeluri directe la API (axios) pentru toate operațiunile
-- Testare completă: Backend 100% (27 teste), Frontend 100% (toate funcționalitățile)
+
+### 12. Status Activ/Inactiv Membri (✅ COMPLET)
+- Coloana "Status" în Administrare Membri cu badge interactiv (Activ/Inactiv)
+- Click pe badge toggle instant starea membrului (optimistic update)
+- Membrii inactivi NU apar în tabelul de prezență (Dashboard)
+- Membrii inactivi NU apar în pagina Proiector
+- Câmpul `activ` default `True` — backward compatible cu membrii existenți

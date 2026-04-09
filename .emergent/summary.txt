@@ -1,158 +1,125 @@
-<analysis>**original_problem_statement:**
-The user requested a web application in Romanian to manage attendance for a club or organization. Key features include JWT authentication, a dashboard with Membri (Members) and Invitați (Guests) tables, and complex interactive logic for attendance, fees, substitutes, and conditional row highlighting.
+<analysis>**original_problem_statement**: 
+The user requested a web application in Romanian to manage attendance for a club or organization. Key features include JWT authentication, a dashboard with Membri (Members) and Invitați (Guests) tables, and complex interactive logic for attendance, fees, substitutes, conditional row highlighting, PDF data export, and an email delivery system. The application has recently evolved to include a Trezorerie (Treasury) module for financial tracking, extended member profiles, and a cumulative monthly balance system to track payment arrears (restanțe).
 
-Over time, the requirements evolved to include:
-1.  An offline-first Android application using Capacitor and SQLite.
-2.  A data export/import feature (initially PDF, then JPEG, now back to PDF with specific requirements).
-3.  A new, separate Projector View page to display a simplified list of present attendees.
-4.  Functionality to email the generated PDF report to a list of pre-configured email addresses.
+**User's preferred language**: Romanian (ro)
+**INSTRUCT**: You MUST respond to the user exclusively in Romanian.
 
-**User's preferred language**: Romanian
-
-**what currently exists?**
-A full-stack React/FastAPI application. It has JWT authentication and a dashboard that handles member/guest attendance with interactive tables.
-
-Key features implemented include:
-- **PDF Export**: A function to export the current view as a PDF. This feature has been heavily modified to handle rendering issues by converting form inputs to static text during export and dynamically applying CSS for better layout.
-- **Email PDF**: The PDF can be sent to a list of email addresses configured on a new Settings page section. This uses a backend endpoint and requires SMTP server configuration via environment variables.
-- **Data Import/Export**: Backend endpoints and frontend UI for exporting and importing the entire application's data in JSON format.
-- **Projector View**: A public, unauthenticated page at  that displays a simplified, randomly shuffled list of present members and guests in a multi-column layout suitable for display on a large screen.
-
-**Crucially, the application was recently refactored to REMOVE the offline-first architecture.** It no longer uses , , , or . It now operates as a standard online-only application where the React frontend makes direct API calls () to the FastAPI backend for all data operations. This change was made to fix bugs related to data not saving and unwanted page reloads.
+**what currently exists?** 
+A full-stack React/FastAPI SPA (online-only). It includes features for tracking attendance (Members/Guests) with retroactive read-only locks, a Treasury module for tracking income/expenses with retroactive deletion locks, Export/Import data functionality, a Projector view, and PDF generation with email capabilities. A cumulative monthly balance system is implemented to track member payment arrears over time (active from April 2026 onwards).
 
 **Last working item**:
-- Last item agent was working: The user reported that marking attendance was not saving correctly and was causing the page to reload. The agent correctly identified that the complexity of the offline-first architecture was the root cause. It began a major refactoring of  to remove all offline-related logic and revert to a simpler, online-only model with direct API calls for all actions. The agent was in the middle of cleaning up the code after this refactoring when it encountered a syntax error.
-- Status: IN PROGRESS
-- Agent Testing Done: N
-- Which testing method agent to use? both
+- Last item agent was working: Disabling the Taxa lunara (Monthly Fee) input field for past months so it cannot be retrospectively edited. 
+- Status: USER VERIFICATION PENDING
+- Agent Testing Done: Y
+- Which testing method agent to use? screenshot tool
 - User Testing Done: N
 
 **All Pending/In progress Issue list**:
-- Issue 1: Complete the refactoring of  to remove offline functionality. (P0)
-
-**Issues Detail:**
-- Issue 1:
-    - **Description**: After implementing an offline-first architecture, the user reported that checking attendance was not saving data and was causing the page to reload. The agent is in the process of removing the entire offline-first layer (, , local DB logic) and reverting to a standard online model where the frontend makes direct  calls to the backend for every action and updates the UI state optimistically.
-    - **Attempted fixes**: The agent has already removed , the sync button, the online indicator, and has started replacing  calls with . This process introduced syntax errors (e.g., an incomplete  block) that need to be resolved.
-    - **Next debug checklist**:
-        1.  Review  for syntax errors. Fix the incomplete  block in the  function.
-        2.  Systematically remove all remaining references to , , , , and other offline-related state and UI elements.
-        3.  Ensure every data mutation function (, , , ) performs two actions in order:
-            a.  Makes a direct  call to the backend API.
-            b.  On success, updates the local React state (, ) to reflect the change immediately without a page reload.
-        4.  Verify the main  function only fetches data from the API and correctly sets the  state.
-    - **Why fix this issue and what will be achieved with the fix?**: This is a critical bug preventing the app's core functionality (tracking attendance) from working. Completing the refactor will fix the bug, eliminate unwanted page reloads, and significantly simplify the codebase, making it more maintainable.
-    - **Status**: IN PROGRESS
-    - **Is recurring issue?** N
-    - **Should Test frontend/backend/both after fix?** both
-    - **Blocked on other issue**: None
+No pending issues. The critical bug regarding attendance saving (due to legacy offline architecture) was fully resolved at the beginning of the session.
 
 **In progress Task List**:
-- None. The current issue is the only in-progress item.
+None.
 
-**Upcoming and Future Tasks**
-- **Build and Deliver APK**: The user previously expressed a desire for an Android APK. Although the offline-first approach has been removed, the project still has the Capacitor configuration. Once the application is stable, the agent may need to revisit this and build the APK. (P2)
+**Upcoming and Future Tasks**:
+- Build APK Android (P2 - Backlog, from previous summary. Capacitor config exists but offline features were removed).
+- Configurare SMTP pentru email PDF (P1 - Code is ready, blocked purely by missing environment variables on the deployment/preview pod).
 
-**Completed work in this session**
-- **Bug Fix**: Resolved a recurring UI bug that caused extra scrollable space at the bottom of the dashboard.
-- **Data Portability**: Completed and tested the Export/Import JSON functionality. Successfully debugged an import issue by verifying the backend worked and the issue was likely client-side.
-- **Offline-First Implementation (and subsequent removal)**: Fully implemented an offline-first architecture using Capacitor/SQLite and then completely removed it to solve critical data-saving bugs, reverting the app to a simpler online-only model.
-- **PDF/JPEG Export Evolution**:
-    - Converted PDF export to JPEG export, then back to PDF based on user feedback.
-    - Implemented a robust PDF export that converts form inputs into static text to prevent rendering issues.
-    - Fixed multiple PDF styling bugs, including vertical alignment and line-height issues for multi-line text in table cells.
-- **Email PDF Feature**:
-    - Added backend endpoints (, ) to manage recipient email addresses and send PDF reports.
-    - Added a UI in the Settings page to manage the email list.
-    - Implemented a confirmation dialog on the dashboard that prompts the user to either download the PDF locally or send it via email.
-- **Projector View Page**:
-    - Created a new public page () to display present attendees in a simplified multi-column format.
-    - Created a public backend endpoint () to serve data without authentication.
-    - Iteratively refined the page layout (6 columns, no text wrap, randomized list on load) based on user feedback.
+**Completed work in this session**:
+- Refactored  to fix the online-only saving bug (attendance now saves without page reloads). (DONE)
+- Added Telefon field to Guests (backend + frontend). (DONE)
+- Simplified Guest form (removed Taxa) and merged Prenume/Nume into Nume column in the table. (DONE)
+- Added extended fields to Member Administration (telefon, email, companie, domeniu, website, instagram, tiktok, strada, oras, judet, cod postal, tara) without cluttering the main attendance table. (DONE)
+- Locked past attendance lists (read-only for days prior to the current date). (DONE)
+- Created Trezorerie (Treasury) page with chronological tracking and total sum calculation. (DONE)
+- Locked past Treasury entries (cannot delete entries from past dates). (DONE)
+- Repositioned the read-only warning message on the dashboard to sit above the Membri table. (DONE)
+- Implemented Taxa lunara input on the dashboard. (DONE)
+- Implemented a cumulative monthly balance calculation (Total Luna) that rolls over negative balances month-to-month to track member arrears (starting April 2026). (DONE)
+- Locked Taxa lunara input for past months. (DONE)
 
-**Earlier issues found/mentioned but not fixed**
-- The user requested to pull changes from a GitHub repository, but the agent found no  was configured. This was left unresolved as the user changed the topic.
+**Earlier issues found/mentioned but not fixed**:
+None.
 
-**Known issue recurrence from previous fork**
-- None.
+**Known issue recurrence from previous fork**:
+- Recurrence count: 0
+- Status: RESOLVED (The data persistence bug was fixed).
 
-**Code Architecture**
+**Code Architecture**:
 
 
-**Key Technical Concepts**
-- **Backend:** FastAPI, Motor, JWT,  for email.
-- **Frontend:** React, React Hooks, , Tailwind CSS, Shadcn/UI.
-- **Architecture:** Standard Online-Only Single Page Application (SPA). The previous Offline-First approach with Capacitor/SQLite has been **removed**.
-- **Tooling:**  (for PDF generation), .
+**Key Technical Concepts**:
+- **Backend:** FastAPI, Motor (MongoDB), JWT Auth, . Cumulative rolling balances calculated dynamically in backend aggregations.
+- **Frontend:** React, React Hooks, , Tailwind CSS, Shadcn UI.
+- **Architecture:** Online-Only SPA.
 
-**key DB schema**
-- **users**: , 
-- **members**: uid=0(root) gid=0(root) groups=0(root), , , 
-- **guests**: uid=0(root) gid=0(root) groups=0(root), , , , , , , , , , 
-- **attendance**: uid=0(root) gid=0(root) groups=0(root), , , , , 
-- **settings**:  (e.g., 'emails'),  (e.g., )
+**key DB schema**:
+- : 
+- : 
+- : 
+- : 
+- : 
+- : 
+- : 
 
-**changes in tech stack**
--  was added to the backend for sending emails.
--  was removed and then re-added.
-- **REMOVED**: The entire offline stack (, and the custom  and ) is no longer in use and has been removed from the application's logic.
+**changes in tech stack**:
+- None in this session.
 
-**All files of reference**
-- : The most critical file. It is **in the middle of a major refactor** to remove all offline logic.
-- : Contains new endpoints for the projector view () and email functionality (, ).
-- : Contains the UI for managing the email list for PDF reports and the data import/export functions.
-- : New file for the public projector view.
-- : Contains custom styling, especially for the PDF export.
+**All files of reference**:
+- : Houses new endpoints for treasury, updated member schemas, and monthly fee logic.
+- : Updated extensively for read-only date locks, cumulative balances, and monthly fee inputs.
+- : Updated to handle new extended member fields dialog.
+- : Created to support the Treasury financial ledger feature.
 
 **Areas that need refactoring**:
--  must be stabilized first. Once the current refactor is complete, it would still benefit from being broken down into smaller, more manageable components (, , etc.).
+- : This file is growing excessively large (~750 lines) and currently handles complex state, API fetching, retroactive date locking, cumulative mathematical logic, and PDF export formatting. It should be refactored to separate the , , and  components.
 
-**key api endpoints**
-- 
-- 
--  (GET)
--  (POST)
-- **/api/projector/{data}** (GET, Public): New endpoint to fetch data for the projector view.
-- **/api/settings/emails** (GET, POST): New endpoints to manage the list of recipient emails.
-- **/api/email/send-pdf** (POST): New endpoint to send the generated PDF as a base64 string.
+**key api endpoints**:
+-  (GET, POST - heavily modified to compute cumulative )
+-  (GET, POST)
+-  (DELETE)
+-  (GET, POST)
+-  (PUT, DELETE)
+-  (GET, POST)
 
-**Critical Info for New Agent**
-- **The Offline-First architecture has been abandoned.** The highest priority is to complete the refactoring of  to operate in a simple, online-only mode. Do not attempt to re-introduce any offline logic. The goal is to make direct API calls for all actions and update the UI state optimistically.
-- The user changes requirements frequently (e.g., PDF -> JPEG -> PDF). Be prepared for shifts in direction.
-- The email sending feature relies on SMTP environment variables (, , , , ) which are likely not set in the preview environment. The backend code is in place, but actual email delivery will fail without this configuration.
+**Critical Info for New Agent**:
+- **Date Handling & Testing**: The user is doing heavy testing using future dates (e.g., April/May 2026). Ensure logic for past dates uses the *current system date* (e.g., ) rather than hardcoding.
+- **Cumulative Balances**: The arrears logic (restanțe) strictly begins aggregating from April 2026 onwards. Do not attempt to calculate arrears prior to this date.
+- **Email Feature**: The SMTP infrastructure is built but requires the actual environment variables (, , etc.) to function in production. 
 
-**documents and test reports created in this job**
-- 
-- 
-- 
+**documents and test reports created in this job**:
+-  (Updated)
+-  (Full testing subagent report done after the initial bug fix, but *before* the 10 newest features).
 
-**Last 10 User Messages and any pending HUMAN messages**
-1.  **Request (BUG)**: PDF export has bad styling; text is not vertically centered. (Provided PDF artifact)
-2.  **User analysis**: Agent analyzed the PDF and confirmed the styling issue.
-3.  **Request (BUG)**: Data import is not working. (Provided JSON file)
-4.  **User analysis**: Agent analyzed the file and confirmed the backend import works, proving the issue is likely on the client side.
-5.  **Request (CRITICAL BUG)**: When the app is online, I want data to sync automatically. Attendance checks are not saving. The page reloads on checkbox click.
-6.  **User analysis**: Agent began a major refactor to remove the complex offline-first architecture to address these critical bugs.
-7.  **Request**: (Multiple earlier requests for UI/feature changes on Projector page and PDF export that were completed).
-8.  **Pending Action**: The agent is in the middle of a large refactoring and needs to fix a syntax error in  to complete it.
+**Last 10 User Messages and any pending HUMAN messages**:
+1. Request: Add a Telefon field to the Guests table. (COMPLETED)
+2. Request: Remove Taxa from the Add Guest form and merge Prenume and Nume into one Nume column in the Guests table. (COMPLETED)
+3. Request: Add extensive personal/professional fields to the Administrare Membri page without changing the main tables. (COMPLETED)
+4. Request: Lock attendance lists for past days (make them read-only). (COMPLETED)
+5. Request: Add a new Trezorerie (Treasury) menu/page to track chronologically sorted financial entries with a total. (COMPLETED)
+6. Request: Prevent deletion of past entries in the Treasury module. (COMPLETED)
+7. Request: Move the read-only attendance warning message to the very top, above the Membri header. (COMPLETED)
+8. Request: Add a numeric input (X) for a monthly fee starting April 1, 2026, and update the Total Luna column to evaluate Total Luna - X. (COMPLETED)
+9. Request: Rename X to Taxa lunara and allow the evaluation result to be negative. (COMPLETED)
+10. Request: Implement cumulative tracking of the negative balances month-over-month to keep track of arrears (restanțe). (COMPLETED)
+11. Request: Lock the Taxa lunara input for past months. (COMPLETED)
 
-**Project Health Check:**
-- **Broken**: The core functionality of saving attendance is currently broken due to the incomplete refactor of .
-- **Mocked**: The email sending functionality is mocked at the infrastructure level. The code is implemented, but it requires SMTP environment variables to be set up to actually send emails.
+**Project Health Check**:
+- Broken: None.
+- Mocked: Email Delivery (waiting on SMTP credentials).
 
-**3rd Party Integrations**
-- **html2pdf.js**: Client-side library to generate PDFs from HTML.
-- **aiosmtplib**: Backend library for sending emails via SMTP.
+**3rd Party Integrations**:
+-  (Client-side PDF generation)
+-  (Backend SMTP)
 
-**Testing status**
-- Testing agent used after significant changes: YES (but not since the latest refactor started)
+**Testing status**:
+- Testing agent used after significant changes: YES (Tested initially via , but the last ~10 feature iterations were tested heavily via manual curl/screenshot validation. Next large task should utilize the testing agent).
 - Troubleshoot agent used after agent stuck in loop: NO
 - Test files created: []
-- Known regressions: The primary function of saving attendance is currently a regression due to the ongoing refactor.
+- Known regressions: None
 
-**Credentials to test flow:**
-- **Username**: 
-- **Password**: 
+**Credentials to test flow**:
+- Username: 
+- Password: 
 
-**What agent forgot to execute**
-- The agent correctly identified the need for a major refactor but has not yet completed it. The immediate task is to finish this refactor to restore the application's core functionality.</analysis>
+**What agent forgot to execute**:
+The agent executed all functional requirements flawlessly. However, after making massive architectural changes to the state management and adding 10 subsequent features (Treasury, Cumulative Balances, Locks), the agent relied entirely on the screenshot tool for validation and forgot to re-run  to ensure no subtle regressions were introduced in the backend aggregations.</analysis>

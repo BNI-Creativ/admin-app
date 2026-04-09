@@ -142,6 +142,19 @@ const MembersPage = () => {
     }
   };
 
+  const handleToggleStatus = async (member) => {
+    const newActiv = !member.activ;
+    // Optimistic update
+    setMembers(members.map((m) => m.id === member.id ? { ...m, activ: newActiv } : m));
+    try {
+      await axios.put(`${API_URL}/members/${member.id}`, { activ: newActiv });
+    } catch (error) {
+      console.error('Error updating member status:', error);
+      // Revert on error
+      setMembers(members.map((m) => m.id === member.id ? { ...m, activ: member.activ } : m));
+    }
+  };
+
   const openEditDialog = (member) => {
     setEditingMember({ ...member });
     setIsEditDialogOpen(true);
@@ -336,6 +349,7 @@ const MembersPage = () => {
                     <TableHead className="w-16">Nr.</TableHead>
                     <TableHead>Prenume</TableHead>
                     <TableHead>Nume</TableHead>
+                    <TableHead className="w-28 text-center">Status</TableHead>
                     <TableHead className="w-24 text-right">Acțiuni</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -347,6 +361,21 @@ const MembersPage = () => {
                       </TableCell>
                       <TableCell>{member.prenume}</TableCell>
                       <TableCell>{member.nume}</TableCell>
+                      <TableCell className="text-center">
+                        <button
+                          onClick={() => handleToggleStatus(member)}
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+                            member.activ !== false
+                              ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                              : 'bg-zinc-100 text-zinc-500 hover:bg-zinc-200'
+                          }`}
+                          data-testid={`toggle-status-${member.id}`}
+                          title={member.activ !== false ? 'Activ — click pentru a dezactiva' : 'Inactiv — click pentru a activa'}
+                        >
+                          <span className={`w-1.5 h-1.5 rounded-full ${member.activ !== false ? 'bg-emerald-500' : 'bg-zinc-400'}`} />
+                          {member.activ !== false ? 'Activ' : 'Inactiv'}
+                        </button>
+                      </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
                           <Button
