@@ -67,6 +67,7 @@ class MemberCreate(BaseModel):
     nume: str
     activ: bool = True
     data_msp: Optional[str] = None
+    doreste_prezentare: bool = False
     nume_inlocuitor: Optional[str] = ""
     telefon: Optional[str] = ""
     email: Optional[str] = ""
@@ -86,6 +87,7 @@ class MemberUpdate(BaseModel):
     nume: Optional[str] = None
     activ: Optional[bool] = None
     data_msp: Optional[str] = None
+    doreste_prezentare: Optional[bool] = None
     nume_inlocuitor: Optional[str] = None
     telefon: Optional[str] = None
     email: Optional[str] = None
@@ -108,6 +110,7 @@ class MemberResponse(BaseModel):
     nume: str
     activ: bool = True
     data_msp: Optional[str] = None
+    doreste_prezentare: bool = False
     nume_inlocuitor: str = ""
     telefon: str = ""
     email: str = ""
@@ -331,6 +334,7 @@ async def create_member(member: MemberCreate, current_user: dict = Depends(get_c
         "nume": member.nume,
         "activ": member.activ,
         "data_msp": member.data_msp,
+        "doreste_prezentare": member.doreste_prezentare,
         "nume_inlocuitor": member.nume_inlocuitor or "",
         "telefon": member.telefon or "",
         "email": member.email or "",
@@ -370,6 +374,7 @@ async def update_member(member_id: str, member: MemberUpdate, current_user: dict
         nume=result["nume"],
         activ=result.get("activ", True),
         data_msp=result.get("data_msp"),
+        doreste_prezentare=result.get("doreste_prezentare", False),
         nume_inlocuitor=result.get("nume_inlocuitor", ""),
         telefon=result.get("telefon", ""),
         email=result.get("email", ""),
