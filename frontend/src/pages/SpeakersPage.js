@@ -53,7 +53,15 @@ const SpeakersPage = () => {
         axios.get(`${API_URL}/speakers/next`),
       ]);
       setSpeakers(speakersRes.data);
-      setNextSpeakers(nextRes.data.next_speakers || []);
+      const nextRaw = nextRes.data.next_speakers || [];
+      // Sort on load: rows with next_date ascending, empty last
+      const sorted = [...nextRaw].sort((a, b) => {
+        if (!a.next_date && !b.next_date) return a.slot - b.slot;
+        if (!a.next_date) return 1;
+        if (!b.next_date) return -1;
+        return a.next_date.localeCompare(b.next_date);
+      });
+      setNextSpeakers(sorted);
       setEligibleCount(nextRes.data.eligible_count || 0);
     } catch (error) {
       console.error('Error fetching speakers:', error);
@@ -62,10 +70,18 @@ const SpeakersPage = () => {
     }
   };
 
+  const today = new Date().toISOString().split('T')[0];
+
   const handleNextDateChange = async (memberId, newDate) => {
-    setNextSpeakers((prev) =>
-      prev.map((s) => s.member_id === memberId ? { ...s, next_date: newDate } : s)
-    );
+    setNextSpeakers((prev) => {
+      const updated = prev.map((s) => s.member_id === memberId ? { ...s, next_date: newDate } : s);
+      return [...updated].sort((a, b) => {
+        if (!a.next_date && !b.next_date) return a.slot - b.slot;
+        if (!a.next_date) return 1;
+        if (!b.next_date) return -1;
+        return a.next_date.localeCompare(b.next_date);
+      });
+    });
     try {
       await axios.post(`${API_URL}/speakers/schedule/${memberId}`, { next_date: newDate });
     } catch (error) {
@@ -261,6 +277,7 @@ const SpeakersPage = () => {
                       <TableCell>
                         <input
                           type="date"
+                          min={today}
                           value={s.next_date || ''}
                           onChange={(e) => handleNextDateChange(s.member_id, e.target.value)}
                           className="w-full rounded-sm border border-zinc-200 px-2 py-1 text-sm text-zinc-700 focus:outline-none focus:ring-1 focus:ring-zinc-400"
