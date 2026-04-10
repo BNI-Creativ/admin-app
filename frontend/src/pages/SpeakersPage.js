@@ -40,6 +40,7 @@ const SpeakersPage = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [importing, setImporting] = useState(false);
   const [speakerInterval, setSpeakerInterval] = useState(7);
+  const [checkedSlots, setCheckedSlots] = useState(new Set());
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -135,35 +136,34 @@ const SpeakersPage = () => {
   };
 
   const handleStatusCheck = async (speaker) => {
-    const isChecked = !speaker.checked;
+    const isChecked = !checkedSlots.has(speaker.slot);
     const effectiveDate = speaker.next_date || today;
 
-    // Optimistic UI update for checkbox
-    setNextSpeakers((prev) =>
-      prev.map((s) => s.member_id === speaker.member_id ? { ...s, checked: isChecked } : s)
-    );
+    // Update only this slot
+    setCheckedSlots((prev) => {
+      const next = new Set(prev);
+      if (isChecked) next.add(speaker.slot);
+      else next.delete(speaker.slot);
+      return next;
+    });
 
-    try {
-      await axios.post(`${API_URL}/speakers/schedule/${speaker.member_id}`, { checked: isChecked });
-
-      // If checked AND date is today or past → move to Istoric
-      if (isChecked && effectiveDate <= today) {
+    // If checked AND date is today or past → move to Istoric
+    if (isChecked && effectiveDate <= today) {
+      try {
         await axios.post(`${API_URL}/speakers`, {
           prenume: speaker.prenume,
           nume: speaker.nume,
           data: effectiveDate,
           member_id: speaker.member_id,
         });
-        // Clear schedule for this member
         await axios.post(`${API_URL}/speakers/schedule/${speaker.member_id}`, {
           next_date: '',
           checked: false,
         });
-        // Refresh both tables
         await fetchAll();
+      } catch (error) {
+        console.error('Error moving to history:', error);
       }
-    } catch (error) {
-      console.error('Error updating status:', error);
     }
   };
 
@@ -364,7 +364,7 @@ const SpeakersPage = () => {
                     <TableRow
                       key={`${s.slot}-${s.member_id}`}
                       data-testid={`next-speaker-slot-${s.slot}`}
-                      className={s.checked ? 'bg-emerald-50' : ''}
+                      className={checkedSlots.has(s.slot) ? 'bg-emerald-50' : ''}
                     >
                       <TableCell className="font-medium tabular-nums text-zinc-400">#{s.slot}</TableCell>
                       <TableCell className="font-medium">{s.prenume}</TableCell>
@@ -385,7 +385,7 @@ const SpeakersPage = () => {
                       <TableCell className="text-center">
                         <input
                           type="checkbox"
-                          checked={!!s.checked}
+                          checked={checkedSlots.has(s.slot)}
                           onChange={() => handleStatusCheck(s)}
                           className="w-4 h-4 accent-zinc-900 cursor-pointer"
                           data-testid={`status-check-${s.member_id}`}
