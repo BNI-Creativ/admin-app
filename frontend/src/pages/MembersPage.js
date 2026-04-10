@@ -419,21 +419,6 @@ const MembersPage = () => {
                   data-testid="zile-valabilitate-msp"
                 />
               </div>
-              <div className="flex items-center gap-2">
-                <Label htmlFor="interval-vorbitori" className="text-sm text-zinc-600 whitespace-nowrap">
-                  Interval Vorbitori (zile)
-                </Label>
-                <Input
-                  id="interval-vorbitori"
-                  type="number"
-                  min="1"
-                  value={intervalVorbitori}
-                  onChange={(e) => setIntervalVorbitori(e.target.value)}
-                  onBlur={(e) => saveSpeakerInterval(e.target.value)}
-                  className="rounded-sm w-24 text-center"
-                  data-testid="interval-vorbitori"
-                />
-              </div>
             </div>
           </div>
 

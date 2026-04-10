@@ -319,7 +319,7 @@ const SpeakersPage = () => {
               </div>
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2">
-                  <label htmlFor="sp-interval" className="text-xs text-zinc-500 whitespace-nowrap">Interval (zile)</label>
+                  <label htmlFor="sp-interval" className="text-xs text-zinc-500 whitespace-nowrap">Interval Vorbitori (zile)</label>
                   <input
                     id="sp-interval"
                     type="number"
@@ -356,7 +356,11 @@ const SpeakersPage = () => {
                 </TableHeader>
                 <TableBody>
                   {nextSpeakers.map((s) => (
-                    <TableRow key={`${s.slot}-${s.member_id}`} data-testid={`next-speaker-slot-${s.slot}`}>
+                    <TableRow
+                      key={`${s.slot}-${s.member_id}`}
+                      data-testid={`next-speaker-slot-${s.slot}`}
+                      className={s.checked ? 'bg-emerald-50' : ''}
+                    >
                       <TableCell className="font-medium tabular-nums text-zinc-400">#{s.slot}</TableCell>
                       <TableCell className="font-medium">{s.prenume}</TableCell>
                       <TableCell>{s.nume}</TableCell>
