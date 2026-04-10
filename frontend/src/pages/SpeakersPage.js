@@ -54,12 +54,12 @@ const SpeakersPage = () => {
       ]);
       setSpeakers(speakersRes.data);
       const nextRaw = nextRes.data.next_speakers || [];
-      // Sort on load: rows with next_date ascending, empty last
+      // Sort on load: by next_date ascending (default=today for empty), same slot order for ties
       const sorted = [...nextRaw].sort((a, b) => {
-        if (!a.next_date && !b.next_date) return a.slot - b.slot;
-        if (!a.next_date) return 1;
-        if (!b.next_date) return -1;
-        return a.next_date.localeCompare(b.next_date);
+        const da = a.next_date || today;
+        const db2 = b.next_date || today;
+        if (da === db2) return a.slot - b.slot;
+        return da.localeCompare(db2);
       });
       setNextSpeakers(sorted);
       setEligibleCount(nextRes.data.eligible_count || 0);
@@ -75,17 +75,53 @@ const SpeakersPage = () => {
   const handleNextDateChange = async (memberId, newDate) => {
     setNextSpeakers((prev) => {
       const updated = prev.map((s) => s.member_id === memberId ? { ...s, next_date: newDate } : s);
-      return [...updated].sort((a, b) => {
-        if (!a.next_date && !b.next_date) return a.slot - b.slot;
-        if (!a.next_date) return 1;
-        if (!b.next_date) return -1;
-        return a.next_date.localeCompare(b.next_date);
-      });
+      return sortNextSpeakers(updated);
     });
     try {
       await axios.post(`${API_URL}/speakers/schedule/${memberId}`, { next_date: newDate });
     } catch (error) {
       console.error('Error saving next date:', error);
+    }
+  };
+
+  const sortNextSpeakers = (list) =>
+    [...list].sort((a, b) => {
+      const da = a.next_date || today;
+      const db2 = b.next_date || today;
+      if (da === db2) return a.slot - b.slot;
+      return da.localeCompare(db2);
+    });
+
+  const handleStatusCheck = async (speaker) => {
+    const isChecked = !speaker.checked;
+    const effectiveDate = speaker.next_date || today;
+
+    // Optimistic UI update for checkbox
+    setNextSpeakers((prev) =>
+      prev.map((s) => s.member_id === speaker.member_id ? { ...s, checked: isChecked } : s)
+    );
+
+    try {
+      await axios.post(`${API_URL}/speakers/schedule/${speaker.member_id}`, { checked: isChecked });
+
+      // If checked AND date is today or past → move to Istoric
+      if (isChecked && effectiveDate <= today) {
+        await axios.post(`${API_URL}/speakers`, {
+          prenume: speaker.prenume,
+          nume: speaker.nume,
+          data: effectiveDate,
+          member_id: speaker.member_id,
+        });
+        // Clear schedule for this member
+        await axios.post(`${API_URL}/speakers/schedule/${speaker.member_id}`, {
+          next_date: '',
+          checked: false,
+        });
+        // Refresh both tables
+        await fetchAll();
+      }
+    } catch (error) {
+      console.error('Error updating status:', error);
     }
   };
 
@@ -209,7 +245,7 @@ const SpeakersPage = () => {
               <h1 className="text-3xl font-bold tracking-tight text-zinc-900" style={{ fontFamily: 'Manrope, sans-serif' }}>
                 Administrare Vorbitori
               </h1>
-              <p className="text-zinc-500 mt-1">Istoric vorbitori și programare Round-Robin</p>
+              <p className="text-zinc-500 mt-1">Istoric vorbitori și programare automată</p>
             </div>
             <div className="flex items-center gap-2">
               <Button variant="outline" className="rounded-sm border-zinc-300 text-sm" onClick={handleExportCSV} data-testid="export-csv-btn">
@@ -238,7 +274,7 @@ const SpeakersPage = () => {
             <div className="p-4 border-b border-zinc-100 flex items-center justify-between">
               <div>
                 <h2 className="text-sm font-semibold text-zinc-900" style={{ fontFamily: 'Manrope, sans-serif' }}>
-                  Următori Vorbitori — Round-Robin
+                  Următorii Vorbitori
                 </h2>
                 <p className="text-xs text-zinc-500 mt-0.5">
                   {eligibleCount} membri eligibili (activi, MSP valid, doresc prezentare)
@@ -263,11 +299,12 @@ const SpeakersPage = () => {
                     <TableHead>Nume</TableHead>
                     <TableHead>Ultima Prezentare</TableHead>
                     <TableHead className="w-44">Următoarea Prezentare</TableHead>
+                    <TableHead className="w-20 text-center">Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {nextSpeakers.map((s) => (
-                    <TableRow key={s.slot} data-testid={`next-speaker-slot-${s.slot}`}>
+                    <TableRow key={`${s.slot}-${s.member_id}`} data-testid={`next-speaker-slot-${s.slot}`}>
                       <TableCell className="font-medium tabular-nums text-zinc-400">#{s.slot}</TableCell>
                       <TableCell className="font-medium">{s.prenume}</TableCell>
                       <TableCell>{s.nume}</TableCell>
@@ -278,10 +315,19 @@ const SpeakersPage = () => {
                         <input
                           type="date"
                           min={today}
-                          value={s.next_date || ''}
+                          value={s.next_date || today}
                           onChange={(e) => handleNextDateChange(s.member_id, e.target.value)}
                           className="w-full rounded-sm border border-zinc-200 px-2 py-1 text-sm text-zinc-700 focus:outline-none focus:ring-1 focus:ring-zinc-400"
                           data-testid={`next-date-${s.member_id}`}
+                        />
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <input
+                          type="checkbox"
+                          checked={!!s.checked}
+                          onChange={() => handleStatusCheck(s)}
+                          className="w-4 h-4 accent-zinc-900 cursor-pointer"
+                          data-testid={`status-check-${s.member_id}`}
                         />
                       </TableCell>
                     </TableRow>

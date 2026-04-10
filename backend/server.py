@@ -1174,15 +1174,19 @@ async def delete_speaker(speaker_id: str, current_user: dict = Depends(get_curre
     return {"message": "Înregistrare ștearsă"}
 
 @api_router.post("/speakers/schedule/{member_id}")
-async def set_speaker_next_date(member_id: str, request: dict, current_user: dict = Depends(get_current_user)):
-    """Set the scheduled next presentation date for a speaker"""
-    next_date = request.get("next_date", "")
+async def set_speaker_schedule(member_id: str, request: dict, current_user: dict = Depends(get_current_user)):
+    """Set the scheduled next presentation date and/or status checkbox for a speaker"""
+    update_fields = {"member_id": member_id}
+    if "next_date" in request:
+        update_fields["next_date"] = request.get("next_date", "")
+    if "checked" in request:
+        update_fields["checked"] = bool(request.get("checked", False))
     await db.speaker_schedules.update_one(
         {"member_id": member_id},
-        {"$set": {"member_id": member_id, "next_date": next_date}},
+        {"$set": update_fields},
         upsert=True
     )
-    return {"success": True, "member_id": member_id, "next_date": next_date}
+    return {"success": True}
 
 @api_router.get("/speakers/next")
 async def get_next_speakers(current_user: dict = Depends(get_current_user)):
@@ -1233,21 +1237,25 @@ async def get_next_speakers(current_user: dict = Depends(get_current_user)):
 
     sorted_eligible = sorted(eligible, key=sort_key)
 
-    # Fill 12 slots cycling through sorted list, enriched with scheduled dates
     schedules = await db.speaker_schedules.find({}, {"_id": 0}).to_list(1000)
-    schedule_map = {s["member_id"]: s.get("next_date", "") for s in schedules}
+    schedule_map = {
+        s["member_id"]: {"next_date": s.get("next_date", ""), "checked": s.get("checked", False)}
+        for s in schedules
+    }
 
     next_speakers = []
     count = 12
     for i in range(count):
         member = sorted_eligible[i % len(sorted_eligible)]
+        sched = schedule_map.get(member["id"], {})
         next_speakers.append({
             "slot": i + 1,
             "member_id": member["id"],
             "prenume": member["prenume"],
             "nume": member["nume"],
             "last_date": member_last_date.get(member["id"]),
-            "next_date": schedule_map.get(member["id"], "")
+            "next_date": sched.get("next_date", ""),
+            "checked": sched.get("checked", False)
         })
 
     return {"next_speakers": next_speakers, "eligible_count": len(eligible)}
