@@ -69,9 +69,12 @@ const SpeakersPage = () => {
   const today = new Date().toISOString().split('T')[0];
 
   const addDays = (dateStr, days) => {
-    const d = new Date(dateStr + 'T00:00:00');
+    const d = new Date(dateStr + 'T12:00:00'); // noon evită problemele de DST
     d.setDate(d.getDate() + days);
-    return d.toISOString().split('T')[0];
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
   };
 
   const sortBySlot = (list) => [...list].sort((a, b) => a.slot - b.slot);
