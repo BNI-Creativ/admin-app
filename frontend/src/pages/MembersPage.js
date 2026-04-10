@@ -422,6 +422,29 @@ const MembersPage = () => {
             </div>
           </div>
 
+          {/* Statistics */}
+          {!loading && (() => {
+            const totalMembri = members.length;
+            const membriActivi = members.filter((m) => m.activ !== false).length;
+            const membriMspActiv = members.filter((m) => !isMspExpired(m.data_msp)).length;
+            return (
+              <div className="grid grid-cols-3 gap-4" data-testid="members-stats">
+                <div className="bg-white border border-zinc-200 rounded-sm px-5 py-4">
+                  <p className="text-xs text-zinc-500 uppercase tracking-wide mb-1">Total Membri</p>
+                  <p className="text-2xl font-bold text-zinc-900" data-testid="stat-total">{totalMembri}</p>
+                </div>
+                <div className="bg-white border border-zinc-200 rounded-sm px-5 py-4">
+                  <p className="text-xs text-zinc-500 uppercase tracking-wide mb-1">Membri Activi</p>
+                  <p className="text-2xl font-bold text-emerald-600" data-testid="stat-activi">{membriActivi}</p>
+                </div>
+                <div className="bg-white border border-zinc-200 rounded-sm px-5 py-4">
+                  <p className="text-xs text-zinc-500 uppercase tracking-wide mb-1">Membri cu MSP Activ</p>
+                  <p className="text-2xl font-bold text-blue-600" data-testid="stat-msp">{membriMspActiv}</p>
+                </div>
+              </div>
+            );
+          })()}
+
           {/* Members Table */}
           <div className="bg-white border border-zinc-200 rounded-sm shadow-sm">
             {loading ? (
