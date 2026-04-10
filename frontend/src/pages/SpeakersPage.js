@@ -39,6 +39,7 @@ const SpeakersPage = () => {
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [importing, setImporting] = useState(false);
+  const [speakerInterval, setSpeakerInterval] = useState(7);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -48,20 +49,15 @@ const SpeakersPage = () => {
   const fetchAll = async () => {
     try {
       setLoading(true);
-      const [speakersRes, nextRes] = await Promise.all([
+      const [speakersRes, nextRes, intervalRes] = await Promise.all([
         axios.get(`${API_URL}/speakers`),
         axios.get(`${API_URL}/speakers/next`),
+        axios.get(`${API_URL}/settings/speaker-interval`),
       ]);
       setSpeakers(speakersRes.data);
+      setSpeakerInterval(intervalRes.data.zile || 7);
       const nextRaw = nextRes.data.next_speakers || [];
-      // Sort on load: by next_date ascending (default=today for empty), same slot order for ties
-      const sorted = [...nextRaw].sort((a, b) => {
-        const da = a.next_date || today;
-        const db2 = b.next_date || today;
-        if (da === db2) return a.slot - b.slot;
-        return da.localeCompare(db2);
-      });
-      setNextSpeakers(sorted);
+      setNextSpeakers(sortByNextDate(nextRaw));
       setEligibleCount(nextRes.data.eligible_count || 0);
     } catch (error) {
       console.error('Error fetching speakers:', error);
@@ -72,25 +68,66 @@ const SpeakersPage = () => {
 
   const today = new Date().toISOString().split('T')[0];
 
-  const handleNextDateChange = async (memberId, newDate) => {
-    setNextSpeakers((prev) => {
-      const updated = prev.map((s) => s.member_id === memberId ? { ...s, next_date: newDate } : s);
-      return sortNextSpeakers(updated);
-    });
-    try {
-      await axios.post(`${API_URL}/speakers/schedule/${memberId}`, { next_date: newDate });
-    } catch (error) {
-      console.error('Error saving next date:', error);
-    }
+  const addDays = (dateStr, days) => {
+    const d = new Date(dateStr + 'T00:00:00');
+    d.setDate(d.getDate() + days);
+    return d.toISOString().split('T')[0];
   };
 
-  const sortNextSpeakers = (list) =>
+  const sortByNextDate = (list) =>
     [...list].sort((a, b) => {
       const da = a.next_date || today;
       const db2 = b.next_date || today;
       if (da === db2) return a.slot - b.slot;
       return da.localeCompare(db2);
     });
+
+  const autoFillSubsequent = (list, fromIdx, anchorDate, interval) => {
+    return list.map((s, i) => {
+      if (i <= fromIdx) return s;
+      return { ...s, next_date: addDays(anchorDate, (i - fromIdx) * interval) };
+    });
+  };
+
+  const saveSchedules = async (rows) => {
+    const savedIds = new Set();
+    const promises = [];
+    for (const s of rows) {
+      if (!savedIds.has(s.member_id)) {
+        savedIds.add(s.member_id);
+        promises.push(
+          axios.post(`${API_URL}/speakers/schedule/${s.member_id}`, { next_date: s.next_date || '' })
+        );
+      }
+    }
+    await Promise.all(promises);
+  };
+
+  const handleNextDateChange = async (memberId, newDate) => {
+    const interval = parseInt(speakerInterval, 10) || 7;
+    const pre = sortByNextDate(
+      nextSpeakers.map((s) => (s.member_id === memberId ? { ...s, next_date: newDate } : s))
+    );
+    const idx = pre.findIndex((s) => s.member_id === memberId);
+    const filled = autoFillSubsequent(pre, idx, newDate, interval);
+    setNextSpeakers(filled);
+    await saveSchedules(filled.slice(idx));
+  };
+
+  const handleIntervalChange = async (newInterval) => {
+    setSpeakerInterval(newInterval);
+    const interval = parseInt(newInterval, 10) || 7;
+    await axios.post(`${API_URL}/settings/speaker-interval`, { zile: interval }).catch(() => {});
+
+    // Recalculate all from anchor (first with a date, or today)
+    const anchor = nextSpeakers.find((s) => s.next_date)?.next_date || today;
+    const recalculated = nextSpeakers.map((s, i) => ({
+      ...s,
+      next_date: addDays(anchor, i * interval),
+    }));
+    setNextSpeakers(recalculated);
+    await saveSchedules(recalculated);
+  };
 
   const handleStatusCheck = async (speaker) => {
     const isChecked = !speaker.checked;
@@ -280,9 +317,24 @@ const SpeakersPage = () => {
                   {eligibleCount} membri eligibili (activi, MSP valid, doresc prezentare)
                 </p>
               </div>
-              <span className="text-xs bg-zinc-100 text-zinc-600 px-2 py-1 rounded-full font-medium">
-                Următoarele 12 sesiuni
-              </span>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <label htmlFor="sp-interval" className="text-xs text-zinc-500 whitespace-nowrap">Interval (zile)</label>
+                  <input
+                    id="sp-interval"
+                    type="number"
+                    min="1"
+                    value={speakerInterval}
+                    onChange={(e) => setSpeakerInterval(e.target.value)}
+                    onBlur={(e) => handleIntervalChange(e.target.value)}
+                    className="w-16 rounded-sm border border-zinc-200 px-2 py-1 text-sm text-center focus:outline-none focus:ring-1 focus:ring-zinc-400"
+                    data-testid="speaker-interval-input"
+                  />
+                </div>
+                <span className="text-xs bg-zinc-100 text-zinc-600 px-2 py-1 rounded-full font-medium">
+                  Următoarele 12 sesiuni
+                </span>
+              </div>
             </div>
             {loading ? (
               <div className="text-center py-8 text-zinc-500 text-sm">Se încarcă...</div>

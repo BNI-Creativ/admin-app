@@ -995,6 +995,9 @@ async def save_email_settings(data: EmailSettings, current_user: dict = Depends(
 class MspValidityUpdate(BaseModel):
     zile: int
 
+class SpeakerIntervalUpdate(BaseModel):
+    zile: int = 7
+
 @api_router.get("/settings/msp-validity")
 async def get_msp_validity(current_user: dict = Depends(get_current_user)):
     """Get MSP validity days setting"""
@@ -1007,6 +1010,22 @@ async def set_msp_validity(data: MspValidityUpdate, current_user: dict = Depends
     await db.settings.update_one(
         {"type": "msp_validity"},
         {"$set": {"type": "msp_validity", "zile": data.zile}},
+        upsert=True
+    )
+    return {"success": True, "zile": data.zile}
+
+@api_router.get("/settings/speaker-interval")
+async def get_speaker_interval(current_user: dict = Depends(get_current_user)):
+    """Get speaker interval days setting"""
+    doc = await db.settings.find_one({"type": "speaker_interval"}, {"_id": 0})
+    return {"zile": doc.get("zile", 7) if doc else 7}
+
+@api_router.post("/settings/speaker-interval")
+async def set_speaker_interval(data: SpeakerIntervalUpdate, current_user: dict = Depends(get_current_user)):
+    """Set speaker interval days setting"""
+    await db.settings.update_one(
+        {"type": "speaker_interval"},
+        {"$set": {"type": "speaker_interval", "zile": data.zile}},
         upsert=True
     )
     return {"success": True, "zile": data.zile}

@@ -60,6 +60,7 @@ const MembersPage = () => {
   const [editingMember, setEditingMember] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [zileValabilitateMsp, setZileValabilitateMsp] = useState(365);
+  const [intervalVorbitori, setIntervalVorbitori] = useState(7);
   const [newMember, setNewMember] = useState({
     prenume: '',
     nume: '',
@@ -68,6 +69,7 @@ const MembersPage = () => {
   useEffect(() => {
     fetchMembers();
     fetchMspValidity();
+    fetchSpeakerInterval();
   }, []);
 
   const fetchMspValidity = async () => {
@@ -84,6 +86,23 @@ const MembersPage = () => {
       await axios.post(`${API_URL}/settings/msp-validity`, { zile: parseInt(zile) || 365 });
     } catch (error) {
       console.error('Error saving MSP validity:', error);
+    }
+  };
+
+  const fetchSpeakerInterval = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/settings/speaker-interval`);
+      setIntervalVorbitori(response.data.zile);
+    } catch (error) {
+      console.error('Error fetching speaker interval:', error);
+    }
+  };
+
+  const saveSpeakerInterval = async (zile) => {
+    try {
+      await axios.post(`${API_URL}/settings/speaker-interval`, { zile: parseInt(zile) || 7 });
+    } catch (error) {
+      console.error('Error saving speaker interval:', error);
     }
   };
 
@@ -398,6 +417,21 @@ const MembersPage = () => {
                   onBlur={(e) => saveMspValidity(e.target.value)}
                   className="rounded-sm w-24 text-center"
                   data-testid="zile-valabilitate-msp"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="interval-vorbitori" className="text-sm text-zinc-600 whitespace-nowrap">
+                  Interval Vorbitori (zile)
+                </Label>
+                <Input
+                  id="interval-vorbitori"
+                  type="number"
+                  min="1"
+                  value={intervalVorbitori}
+                  onChange={(e) => setIntervalVorbitori(e.target.value)}
+                  onBlur={(e) => saveSpeakerInterval(e.target.value)}
+                  className="rounded-sm w-24 text-center"
+                  data-testid="interval-vorbitori"
                 />
               </div>
             </div>
