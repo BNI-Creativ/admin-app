@@ -57,7 +57,7 @@ const SpeakersPage = () => {
       setSpeakers(speakersRes.data);
       setSpeakerInterval(intervalRes.data.zile || 7);
       const nextRaw = nextRes.data.next_speakers || [];
-      setNextSpeakers(sortByNextDate(nextRaw));
+      setNextSpeakers(sortBySlot(nextRaw));
       setEligibleCount(nextRes.data.eligible_count || 0);
     } catch (error) {
       console.error('Error fetching speakers:', error);
@@ -73,6 +73,8 @@ const SpeakersPage = () => {
     d.setDate(d.getDate() + days);
     return d.toISOString().split('T')[0];
   };
+
+  const sortBySlot = (list) => [...list].sort((a, b) => a.slot - b.slot);
 
   const sortByNextDate = (list) =>
     [...list].sort((a, b) => {
@@ -105,7 +107,7 @@ const SpeakersPage = () => {
 
   const handleNextDateChange = async (memberId, newDate) => {
     const interval = parseInt(speakerInterval, 10) || 7;
-    const pre = sortByNextDate(
+    const pre = sortBySlot(
       nextSpeakers.map((s) => (s.member_id === memberId ? { ...s, next_date: newDate } : s))
     );
     const idx = pre.findIndex((s) => s.member_id === memberId);
@@ -125,7 +127,7 @@ const SpeakersPage = () => {
       ...s,
       next_date: addDays(anchor, i * interval),
     }));
-    setNextSpeakers(recalculated);
+    setNextSpeakers(sortBySlot(recalculated));
     await saveSchedules(recalculated);
   };
 
