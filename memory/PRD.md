@@ -12,7 +12,7 @@ Aplicatie web in limba romana pentru gestionarea prezentei membrilor si invitati
 ```
 /app/
   backend/
-    server.py       # FastAPI, Motor, JWT, SSE, toate endpoint-urile (~1400 linii)
+    server.py       # FastAPI, Motor, JWT, SSE, toate endpoint-urile (~1430 linii)
     .env
   frontend/
     src/
@@ -42,22 +42,19 @@ Aplicatie web in limba romana pentru gestionarea prezentei membrilor si invitati
 
 ### 2. Dashboard Prezenta (COMPLET)
 - Afisare data curenta in format romanesc, Calendar cu marcaj
-- Doua tabele: Membri si Invitati
-- Salvare instant fara reload
+- Doua tabele: Membri si Invitati, Salvare instant fara reload
 
 ### 3. Tabel Membri Dashboard (COMPLET)
 - Coloane: Nr., Prenume, Nume, Inlocuitor, Prezent, Taxa, Total Luna
 - Sortare alfabetica, Nr. secvential, Total row
 
 ### 4. Tabel Invitati Dashboard (COMPLET)
-- Formular adaugare invitati, Dropdown "Invitat de"
-- Taxa editabila direct in tabel
+- Formular adaugare invitati, Dropdown "Invitat de", Taxa editabila
 
 ### 5. Logica Inlocuitori (COMPLET)
-- Checkbox "Inlocuitor" pentru invitati
-- Autocompletare in coloana "Inlocuitor" a membrului
+- Checkbox "Inlocuitor" cu autocompletare in coloana membrului
 
-### 6. Evidentiiere Randuri (COMPLET)
+### 6. Evidentiire Randuri (COMPLET)
 - Verde: prezent, Galben: inlocuitor, Albastru: invitat-inlocuitor
 
 ### 7. UI/UX (COMPLET)
@@ -73,49 +70,34 @@ Aplicatie web in limba romana pentru gestionarea prezentei membrilor si invitati
 - URL public: `/proiector?data=YYYY-MM-DD`, lista randomizata
 
 ### 11. Email PDF (COMPLET - necesita configurare SMTP)
-- **NOTA**: Necesita SMTP_HOST, SMTP_USER, SMTP_PASSWORD, SMTP_PORT, SMTP_FROM
+- NOTA: Necesita SMTP_HOST, SMTP_USER, SMTP_PASSWORD, SMTP_PORT, SMTP_FROM
 
 ### 12. Administrare Membri (COMPLET)
-- Status Activ/Inactiv cu badge interactiv
-- Data MSP cu culoare rosu/verde (expirare)
-- Zile Valabilitate MSP (setare globala in DB)
-- Doreste Prezentare checkbox
+- Status Activ/Inactiv, Data MSP, Doreste Prezentare
 - Statistici: Total Membri, Activi, cu MSP Activ
 
 ### 13. Administrare Vorbitori (COMPLET)
-- Pagina /speakers cu istoric si Round-Robin automat
-- Eligibili: activ=True, MSP valid, doreste_prezentare=True
-- Export/Import CSV
-- Interval Vorbitori (zile) configurabil
+- Round-Robin automat, Export/Import CSV, Interval Vorbitori configurabil
 
-### 14. SSE Real-Time Sync (COMPLET)
+### 14. SSE Real-Time Sync (COMPLET - FIXAT 15 Apr 2026)
 - Server-Sent Events pe /api/events?token=JWT
 - Hook useRealtimeSync pe toate paginile
-- Broadcast la fiecare mutatie (members_updated, attendance_updated, speakers_updated, treasury_updated)
+- FIX CRITIC: Adaugat broadcast() lipsa pe POST /api/attendance/{data} si alte 5 endpoint-uri
+- Testat si verificat: Dashboard, Members, Speakers, Treasury - toate sincronizeaza in real-time
 
 ### 15. Trezorerie (COMPLET)
-- Intrari/iesiri cu sume colorate
-- Total general, deduceri lunare
+- Intrari/iesiri cu sume colorate, Total general, deduceri lunare
 
 ## Key API Endpoints
 - Auth: POST /api/auth/login, GET /api/auth/me, POST /api/auth/change-password
 - Members: GET/POST/PUT/DELETE /api/members
 - Guests: GET/POST/PUT/DELETE /api/guests/{data}
 - Attendance: GET/POST /api/attendance/{data}, GET /api/attendance/dates/list
-- Speakers: GET/POST/DELETE /api/speakers, GET /api/speakers/next, GET /api/speakers/export-csv, POST /api/speakers/import-csv
-- Settings: GET/POST /api/settings/speaker-interval, GET/POST /api/settings/msp-validity, GET/POST /api/settings/emails
+- Speakers: GET/POST/DELETE /api/speakers, GET /api/speakers/next, CSV export/import
+- Settings: speaker-interval, msp-validity, emails
 - Treasury: GET/POST/DELETE /api/treasury, GET /api/treasury/total
 - SSE: GET /api/events?token=JWT
 - Export: GET /api/export, POST /api/import
-
-## DB Schema
-- members: {id, nr, prenume, nume, activ, data_msp, doreste_prezentare, telefon, email}
-- speakers_history: {id, nume, data, member_id}
-- speaker_schedules: {member_id, next_date, checked, slot}
-- settings: {key, value}
-- treasury: {id, data, descriere, suma, tip}
-- guests: {id, data, prenume, nume, companie, invitat_de, prezent, inlocuitor, taxa}
-- attendance: {data, member_id, prezent, taxa, inlocuitor}
 
 ## Backlog
 
@@ -126,15 +108,9 @@ Aplicatie web in limba romana pentru gestionarea prezentei membrilor si invitati
 - Configuratie Capacitor existenta (neactiva)
 
 ### P2 - Refactoring
-- server.py >1400 linii - impartire in route-uri separate
+- server.py >1430 linii - impartire in route-uri separate
 - DashboardPage.js >750 linii - componentizare
 
 ## Teste
-- Testing Agent Run: 15 Apr 2025 - 100% backend (27/27), 100% frontend
-- Test file: /app/backend/tests/test_bni_app.py
-
-## Note Tehnice Critice
-- Date Math: NU folosi Date.toISOString() local (UTC shift). Foloseste getFullYear/getMonth/getDate
-- React Hooks: useRealtimeSync trebuie plasat dupa toate definitiile de functii
-- SSE: Atentie la loop-uri infinite daca state updates triggereaza broadcasts
-- MongoDB: Exclude _id din responses
+- Iteration 7 (15 Apr 2026): 100% backend (27/27), 100% frontend
+- Iteration 8 (15 Apr 2026): SSE sync - 100% (15/15 backend, all frontend pages)
