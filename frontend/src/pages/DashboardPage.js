@@ -168,7 +168,7 @@ const DashboardPage = () => {
     fetchData();
   }, [fetchData]);
 
-  useRealtimeSync(['attendance_updated'], fetchData);
+  useRealtimeSync(['attendance_updated', 'members_updated'], fetchData);
 
   useEffect(() => {
     fetchDatesWithData();
