@@ -724,6 +724,7 @@ async def update_attendance(data: str, attendance: AttendanceUpdate, current_use
         }},
         upsert=True
     )
+    await broadcast("attendance_updated")
     return {"message": "Prezență actualizată"}
 
 @api_router.get("/attendance/dates/list")
@@ -1000,6 +1001,10 @@ async def import_all_data(import_data: dict, current_user: dict = Depends(get_cu
             logger.error(f"Error importing guest: {e}")
             results["guests"]["errors"] += 1
     
+    await broadcast("members_updated")
+    await broadcast("attendance_updated")
+    await broadcast("speakers_updated")
+    await broadcast("treasury_updated")
     return {
         "success": True,
         "version_imported": version,
@@ -1018,6 +1023,10 @@ async def clear_all_data(current_user: dict = Depends(get_current_user)):
     attendance_result = await db.attendance.delete_many({})
     guests_result = await db.guests.delete_many({})
     
+    await broadcast("members_updated")
+    await broadcast("attendance_updated")
+    await broadcast("speakers_updated")
+    await broadcast("treasury_updated")
     return {
         "success": True,
         "deleted": {
@@ -1067,6 +1076,7 @@ async def set_msp_validity(data: MspValidityUpdate, current_user: dict = Depends
         {"$set": {"type": "msp_validity", "zile": data.zile}},
         upsert=True
     )
+    await broadcast("members_updated")
     return {"success": True, "zile": data.zile}
 
 @api_router.get("/settings/speaker-interval")
@@ -1083,6 +1093,7 @@ async def set_speaker_interval(data: SpeakerIntervalUpdate, current_user: dict =
         {"$set": {"type": "speaker_interval", "zile": data.zile}},
         upsert=True
     )
+    await broadcast("speakers_updated")
     return {"success": True, "zile": data.zile}
 
 @api_router.post("/send-pdf-email")
@@ -1396,6 +1407,7 @@ async def import_speakers_csv(request: dict, current_user: dict = Depends(get_cu
         except Exception:
             errors += 1
 
+    await broadcast("speakers_updated")
     return {"success": True, "imported": imported, "errors": errors}
 
 # Include the router in the main app
