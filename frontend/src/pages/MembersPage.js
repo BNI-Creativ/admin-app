@@ -50,6 +50,8 @@ import {
 
 const API_URL = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
+import { useRealtimeSync } from '../hooks/useRealtimeSync';
+
 const MembersPage = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -217,6 +219,8 @@ const MembersPage = () => {
     setEditingMember({ ...member });
     setIsEditDialogOpen(true);
   };
+
+  useRealtimeSync(['members_updated'], fetchMembers);
 
   return (
     <div className="flex h-screen bg-zinc-100 overflow-hidden">

@@ -1,4 +1,5 @@
-from fastapi import FastAPI, APIRouter, Depends, HTTPException, status
+from fastapi import FastAPI, APIRouter, Depends, HTTPException, status, Request, Query
+from fastapi.responses import StreamingResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
@@ -12,6 +13,8 @@ import uuid
 from datetime import datetime, timezone, date, timedelta
 import io
 import csv
+import asyncio
+import json
 import jwt
 import bcrypt
 
@@ -34,11 +37,60 @@ db = client[os.environ['DB_NAME']]
 JWT_SECRET = os.environ.get('JWT_SECRET', 'your-secret-key-change-in-production')
 JWT_ALGORITHM = "HS256"
 
+# ============= SSE BROADCAST INFRASTRUCTURE =============
+_sse_clients: set = set()
+
+async def broadcast(event_type: str):
+    """Push an SSE event to all connected clients."""
+    if not _sse_clients:
+        return
+    message = f"event: {event_type}\ndata: {{}}\n\n"
+    dead = set()
+    for q in list(_sse_clients):
+        try:
+            q.put_nowait(message)
+        except asyncio.QueueFull:
+            dead.add(q)
+    _sse_clients.difference_update(dead)
+# ============= END SSE GLOBALS =============
+
 # Create the main app
 app = FastAPI()
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
+
+@api_router.get("/events")
+async def sse_endpoint(request: Request, token: str = Query(...)):
+    """SSE endpoint — streams real-time update events to connected browsers."""
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        if not payload.get("user_id"):
+            raise HTTPException(status_code=401)
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Token invalid")
+
+    queue: asyncio.Queue = asyncio.Queue(maxsize=50)
+    _sse_clients.add(queue)
+
+    async def generator():
+        try:
+            while True:
+                if await request.is_disconnected():
+                    break
+                try:
+                    msg = await asyncio.wait_for(queue.get(), timeout=20)
+                    yield msg
+                except asyncio.TimeoutError:
+                    yield ": keepalive\n\n"
+        finally:
+            _sse_clients.discard(queue)
+
+    return StreamingResponse(
+        generator(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
 
 security = HTTPBearer()
 
@@ -352,6 +404,7 @@ async def create_member(member: MemberCreate, current_user: dict = Depends(get_c
         "tara": member.tara or ""
     }
     await db.members.insert_one(member_doc)
+    await broadcast("members_updated")
     return MemberResponse(**member_doc)
 
 @api_router.put("/members/{member_id}", response_model=MemberResponse)
@@ -368,7 +421,7 @@ async def update_member(member_id: str, member: MemberUpdate, current_user: dict
     )
     if not result:
         raise HTTPException(status_code=404, detail="Membru negăsit")
-    
+    await broadcast("members_updated")
     return MemberResponse(
         id=result["id"],
         nr=result["nr"],
@@ -397,6 +450,7 @@ async def delete_member(member_id: str, current_user: dict = Depends(get_current
     result = await db.members.delete_one({"id": member_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Membru negăsit")
+    await broadcast("members_updated")
     return {"message": "Membru șters cu succes"}
 
 # ============= GUESTS ROUTES =============
@@ -437,6 +491,7 @@ async def create_guest(guest: GuestCreate, data: str, current_user: dict = Depen
         "member_id": guest.member_id
     }
     await db.guests.insert_one(guest_doc)
+    await broadcast("attendance_updated")
     return GuestResponse(**guest_doc)
 
 @api_router.put("/guests/{guest_id}", response_model=GuestResponse)
@@ -464,7 +519,7 @@ async def update_guest(guest_id: str, guest: GuestUpdate, current_user: dict = D
     )
     if not result:
         raise HTTPException(status_code=404, detail="Invitat negăsit")
-    
+    await broadcast("attendance_updated")
     return GuestResponse(
         id=result["id"],
         nr=result["nr"],
@@ -485,6 +540,7 @@ async def delete_guest(guest_id: str, current_user: dict = Depends(get_current_u
     result = await db.guests.delete_one({"id": guest_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Invitat negăsit")
+    await broadcast("attendance_updated")
     return {"message": "Invitat șters cu succes"}
 
 # ============= ATTENDANCE ROUTES =============
@@ -761,9 +817,8 @@ async def sync_push(data: SyncPushData):
             )
             results["guests"] += 1
     
+    await broadcast("attendance_updated")
     return {"success": True, "synced": results}
-
-@api_router.get("/sync/pull")
 async def sync_pull(since: Optional[str] = None):
     """
     Send all data to mobile app (or only data updated since last sync)
@@ -1115,6 +1170,7 @@ async def create_treasury_entry(entry: TreasuryEntryCreate, current_user: dict =
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.treasury.insert_one(entry_doc)
+    await broadcast("treasury_updated")
     return TreasuryEntryResponse(**entry_doc)
 
 @api_router.delete("/treasury/{entry_id}")
@@ -1123,6 +1179,7 @@ async def delete_treasury_entry(entry_id: str, current_user: dict = Depends(get_
     result = await db.treasury.delete_one({"id": entry_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Intrare negăsită")
+    await broadcast("treasury_updated")
     return {"message": "Intrare ștearsă cu succes"}
 
 # ============= MONTHLY DEDUCTION ROUTES =============
@@ -1145,6 +1202,7 @@ async def set_monthly_deduction(year: int, month: int, data: MonthlyDeductionUpd
         {"$set": {"key": key, "suma": data.suma}},
         upsert=True
     )
+    await broadcast("attendance_updated")
     return {"message": "Sumă actualizată", "suma": data.suma}
 
 # ============= SPEAKERS ROUTES =============
@@ -1182,6 +1240,7 @@ async def add_speaker(speaker: SpeakerCreate, current_user: dict = Depends(get_c
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.speakers_history.insert_one(doc)
+    await broadcast("speakers_updated")
     return SpeakerResponse(**doc)
 
 @api_router.delete("/speakers/{speaker_id}")
@@ -1190,6 +1249,7 @@ async def delete_speaker(speaker_id: str, current_user: dict = Depends(get_curre
     result = await db.speakers_history.delete_one({"id": speaker_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Înregistrare negăsită")
+    await broadcast("speakers_updated")
     return {"message": "Înregistrare ștearsă"}
 
 @api_router.post("/speakers/schedule/{member_id}")
@@ -1205,6 +1265,7 @@ async def set_speaker_schedule(member_id: str, request: dict, current_user: dict
         {"$set": update_fields},
         upsert=True
     )
+    await broadcast("speakers_updated")
     return {"success": True}
 
 @api_router.get("/speakers/next")
