@@ -44,5 +44,6 @@ export const useRealtimeSync = (eventTypes, onUpdate) => {
       clearTimeout(retryTimeout);
       if (es) es.close();
     };
-  }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line
+  }, [token]);
 };
