@@ -1,169 +1,140 @@
-# BNI Prezență - Product Requirements Document
+# BNI Prezenta - Product Requirements Document
 
 ## Descriere Proiect
-Aplicație web în limba română pentru gestionarea prezenței membrilor și invitaților la un club/organizație (BNI). Aplicație online-only cu interfață modernă și funcționalități complete.
+Aplicatie web in limba romana pentru gestionarea prezentei membrilor si invitatilor la un club/organizatie (BNI). Aplicatie online-only cu interfata moderna si functionalitati complete.
 
-## Utilizatori și Credențiale
-- **Admin**: `admin` / `admin123`
-- Pagina de înregistrare a fost dezactivată conform cerințelor
+## Utilizatori si Credentiale
+- **Admin**: `admin` / `admin123` (email field accepts 'admin' or 'admin@local')
+- Pagina de inregistrare a fost dezactivata conform cerintelor
 
-## Funcționalități Implementate
-
-### 1. Autentificare (✅ COMPLET)
-- Login cu username/password
-- JWT token pentru sesiuni
-- Schimbare parolă în Settings
-
-### 2. Dashboard Prezență (✅ COMPLET)
-- Afișare dată curentă în format românesc
-- Calendar cu marcaj pentru zilele cu date salvate
-- Două tabele pe o singură pagină: Membri și Invitați
-- **Salvare instant fără reload** - toate modificările sunt salvate direct în API
-
-### 3. Tabel Membri (✅ COMPLET)
-- Coloane: Nr., Prenume, Nume, Înlocuitor, Prezent, Taxă, Total Lună
-- Sortare alfabetică după Prenume, apoi Nume
-- Nr. secvențial care se actualizează la sortare
-- Total row pentru Prezent, Taxă și Total Lună
-- Total Lună calculat lunar per membru
-
-### 4. Tabel Invitați (✅ COMPLET)
-- Formular pentru adăugare invitați
-- Dropdown "Invitat de" cu lista membrilor
-- Coloane: Nr., Prenume, Nume, Companie, Invitat de, Prezent, Înlocuitor, Taxă
-- Taxă editabilă direct în tabel
-- Sortare alfabetică
-
-### 5. Logica Înlocuitori (✅ COMPLET)
-- Checkbox "Înlocuitor" pentru invitați
-- Când un invitat e marcat ca înlocuitor, numele său apare automat în coloana "Înlocuitor" a membrului
-- Rândul membrului devine galben și checkbox-ul "Prezent" este dezactivat
-- Datele persistă corect
-
-### 6. Evidențiere Rânduri (✅ COMPLET)
-- **Verde** (bg-green-100): când membrul/invitatul este marcat prezent
-- **Galben** (bg-yellow-100): când membrul are un înlocuitor
-- **Albastru deschis** (bg-blue-50): când invitatul este marcat ca înlocuitor
-
-### 7. UI/UX (✅ COMPLET)
-- Sidebar colapsabil, implicit închis
-- Toggle prin icon în stânga-sus
-- Design minimalist Swiss-style
-- Calendar românesc
-
-### 8. Export PDF (✅ COMPLET)
-- Buton "Exportă PDF" în header
-- Convertește input-urile în text static pentru randare corectă
-- Flexbox centering pentru celule tabel
-- Opțiune de trimitere pe email sau descărcare locală
-
-### 9. Export/Import Date (✅ COMPLET)
-- Export JSON versionat cu toată baza de date
-- Import JSON cu confirmare (înlocuiește datele existente)
-- UI în pagina Settings
-
-### 10. Pagina Proiector (✅ COMPLET)
-- URL public: `/proiector?data=YYYY-MM-DD`
-- Afișează lista persoanelor prezente în format multi-coloană
-- Lista randomizată la fiecare încărcare
-- Nu necesită autentificare
-
-### 11. Email PDF (✅ COMPLET - necesită configurare SMTP)
-- Setări email în pagina Settings
-- Dialog de confirmare pentru trimitere sau descărcare locală
-- **NOTĂ**: Necesită configurare SMTP (SMTP_HOST, SMTP_USER, SMTP_PASSWORD, SMTP_PORT, SMTP_FROM)
-
-## Arhitectura Tehnică
+## Arhitectura Tehnica
 
 ```
 /app/
-├── backend/
-│   └── server.py       # FastAPI, Motor, JWT, toate endpoint-urile
-├── frontend/
-│   ├── src/
-│   │   ├── components/ui/  # Shadcn UI
-│   │   ├── contexts/       # AuthContext.js
-│   │   ├── pages/          
-│   │   │   ├── DashboardPage.js  # Prezență membri/invitați
-│   │   │   ├── LoginPage.js
-│   │   │   ├── MembersPage.js    # Administrare membri
-│   │   │   ├── SettingsPage.js   # Setări, Export/Import
-│   │   │   └── ProjectorPage.js  # Pagina proiector public
-│   │   └── App.js
-│   └── package.json
-└── memory/
-    └── PRD.md
+  backend/
+    server.py       # FastAPI, Motor, JWT, SSE, toate endpoint-urile (~1400 linii)
+    .env
+  frontend/
+    src/
+      components/ui/  # Shadcn UI
+      contexts/       # AuthContext.js
+      hooks/           # useRealtimeSync.js (SSE consumer)
+      pages/          
+        DashboardPage.js  # Prezenta membri/invitati
+        LoginPage.js
+        MembersPage.js    # Administrare membri (Status, MSP, Stats)
+        SpeakersPage.js   # Administrare vorbitori (Round-Robin)
+        TreasuryPage.js   # Trezorerie
+        SettingsPage.js   # Setari, Export/Import
+        ProjectorPage.js  # Pagina proiector public
+      App.js
+    package.json
+  memory/
+    PRD.md
+    test_credentials.md
 ```
 
-## Endpoint-uri API
+## Functionalitati Implementate
 
-### Autentificare
-- `POST /api/auth/login` - Login
-- `GET /api/auth/me` - User curent
-- `POST /api/auth/change-password` - Schimbare parolă
+### 1. Autentificare (COMPLET)
+- Login cu email/password, JWT token pentru sesiuni
+- Schimbare parola in Settings
 
-### Membri
-- `GET /api/members` - Lista membri
-- `POST /api/members` - Adaugă membru
-- `PUT /api/members/{id}` - Actualizează membru
-- `DELETE /api/members/{id}` - Șterge membru
+### 2. Dashboard Prezenta (COMPLET)
+- Afisare data curenta in format romanesc, Calendar cu marcaj
+- Doua tabele: Membri si Invitati
+- Salvare instant fara reload
 
-### Invitați
-- `GET /api/guests/{data}` - Lista invitați pentru dată
-- `POST /api/guests?data=YYYY-MM-DD` - Adaugă invitat
-- `PUT /api/guests/{id}` - Actualizează invitat
-- `DELETE /api/guests/{id}` - Șterge invitat
+### 3. Tabel Membri Dashboard (COMPLET)
+- Coloane: Nr., Prenume, Nume, Inlocuitor, Prezent, Taxa, Total Luna
+- Sortare alfabetica, Nr. secvential, Total row
 
-### Prezență
-- `GET /api/attendance/{data}` - Date prezență zilnică (membri + invitați + totaluri)
-- `POST /api/attendance/{data}` - Salvează prezență membru
-- `GET /api/attendance/dates/list` - Lista date cu date salvate
+### 4. Tabel Invitati Dashboard (COMPLET)
+- Formular adaugare invitati, Dropdown "Invitat de"
+- Taxa editabila direct in tabel
 
-### Export/Import
-- `GET /api/export` - Export JSON complet
-- `POST /api/import` - Import JSON (înlocuiește datele)
-- `DELETE /api/clear-all` - Șterge toate datele
+### 5. Logica Inlocuitori (COMPLET)
+- Checkbox "Inlocuitor" pentru invitati
+- Autocompletare in coloana "Inlocuitor" a membrului
 
-### Proiector
-- `GET /api/proiector/{data}` - Date pentru proiector (endpoint public)
+### 6. Evidentiiere Randuri (COMPLET)
+- Verde: prezent, Galben: inlocuitor, Albastru: invitat-inlocuitor
 
-### Setări
-- `GET /api/settings/emails` - Lista email-uri
-- `POST /api/settings/emails` - Salvează email-uri
-- `POST /api/send-pdf-email` - Trimite PDF pe email
+### 7. UI/UX (COMPLET)
+- Sidebar colapsabil, design minimalist Swiss-style, Calendar romanesc
 
-## Backlog (P2)
+### 8. Export PDF (COMPLET)
+- Buton "Exporta PDF", optiune email sau descarcare locala
 
-### Build APK Android
-- Configurație Capacitor existentă (dar neactivă)
-- Necesită Android Studio sau build CLI
-- Opțional - aplicația funcționează bine în browser
+### 9. Export/Import Date (COMPLET)
+- Export JSON versionat, Import JSON cu confirmare
 
-## Actualizări Recente (Aprilie 2026)
-- **Status Membri**: Câmp `activ` adăugat — membrii inactivi sunt excluși din tabelul de prezență și proiector
-- **Bug Fix Critic REZOLVAT**: Salvarea prezenței funcționează corect fără page reload
-- Arhitectura offline-first a fost **ELIMINATĂ** pentru simplificare
-- Aplicația folosește acum apeluri directe la API (axios) pentru toate operațiunile
+### 10. Pagina Proiector (COMPLET)
+- URL public: `/proiector?data=YYYY-MM-DD`, lista randomizata
 
-### 14. Administrare Vorbitori (✅ COMPLET)
-- Pagină nouă `/speakers` în meniu sub "Administrare Membri"
-- Istoric vorbitori: adaugă manual (Prenume, Nume, Dată) sau importă din CSV
-- Export/Import CSV (format: `data,prenume,nume,member_id`)
-- Round-Robin automat: calculează următori 12 vorbitori eligibili
-  - Eligibili: activ=True, MSP valid, doreste_prezentare=True
-  - Ordenare: cei care n-au vorbit niciodată primii (alfabetic), apoi cei care au vorbit cel mai demult
-  - Ciclu repetat până la 12 sloturi
-- Endpoint-uri: GET/POST/DELETE /api/speakers, GET /api/speakers/next, GET /api/speakers/export-csv, POST /api/speakers/import-csv
+### 11. Email PDF (COMPLET - necesita configurare SMTP)
+- **NOTA**: Necesita SMTP_HOST, SMTP_USER, SMTP_PASSWORD, SMTP_PORT, SMTP_FROM
 
+### 12. Administrare Membri (COMPLET)
+- Status Activ/Inactiv cu badge interactiv
+- Data MSP cu culoare rosu/verde (expirare)
+- Zile Valabilitate MSP (setare globala in DB)
+- Doreste Prezentare checkbox
+- Statistici: Total Membri, Activi, cu MSP Activ
 
-- Coloana "Data MSP" în Administrare Membri cu culoare: **roșu** = expirat/nedefinit, **verde** = valid
-- Input global "Zile Valabilitate MSP" (saved in DB) afișat sub butonul "Adaugă Membru"
-- Logic: `data_msp + zile_valabilitate < azi` → expirat (roșu); fără dată → roșu implicit
-- Câmp dată editat din dialogul de editare al membrului
+### 13. Administrare Vorbitori (COMPLET)
+- Pagina /speakers cu istoric si Round-Robin automat
+- Eligibili: activ=True, MSP valid, doreste_prezentare=True
+- Export/Import CSV
+- Interval Vorbitori (zile) configurabil
 
+### 14. SSE Real-Time Sync (COMPLET)
+- Server-Sent Events pe /api/events?token=JWT
+- Hook useRealtimeSync pe toate paginile
+- Broadcast la fiecare mutatie (members_updated, attendance_updated, speakers_updated, treasury_updated)
 
-- Coloana "Status" în Administrare Membri cu badge interactiv (Activ/Inactiv)
-- Click pe badge toggle instant starea membrului (optimistic update)
-- Membrii inactivi NU apar în tabelul de prezență (Dashboard)
-- Membrii inactivi NU apar în pagina Proiector
-- Câmpul `activ` default `True` — backward compatible cu membrii existenți
+### 15. Trezorerie (COMPLET)
+- Intrari/iesiri cu sume colorate
+- Total general, deduceri lunare
+
+## Key API Endpoints
+- Auth: POST /api/auth/login, GET /api/auth/me, POST /api/auth/change-password
+- Members: GET/POST/PUT/DELETE /api/members
+- Guests: GET/POST/PUT/DELETE /api/guests/{data}
+- Attendance: GET/POST /api/attendance/{data}, GET /api/attendance/dates/list
+- Speakers: GET/POST/DELETE /api/speakers, GET /api/speakers/next, GET /api/speakers/export-csv, POST /api/speakers/import-csv
+- Settings: GET/POST /api/settings/speaker-interval, GET/POST /api/settings/msp-validity, GET/POST /api/settings/emails
+- Treasury: GET/POST/DELETE /api/treasury, GET /api/treasury/total
+- SSE: GET /api/events?token=JWT
+- Export: GET /api/export, POST /api/import
+
+## DB Schema
+- members: {id, nr, prenume, nume, activ, data_msp, doreste_prezentare, telefon, email}
+- speakers_history: {id, nume, data, member_id}
+- speaker_schedules: {member_id, next_date, checked, slot}
+- settings: {key, value}
+- treasury: {id, data, descriere, suma, tip}
+- guests: {id, data, prenume, nume, companie, invitat_de, prezent, inlocuitor, taxa}
+- attendance: {data, member_id, prezent, taxa, inlocuitor}
+
+## Backlog
+
+### P1 - Configurare SMTP
+- Cod gata, necesita variabile de mediu SMTP
+
+### P2 - Build APK Android
+- Configuratie Capacitor existenta (neactiva)
+
+### P2 - Refactoring
+- server.py >1400 linii - impartire in route-uri separate
+- DashboardPage.js >750 linii - componentizare
+
+## Teste
+- Testing Agent Run: 15 Apr 2025 - 100% backend (27/27), 100% frontend
+- Test file: /app/backend/tests/test_bni_app.py
+
+## Note Tehnice Critice
+- Date Math: NU folosi Date.toISOString() local (UTC shift). Foloseste getFullYear/getMonth/getDate
+- React Hooks: useRealtimeSync trebuie plasat dupa toate definitiile de functii
+- SSE: Atentie la loop-uri infinite daca state updates triggereaza broadcasts
+- MongoDB: Exclude _id din responses
