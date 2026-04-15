@@ -5,14 +5,14 @@ const API_URL = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 /**
  * Subscribes to SSE events from the server.
- * Calls `onUpdate` whenever one of the `eventTypes` is received.
+ * Calls `onUpdate(eventData)` whenever one of the `eventTypes` is received.
+ * eventData includes: { sender, action, ... } — sender is the client_id of who triggered the change.
  * Auto-reconnects on error with exponential backoff.
  */
 export const useRealtimeSync = (eventTypes, onUpdate) => {
   const { token } = useAuth();
   const callbackRef = useRef(null);
 
-  // Keep ref updated after every render (never causes TDZ issues)
   useEffect(() => {
     callbackRef.current = onUpdate;
   });
@@ -26,8 +26,17 @@ export const useRealtimeSync = (eventTypes, onUpdate) => {
 
     const connect = () => {
       es = new EventSource(`${API_URL}/events?token=${encodeURIComponent(token)}`);
-      const handler = () => callbackRef.current?.();
+
+      const handler = (event) => {
+        let data = {};
+        try {
+          data = JSON.parse(event.data || '{}');
+        } catch {}
+        callbackRef.current?.(data);
+      };
+
       eventTypes.forEach((type) => es.addEventListener(type, handler));
+
       es.onerror = () => {
         es.close();
         retryTimeout = setTimeout(() => {

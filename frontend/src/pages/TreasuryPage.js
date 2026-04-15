@@ -41,6 +41,8 @@ import { ro } from 'date-fns/locale';
 const API_URL = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 import { useRealtimeSync } from '../hooks/useRealtimeSync';
+import { CLIENT_ID } from '../contexts/AuthContext';
+import { toast } from '../components/ui/sonner';
 
 const TreasuryPage = () => {
   const { user, logout } = useAuth();
@@ -59,9 +61,9 @@ const TreasuryPage = () => {
     fetchEntries();
   }, []);
 
-  const fetchEntries = async () => {
+  const fetchEntries = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const [entriesRes, totalRes] = await Promise.all([
         axios.get(`${API_URL}/treasury`),
         axios.get(`${API_URL}/treasury/total`)
@@ -133,7 +135,18 @@ const TreasuryPage = () => {
     return entryDate < today;
   };
 
-  useRealtimeSync(['treasury_updated'], fetchEntries);
+  useRealtimeSync(['treasury_updated'], (data) => {
+    if (data?.sender === CLIENT_ID) return;
+    fetchEntries(true);
+    const { action, suma, explicatii } = data || {};
+    if (action === 'create' && suma !== undefined) {
+      toast.info(`Intrare nouă: ${suma > 0 ? '+' : ''}${suma} RON`, { description: explicatii || '' });
+    } else if (action === 'delete') {
+      toast.info('O intrare a fost ștearsă');
+    } else if (action) {
+      toast.info('Trezoreria a fost actualizată');
+    }
+  });
 
   return (
     <div className="flex h-screen bg-zinc-100 overflow-hidden">

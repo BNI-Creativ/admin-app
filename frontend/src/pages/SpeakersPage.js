@@ -31,6 +31,8 @@ import { ro } from 'date-fns/locale';
 const API_URL = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 import { useRealtimeSync } from '../hooks/useRealtimeSync';
+import { CLIENT_ID } from '../contexts/AuthContext';
+import { toast } from '../components/ui/sonner';
 
 const SpeakersPage = () => {
   const { user, logout } = useAuth();
@@ -49,9 +51,9 @@ const SpeakersPage = () => {
     fetchAll();
   }, []);
 
-  const fetchAll = async () => {
+  const fetchAll = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const [speakersRes, nextRes, intervalRes] = await Promise.all([
         axios.get(`${API_URL}/speakers`),
         axios.get(`${API_URL}/speakers/next`),
@@ -217,7 +219,16 @@ const SpeakersPage = () => {
     }
   };
 
-  useRealtimeSync(['speakers_updated', 'members_updated'], fetchAll);
+  useRealtimeSync(['speakers_updated', 'members_updated'], (data) => {
+    if (data?.sender === CLIENT_ID) return;
+    fetchAll(true);
+    const { action, prenume, nume } = data || {};
+    if (action === 'create' && prenume) {
+      toast.info(`Vorbitor adăugat: ${prenume} ${nume}`);
+    } else if (action) {
+      toast.info('Vorbitorii au fost actualizați');
+    }
+  });
 
   return (
     <div className="flex h-screen bg-zinc-100 overflow-hidden">
