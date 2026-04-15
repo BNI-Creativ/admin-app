@@ -42,6 +42,8 @@ import html2pdf from 'html2pdf.js';
 const API_URL = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 import { useRealtimeSync } from '../hooks/useRealtimeSync';
+import { CLIENT_ID } from '../contexts/AuthContext';
+import { toast } from '../components/ui/sonner';
 
 const DashboardPage = () => {
   const { user, logout } = useAuth();
@@ -130,9 +132,9 @@ const DashboardPage = () => {
   }, []);
 
   // Main data fetch from server
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const response = await axios.get(`${API_URL}/attendance/${dateString}`);
       const serverData = response.data;
 
@@ -168,7 +170,30 @@ const DashboardPage = () => {
     fetchData();
   }, [fetchData]);
 
-  useRealtimeSync(['attendance_updated', 'members_updated'], fetchData);
+  // SSE real-time sync: silent fetch + toast for changes from other clients
+  useRealtimeSync(['attendance_updated', 'members_updated'], (data) => {
+    if (data?.sender === CLIENT_ID) return; // own change, skip
+    fetchData(true); // silent — no loading spinner
+    const { action, prenume, nume, prezent, taxa } = data || {};
+    if (action === 'update' && prenume) {
+      const details = [];
+      if (prezent !== undefined) details.push(prezent ? 'prezent' : 'absent');
+      if (taxa !== undefined) details.push(`taxa ${taxa} RON`);
+      toast.info(`${prenume} ${nume}`, { description: details.join(', ') || 'actualizat' });
+    } else if (action === 'guest_add' && prenume) {
+      toast.info(`Invitat adăugat: ${prenume} ${nume}`);
+    } else if (action === 'guest_update' && prenume) {
+      toast.info(`Invitat actualizat: ${prenume} ${nume}`);
+    } else if (action === 'guest_delete') {
+      toast.info('Un invitat a fost șters');
+    } else if (action === 'create' && prenume) {
+      toast.info(`Membru nou: ${prenume} ${nume}`);
+    } else if (action === 'delete' && prenume) {
+      toast.info(`Membru șters: ${prenume} ${nume}`);
+    } else if (action) {
+      toast.info('Date actualizate');
+    }
+  });
 
   useEffect(() => {
     fetchDatesWithData();

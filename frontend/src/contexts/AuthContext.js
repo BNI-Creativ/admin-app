@@ -5,6 +5,10 @@ const AuthContext = createContext(null);
 
 const API_URL = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
+// Unique client ID per browser tab — used to identify SSE sender
+const CLIENT_ID = Math.random().toString(36).slice(2) + Date.now().toString(36);
+axios.defaults.headers.common['X-Client-Id'] = CLIENT_ID;
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token'));
@@ -72,3 +76,5 @@ export const useAuth = () => {
   }
   return context;
 };
+
+export { CLIENT_ID };

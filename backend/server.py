@@ -17,6 +17,9 @@ import asyncio
 import json
 import jwt
 import bcrypt
+from contextvars import ContextVar
+
+_current_client_id: ContextVar[str] = ContextVar('client_id', default='')
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -40,11 +43,13 @@ JWT_ALGORITHM = "HS256"
 # ============= SSE BROADCAST INFRASTRUCTURE =============
 _sse_clients: set = set()
 
-async def broadcast(event_type: str):
-    """Push an SSE event to all connected clients."""
+async def broadcast(event_type: str, data: dict = None):
+    """Push an SSE event with payload to all connected clients."""
     if not _sse_clients:
         return
-    message = f"event: {event_type}\ndata: {{}}\n\n"
+    sender = _current_client_id.get("")
+    payload = json.dumps({"sender": sender, **(data or {})}, ensure_ascii=False)
+    message = f"event: {event_type}\ndata: {payload}\n\n"
     dead = set()
     for q in list(_sse_clients):
         try:
@@ -56,6 +61,12 @@ async def broadcast(event_type: str):
 
 # Create the main app
 app = FastAPI()
+
+@app.middleware("http")
+async def extract_client_id(request: Request, call_next):
+    _current_client_id.set(request.headers.get("x-client-id", ""))
+    response = await call_next(request)
+    return response
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
@@ -404,7 +415,7 @@ async def create_member(member: MemberCreate, current_user: dict = Depends(get_c
         "tara": member.tara or ""
     }
     await db.members.insert_one(member_doc)
-    await broadcast("members_updated")
+    await broadcast("members_updated", {"action": "create", "prenume": member.prenume, "nume": member.nume})
     return MemberResponse(**member_doc)
 
 @api_router.put("/members/{member_id}", response_model=MemberResponse)
@@ -421,7 +432,7 @@ async def update_member(member_id: str, member: MemberUpdate, current_user: dict
     )
     if not result:
         raise HTTPException(status_code=404, detail="Membru negăsit")
-    await broadcast("members_updated")
+    await broadcast("members_updated", {"action": "update", "prenume": result.get("prenume", ""), "nume": result.get("nume", "")})
     return MemberResponse(
         id=result["id"],
         nr=result["nr"],
@@ -447,10 +458,11 @@ async def update_member(member_id: str, member: MemberUpdate, current_user: dict
 
 @api_router.delete("/members/{member_id}")
 async def delete_member(member_id: str, current_user: dict = Depends(get_current_user)):
+    member = await db.members.find_one({"id": member_id}, {"_id": 0, "prenume": 1, "nume": 1})
     result = await db.members.delete_one({"id": member_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Membru negăsit")
-    await broadcast("members_updated")
+    await broadcast("members_updated", {"action": "delete", "prenume": member.get("prenume", "") if member else "", "nume": member.get("nume", "") if member else ""})
     return {"message": "Membru șters cu succes"}
 
 # ============= GUESTS ROUTES =============
@@ -491,7 +503,7 @@ async def create_guest(guest: GuestCreate, data: str, current_user: dict = Depen
         "member_id": guest.member_id
     }
     await db.guests.insert_one(guest_doc)
-    await broadcast("attendance_updated")
+    await broadcast("attendance_updated", {"action": "guest_add", "prenume": guest.prenume, "nume": guest.nume})
     return GuestResponse(**guest_doc)
 
 @api_router.put("/guests/{guest_id}", response_model=GuestResponse)
@@ -519,7 +531,7 @@ async def update_guest(guest_id: str, guest: GuestUpdate, current_user: dict = D
     )
     if not result:
         raise HTTPException(status_code=404, detail="Invitat negăsit")
-    await broadcast("attendance_updated")
+    await broadcast("attendance_updated", {"action": "guest_update", "prenume": result.get("prenume", ""), "nume": result.get("nume", "")})
     return GuestResponse(
         id=result["id"],
         nr=result["nr"],
@@ -540,7 +552,7 @@ async def delete_guest(guest_id: str, current_user: dict = Depends(get_current_u
     result = await db.guests.delete_one({"id": guest_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Invitat negăsit")
-    await broadcast("attendance_updated")
+    await broadcast("attendance_updated", {"action": "guest_delete"})
     return {"message": "Invitat șters cu succes"}
 
 # ============= ATTENDANCE ROUTES =============
@@ -724,7 +736,15 @@ async def update_attendance(data: str, attendance: AttendanceUpdate, current_use
         }},
         upsert=True
     )
-    await broadcast("attendance_updated")
+    # Lookup member name for broadcast
+    member = await db.members.find_one({"id": attendance.member_id}, {"_id": 0, "prenume": 1, "nume": 1})
+    member_name = f"{member['prenume']} {member['nume']}" if member else ""
+    await broadcast("attendance_updated", {
+        "action": "update", "member_id": attendance.member_id,
+        "prenume": member.get("prenume", "") if member else "",
+        "nume": member.get("nume", "") if member else "",
+        "prezent": attendance.prezent, "taxa": attendance.taxa
+    })
     return {"message": "Prezență actualizată"}
 
 @api_router.get("/attendance/dates/list")
@@ -1181,7 +1201,7 @@ async def create_treasury_entry(entry: TreasuryEntryCreate, current_user: dict =
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.treasury.insert_one(entry_doc)
-    await broadcast("treasury_updated")
+    await broadcast("treasury_updated", {"action": "create", "suma": entry.suma, "explicatii": entry.explicatii})
     return TreasuryEntryResponse(**entry_doc)
 
 @api_router.delete("/treasury/{entry_id}")
@@ -1190,7 +1210,7 @@ async def delete_treasury_entry(entry_id: str, current_user: dict = Depends(get_
     result = await db.treasury.delete_one({"id": entry_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Intrare negăsită")
-    await broadcast("treasury_updated")
+    await broadcast("treasury_updated", {"action": "delete"})
     return {"message": "Intrare ștearsă cu succes"}
 
 # ============= MONTHLY DEDUCTION ROUTES =============
@@ -1251,7 +1271,7 @@ async def add_speaker(speaker: SpeakerCreate, current_user: dict = Depends(get_c
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.speakers_history.insert_one(doc)
-    await broadcast("speakers_updated")
+    await broadcast("speakers_updated", {"action": "create", "prenume": speaker.prenume, "nume": speaker.nume})
     return SpeakerResponse(**doc)
 
 @api_router.delete("/speakers/{speaker_id}")
