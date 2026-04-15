@@ -30,6 +30,8 @@ import { ro } from 'date-fns/locale';
 
 const API_URL = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
+import { useRealtimeSync } from '../hooks/useRealtimeSync';
+
 const SpeakersPage = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -214,6 +216,8 @@ const SpeakersPage = () => {
       return dateStr;
     }
   };
+
+  useRealtimeSync(['speakers_updated', 'members_updated'], fetchAll);
 
   return (
     <div className="flex h-screen bg-zinc-100 overflow-hidden">

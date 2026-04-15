@@ -41,6 +41,8 @@ import html2pdf from 'html2pdf.js';
 
 const API_URL = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
+import { useRealtimeSync } from '../hooks/useRealtimeSync';
+
 const DashboardPage = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -165,6 +167,8 @@ const DashboardPage = () => {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  useRealtimeSync(['attendance_updated'], fetchData);
 
   useEffect(() => {
     fetchDatesWithData();

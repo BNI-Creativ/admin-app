@@ -40,6 +40,8 @@ import { ro } from 'date-fns/locale';
 
 const API_URL = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
+import { useRealtimeSync } from '../hooks/useRealtimeSync';
+
 const TreasuryPage = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -130,6 +132,8 @@ const TreasuryPage = () => {
     const entryDate = new Date(dateStr + 'T00:00:00');
     return entryDate < today;
   };
+
+  useRealtimeSync(['treasury_updated'], fetchEntries);
 
   return (
     <div className="flex h-screen bg-zinc-100 overflow-hidden">
