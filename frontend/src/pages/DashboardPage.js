@@ -174,12 +174,15 @@ const DashboardPage = () => {
   useRealtimeSync(['attendance_updated', 'members_updated'], (data) => {
     if (data?.sender === CLIENT_ID) return; // own change, skip
     fetchData(true); // silent — no loading spinner
-    const { action, prenume, nume, prezent, taxa } = data || {};
+    const { action, prenume, nume, prezent } = data || {};
     if (action === 'update' && prenume) {
-      const details = [];
-      if (prezent !== undefined) details.push(prezent ? 'prezent' : 'absent');
-      if (taxa !== undefined) details.push(`taxa ${taxa} RON`);
-      toast.info(`${prenume} ${nume}`, { description: details.join(', ') || 'actualizat' });
+      if (prezent === true) {
+        toast.info(`${prenume} ${nume} marcat prezent`);
+      } else if (prezent === false) {
+        toast.info(`${prenume} ${nume} debifat ca prezent`);
+      } else {
+        toast.info(`${prenume} ${nume} actualizat`);
+      }
     } else if (action === 'guest_add' && prenume) {
       toast.info(`Invitat adăugat: ${prenume} ${nume}`);
     } else if (action === 'guest_update' && prenume) {
