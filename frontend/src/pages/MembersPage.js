@@ -65,6 +65,8 @@ const MembersPage = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [zileValabilitateMsp, setZileValabilitateMsp] = useState(365);
   const [intervalVorbitori, setIntervalVorbitori] = useState(7);
+  const [sortKey, setSortKey] = useState('prenume');
+  const [sortDir, setSortDir] = useState('asc');
   const [newMember, setNewMember] = useState({
     prenume: '',
     nume: '',
@@ -136,10 +138,38 @@ const MembersPage = () => {
 
   const sortMembers = (membersList) => {
     return [...membersList].sort((a, b) => {
-      const prenumeCompare = a.prenume.localeCompare(b.prenume, 'ro');
-      if (prenumeCompare !== 0) return prenumeCompare;
-      return a.nume.localeCompare(b.nume, 'ro');
+      let cmp = 0;
+      if (sortKey === 'prenume') {
+        cmp = a.prenume.localeCompare(b.prenume, 'ro');
+        if (cmp === 0) cmp = a.nume.localeCompare(b.nume, 'ro');
+      } else if (sortKey === 'nume') {
+        cmp = a.nume.localeCompare(b.nume, 'ro');
+        if (cmp === 0) cmp = a.prenume.localeCompare(b.prenume, 'ro');
+      } else if (sortKey === 'data_msp') {
+        const da = a.data_msp || '';
+        const db2 = b.data_msp || '';
+        cmp = da.localeCompare(db2);
+      } else if (sortKey === 'doreste_prezentare') {
+        cmp = (b.doreste_prezentare ? 1 : 0) - (a.doreste_prezentare ? 1 : 0);
+      } else if (sortKey === 'activ') {
+        cmp = ((b.activ !== false) ? 1 : 0) - ((a.activ !== false) ? 1 : 0);
+      }
+      return sortDir === 'asc' ? cmp : -cmp;
     });
+  };
+
+  const handleSort = (key) => {
+    if (sortKey === key) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortKey(key);
+      setSortDir('asc');
+    }
+  };
+
+  const SortIcon = ({ column }) => {
+    if (sortKey !== column) return <span className="ml-1 text-zinc-300">↕</span>;
+    return <span className="ml-1">{sortDir === 'asc' ? '↑' : '↓'}</span>;
   };
 
   const handleAddMember = async (e) => {
@@ -473,16 +503,26 @@ const MembersPage = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-16">Nr.</TableHead>
-                    <TableHead>Prenume</TableHead>
-                    <TableHead>Nume</TableHead>
-                    <TableHead className="w-32">Data MSP</TableHead>
-                    <TableHead className="w-36 text-center">Dorește Prezentare</TableHead>
-                    <TableHead className="w-28 text-center">Status</TableHead>
+                    <TableHead className="cursor-pointer select-none hover:text-zinc-900" onClick={() => handleSort('prenume')} data-testid="sort-prenume">
+                      Prenume<SortIcon column="prenume" />
+                    </TableHead>
+                    <TableHead className="cursor-pointer select-none hover:text-zinc-900" onClick={() => handleSort('nume')} data-testid="sort-nume">
+                      Nume<SortIcon column="nume" />
+                    </TableHead>
+                    <TableHead className="w-32 cursor-pointer select-none hover:text-zinc-900" onClick={() => handleSort('data_msp')} data-testid="sort-data-msp">
+                      Data MSP<SortIcon column="data_msp" />
+                    </TableHead>
+                    <TableHead className="w-36 text-center cursor-pointer select-none hover:text-zinc-900" onClick={() => handleSort('doreste_prezentare')} data-testid="sort-doreste">
+                      Dorește Prezentare<SortIcon column="doreste_prezentare" />
+                    </TableHead>
+                    <TableHead className="w-28 text-center cursor-pointer select-none hover:text-zinc-900" onClick={() => handleSort('activ')} data-testid="sort-status">
+                      Status<SortIcon column="activ" />
+                    </TableHead>
                     <TableHead className="w-24 text-right">Acțiuni</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {members.map((member, index) => (
+                  {sortMembers(members).map((member, index) => (
                     <TableRow key={member.id} data-testid={`member-row-${member.id}`}>
                       <TableCell className="font-medium tabular-nums">
                         {index + 1}
